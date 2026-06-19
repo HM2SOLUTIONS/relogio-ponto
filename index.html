@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Relógio de Ponto 2026</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
   :root {
     --bg: #ffffff; --bg2: #f5f5f4; --bg3: #fafaf9;
@@ -198,6 +200,7 @@
         <div class="form-group"><label>Mês</label><select id="rel-mes"></select></div>
         <button class="btn btn-purple" onclick="gerarRelatorio()" style="margin-top:20px;"><i class="ti ti-refresh"></i> Gerar</button>
         <button class="btn btn-green" onclick="exportarCSV()" style="margin-top:20px;"><i class="ti ti-download"></i> Exportar CSV</button>
+        <button class="btn btn-red" onclick="exportarRelatorioPDF()" style="margin-top:20px;"><i class="ti ti-file-type-pdf"></i> Exportar PDF</button>
       </div>
     </div>
     <div id="rel-output"></div>
@@ -260,7 +263,8 @@
           <div class="card-title"><i class="ti ti-database-export"></i> Exportar todos os dados</div>
           <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Exporta todos os registos de todos os colaboradores em CSV.</p>
           <div class="btn-row">
-            <button class="btn btn-green" onclick="exportarTodosCSV()"><i class="ti ti-download"></i> Exportar todos os registos</button>
+            <button class="btn btn-green" onclick="exportarTodosCSV()"><i class="ti ti-download"></i> Exportar todos os registos (CSV)</button>
+            <button class="btn btn-red" onclick="exportarTodosPDF()"><i class="ti ti-file-type-pdf"></i> Exportar todos os registos (PDF)</button>
           </div>
         </div>
         <div class="card">
@@ -479,6 +483,9 @@ function renderHistorico(){
     rows+=`<tr><td style="font-weight:600;">${data.split('-').reverse().join('/')}</td><td>${DIAS[d.getDay()]}</td><td style="font-size:12px;">${regs.map(r=>`${r.hora.slice(0,5)} <span style="color:var(--text2);">${TL[r.tipo]}</span>`).join(' · ')}</td><td style="text-align:right;font-weight:600;">${h.toFixed(2)}h</td></tr>`;
   });
   container.innerHTML=`<p style="font-size:14px;font-weight:600;margin-bottom:12px;">${emp.nome} — ${MESES[mes]}</p>
+    <div class="btn-row" style="margin-bottom:12px;">
+      <button class="btn btn-red btn-sm" onclick="exportarHistoricoPDF(${empId},${mes})"><i class="ti ti-file-type-pdf"></i> Exportar PDF</button>
+    </div>
     <div style="overflow-x:auto;"><table><thead><tr><th>Data</th><th>Dia</th><th>Registos</th><th style="text-align:right;">Horas</th></tr></thead><tbody>${rows}</tbody>
     <tfoot><tr><td colspan="3">Total do mês</td><td style="text-align:right;">${totalH.toFixed(2)}h</td></tr></tfoot></table></div>`;
 }
@@ -712,6 +719,208 @@ function limparTodos(){
   if(!confirm('Eliminar TODOS os registos de ponto? Esta ação é irreversível.')) return;
   registos=[]; salvar(); toast('Todos os registos eliminados.'); renderAdminRegistos();
 }
+// ── PDF Export Functions ──────────────────────────────────────────────────────
+function getPDF(title, subtitle) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const purple = [60, 52, 137];
+  const gray = [120, 113, 108];
+  const lightGray = [245, 245, 244];
+
+  // Header bar
+  doc.setFillColor(...purple);
+  doc.rect(0, 0, 210, 22, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(255, 255, 255);
+  doc.text('Relógio de Ponto 2026', 14, 10);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Registo de assiduidade', 14, 16);
+  const now = new Date();
+  doc.text('Gerado em: ' + now.toLocaleDateString('pt-PT') + ' ' + now.toLocaleTimeString('pt-PT', {hour:'2-digit',minute:'2-digit'}), 196, 10, {align:'right'});
+
+  // Title section
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...purple);
+  doc.text(title, 14, 34);
+  if (subtitle) {
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...gray);
+    doc.text(subtitle, 14, 40);
+  }
+  return { doc, purple, gray, lightGray, startY: subtitle ? 46 : 40 };
+}
+
+function exportarRelatorioPDF() {
+  const mes = parseInt(document.getElementById('rel-mes').value);
+  const pref = '2026-' + String(mes + 1).padStart(2, '0');
+  const du = contarDiasUteis(mes), he = du * 8;
+  let tG = 0, tE = 0, tF = 0;
+  const rows = [];
+
+  colaboradores.forEach(emp => {
+    const dias = {};
+    registos.filter(r => r.empId === emp.id && r.data.startsWith(pref)).forEach(r => { if (!dias[r.data]) dias[r.data] = []; dias[r.data].push(r); });
+    let h = 0; Object.values(dias).forEach(rs => h += calcHoras(rs));
+    const ex = Math.max(0, h - he), fa = Math.max(0, he - h);
+    tG += h; tE += ex; tF += fa;
+    rows.push([emp.nome, emp.dept, Object.keys(dias).length, h.toFixed(2) + 'h', ex > 0 ? '+' + ex.toFixed(2) + 'h' : '—', fa > 0 ? '-' + fa.toFixed(2) + 'h' : '—']);
+  });
+
+  const { doc, purple, gray, lightGray, startY } = getPDF(
+    'Relatório Mensal — ' + MESES[mes] + ' 2026',
+    du + ' dias úteis · ' + he + 'h esperadas por colaborador · ' + colaboradores.length + ' colaborador(es)'
+  );
+
+  // Metrics boxes
+  const metrics = [
+    { label: 'Total horas', value: tG.toFixed(1) + 'h', color: [60,52,137] },
+    { label: 'Horas extra', value: '+' + tE.toFixed(1) + 'h', color: [22,101,52] },
+    { label: 'Em falta', value: '-' + tF.toFixed(1) + 'h', color: [153,27,27] },
+    { label: 'Colaboradores', value: colaboradores.length.toString(), color: [30,64,175] },
+  ];
+  const boxW = 43, boxH = 16, gap = 4, startX = 14;
+  metrics.forEach((m, i) => {
+    const x = startX + i * (boxW + gap);
+    doc.setFillColor(...lightGray);
+    doc.roundedRect(x, startY, boxW, boxH, 2, 2, 'F');
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...gray);
+    doc.text(m.label.toUpperCase(), x + 4, startY + 5);
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...m.color);
+    doc.text(m.value, x + 4, startY + 13);
+  });
+
+  doc.autoTable({
+    startY: startY + boxH + 6,
+    head: [['Colaborador', 'Depto.', 'Dias', 'Horas', 'Extra', 'Em falta']],
+    body: rows,
+    styles: { fontSize: 9, cellPadding: 3, textColor: [28,25,23] },
+    headStyles: { fillColor: purple, textColor: [255,255,255], fontStyle: 'bold', fontSize: 9 },
+    alternateRowStyles: { fillColor: lightGray },
+    columnStyles: { 0: { cellWidth: 55 }, 1: { cellWidth: 35 }, 2: { cellWidth: 18, halign:'center' }, 3: { cellWidth: 22, halign:'right' }, 4: { cellWidth: 22, halign:'right', textColor:[22,101,52] }, 5: { cellWidth: 22, halign:'right', textColor:[153,27,27] } },
+    margin: { left: 14, right: 14 },
+    foot: [['Total geral', '', '', tG.toFixed(2) + 'h', '+' + tE.toFixed(2) + 'h', '-' + tF.toFixed(2) + 'h']],
+    footStyles: { fillColor: [235,233,254], textColor: [38,33,92], fontStyle: 'bold' },
+  });
+
+  // Footer
+  addPDFFooter(doc);
+  doc.save('relatorio_' + MESES[mes].toLowerCase() + '_2026.pdf');
+  toast('✓ PDF do relatório exportado!');
+}
+
+function exportarHistoricoPDF(empId, mes) {
+  const emp = colaboradores.find(c => c.id === empId); if (!emp) return;
+  const pref = '2026-' + String(mes + 1).padStart(2, '0');
+  const dias = {};
+  registos.filter(r => r.empId === empId && r.data.startsWith(pref)).forEach(r => { if (!dias[r.data]) dias[r.data] = []; dias[r.data].push(r); });
+
+  let totalH = 0;
+  const rows = [];
+  Object.keys(dias).sort().forEach(data => {
+    const regs = dias[data];
+    const h = calcHoras(regs); totalH += h;
+    const d = new Date(data + 'T12:00:00');
+    const registosStr = regs.map(r => r.hora.slice(0,5) + ' ' + TL[r.tipo]).join('  ·  ');
+    rows.push([data.split('-').reverse().join('/'), DIAS[d.getDay()], registosStr, h.toFixed(2) + 'h']);
+  });
+
+  const he = contarDiasUteis(mes) * 8;
+  const extra = Math.max(0, totalH - he), falta = Math.max(0, he - totalH);
+  const { doc, purple, gray, lightGray, startY } = getPDF(
+    'Histórico — ' + emp.nome,
+    MESES[mes] + ' 2026 · ' + emp.dept + ' · Turno: ' + emp.turno
+  );
+
+  // Summary boxes
+  const metrics2 = [
+    { label: 'Dias trabalhados', value: Object.keys(dias).length.toString(), color: [60,52,137] },
+    { label: 'Total horas', value: totalH.toFixed(2) + 'h', color: [28,25,23] },
+    { label: 'Horas extra', value: '+' + extra.toFixed(2) + 'h', color: [22,101,52] },
+    { label: 'Em falta', value: '-' + falta.toFixed(2) + 'h', color: [153,27,27] },
+  ];
+  const boxW = 43, boxH = 16, gap = 4;
+  metrics2.forEach((m, i) => {
+    const x = 14 + i * (boxW + gap);
+    doc.setFillColor(...lightGray);
+    doc.roundedRect(x, startY, boxW, boxH, 2, 2, 'F');
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...gray);
+    doc.text(m.label.toUpperCase(), x + 4, startY + 5);
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...m.color);
+    doc.text(m.value, x + 4, startY + 13);
+  });
+
+  doc.autoTable({
+    startY: startY + boxH + 6,
+    head: [['Data', 'Dia', 'Registos', 'Horas']],
+    body: rows,
+    styles: { fontSize: 8.5, cellPadding: 3, textColor: [28,25,23] },
+    headStyles: { fillColor: purple, textColor: [255,255,255], fontStyle: 'bold', fontSize: 9 },
+    alternateRowStyles: { fillColor: lightGray },
+    columnStyles: { 0: { cellWidth: 22 }, 1: { cellWidth: 22 }, 2: { cellWidth: 120 }, 3: { cellWidth: 18, halign:'right', fontStyle:'bold' } },
+    margin: { left: 14, right: 14 },
+    foot: [['', '', 'Total do mês', totalH.toFixed(2) + 'h']],
+    footStyles: { fillColor: [235,233,254], textColor: [38,33,92], fontStyle: 'bold' },
+  });
+
+  addPDFFooter(doc);
+  doc.save('historico_' + emp.nome.replace(/ /g,'_').toLowerCase() + '_' + MESES[mes].toLowerCase() + '_2026.pdf');
+  toast('✓ PDF do histórico exportado!');
+}
+
+function exportarTodosPDF() {
+  const { doc, purple, gray, lightGray, startY } = getPDF(
+    'Todos os Registos de Ponto — 2026',
+    'Exportação completa · ' + registos.length + ' registos · ' + colaboradores.length + ' colaboradores'
+  );
+
+  const sorted = registos.slice().sort((a,b) => a.ts - b.ts);
+  const rows = sorted.map(r => {
+    const emp = colaboradores.find(c => c.id === r.empId);
+    return [emp ? emp.nome : '?', emp ? emp.dept : '?', r.data.split('-').reverse().join('/'), r.hora.slice(0,5), TL[r.tipo]];
+  });
+
+  doc.autoTable({
+    startY,
+    head: [['Colaborador', 'Departamento', 'Data', 'Hora', 'Tipo']],
+    body: rows,
+    styles: { fontSize: 9, cellPadding: 3, textColor: [28,25,23] },
+    headStyles: { fillColor: purple, textColor: [255,255,255], fontStyle: 'bold', fontSize: 9 },
+    alternateRowStyles: { fillColor: lightGray },
+    columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 40 }, 2: { cellWidth: 28 }, 3: { cellWidth: 20, halign:'center' }, 4: { cellWidth: 40 } },
+    margin: { left: 14, right: 14 },
+  });
+
+  addPDFFooter(doc);
+  doc.save('todos_registos_2026.pdf');
+  toast('✓ PDF completo exportado!');
+}
+
+function addPDFFooter(doc) {
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(168, 162, 158);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Relógio de Ponto 2026 — Registo de assiduidade', 14, 290);
+    doc.text('Página ' + i + ' de ' + pageCount, 196, 290, { align: 'right' });
+    doc.setDrawColor(229, 225, 220);
+    doc.line(14, 287, 196, 287);
+  }
+}
+
 // Init
 initMesSelects();
 populateSelects();
