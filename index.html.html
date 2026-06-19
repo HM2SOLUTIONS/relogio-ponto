@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Relógio de Ponto 2026</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+<style>
+  :root {
+    --bg: #ffffff; --bg2: #f5f5f4; --bg3: #fafaf9;
+    --text: #1c1917; --text2: #78716c; --text3: #a8a29e;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --purple: #3C3489; --purple-light: #EEEDFE; --purple-text: #26215C;
+    --green-bg: #f0fdf4; --green-text: #166534; --green-border: #bbf7d0;
+    --red-bg: #fef2f2; --red-text: #991b1b; --red-border: #fecaca;
+    --yellow-bg: #fffbeb; --yellow-text: #92400e; --yellow-border: #fde68a;
+    --blue-bg: #eff6ff; --blue-text: #1e40af; --blue-border: #bfdbfe;
+    --amber-light: #FAEEDA; --amber: #EF9F27; --amber-text: #854F0B;
+    --radius: 8px; --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1917; --bg2: #292524; --bg3: #1c1917;
+      --text: #fafaf9; --text2: #a8a29e; --text3: #78716c;
+      --border: rgba(255,255,255,0.10); --border2: rgba(255,255,255,0.20);
+      --purple-light: #26215C; --purple-text: #EEEDFE;
+      --green-bg: #052e16; --green-text: #86efac; --green-border: #166534;
+      --red-bg: #450a0a; --red-text: #fca5a5; --red-border: #991b1b;
+      --yellow-bg: #451a03; --yellow-text: #fcd34d; --yellow-border: #92400e;
+      --blue-bg: #1e3a5f; --blue-text: #93c5fd; --blue-border: #1e40af;
+      --amber-light: #451a03; --amber-text: #fcd34d;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
+  .header { background: var(--bg); border-bottom: 0.5px solid var(--border); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .header-icon { color: var(--purple); font-size: 24px; }
+  .header-title { font-size: 17px; font-weight: 600; }
+  .header-sub { font-size: 12px; color: var(--text2); }
+  .admin-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--amber-light); color: var(--amber-text); border: 0.5px solid var(--amber); padding: 5px 12px; border-radius: 99px; font-size: 12px; font-weight: 500; }
+  .logout-btn { background: none; border: none; color: var(--text2); font-size: 12px; cursor: pointer; text-decoration: underline; margin-left: 8px; }
+  .container { max-width: 760px; margin: 0 auto; padding: 20px 16px; }
+  .tab-bar { display: flex; gap: 4px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 4px; margin-bottom: 20px; overflow-x: auto; }
+  .tab { flex: 1; min-width: fit-content; padding: 9px 14px; font-size: 13px; cursor: pointer; border: none; background: none; color: var(--text2); border-radius: var(--radius); display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .tab.active { background: var(--purple); color: #fff; font-weight: 500; }
+  .tab.admin-tab:not(.active) { color: var(--amber-text); }
+  .section { display: none; }
+  .section.active { display: block; }
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; color: var(--text); }
+  .clock-wrap { text-align: center; padding: 24px 0 16px; }
+  .clock-time { font-size: 52px; font-weight: 300; letter-spacing: 3px; font-variant-numeric: tabular-nums; }
+  .clock-date { font-size: 14px; color: var(--text2); margin-top: 4px; }
+  label { font-size: 13px; color: var(--text2); }
+  select, input[type=text], input[type=number], input[type=date], input[type=time], input[type=password] {
+    width: 100%; padding: 9px 12px; border: 0.5px solid var(--border2); border-radius: var(--radius);
+    background: var(--bg); color: var(--text); font-size: 14px; outline: none; margin-top: 4px;
+  }
+  select:focus, input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(60,52,137,0.12); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-group { margin-bottom: 12px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: opacity 0.15s; }
+  .btn:active { opacity: 0.8; }
+  .btn-purple { background: var(--purple); color: #fff; }
+  .btn-green { background: var(--green-bg); color: var(--green-text); border: 1px solid var(--green-border); }
+  .btn-red { background: var(--red-bg); color: var(--red-text); border: 1px solid var(--red-border); }
+  .btn-yellow { background: var(--yellow-bg); color: var(--yellow-text); border: 1px solid var(--yellow-border); }
+  .btn-gray { background: var(--bg2); color: var(--text2); border: 0.5px solid var(--border); }
+  .btn-amber { background: var(--amber-light); color: var(--amber-text); border: 1px solid var(--amber); }
+  .btn-blue { background: var(--blue-bg); color: var(--blue-text); border: 0.5px solid var(--blue-border); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+  .badge-green { background: var(--green-bg); color: var(--green-text); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); }
+  .badge-yellow { background: var(--yellow-bg); color: var(--yellow-text); }
+  .badge-gray { background: var(--bg2); color: var(--text2); }
+  .badge-amber { background: var(--amber-light); color: var(--amber-text); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 10px; font-weight: 500; color: var(--text2); border-bottom: 0.5px solid var(--border); font-size: 12px; }
+  td { padding: 9px 10px; border-bottom: 0.5px solid var(--border); color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg2); }
+  tfoot td { font-weight: 600; border-top: 1px solid var(--border2); border-bottom: none; }
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .metric { background: var(--bg2); border-radius: var(--radius); padding: 14px 16px; }
+  .metric-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .metric-value { font-size: 24px; font-weight: 600; }
+  .emp-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+  .emp-row:last-child { border-bottom: none; }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--purple-light); color: var(--purple-text); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+  .emp-info { flex: 1; min-width: 0; }
+  .emp-name { font-size: 14px; font-weight: 500; }
+  .emp-sub { font-size: 12px; color: var(--text2); }
+  .seg { display: flex; border: 0.5px solid var(--border2); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
+  .seg-btn { flex: 1; padding: 9px; font-size: 13px; cursor: pointer; border: none; background: transparent; color: var(--text2); }
+  .seg-btn.active { background: var(--purple); color: #fff; font-weight: 500; }
+  .edit-input { font-size: 12px; padding: 5px 8px; border: 0.5px solid var(--border2); border-radius: 6px; background: var(--bg); color: var(--text); width: 100%; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1c1917; color: #fafaf9; padding: 11px 24px; border-radius: var(--radius-lg); font-size: 13px; z-index: 1000; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.3); white-space: nowrap; }
+  .pin-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; display: none; align-items: center; justify-content: center; }
+  .pin-box { background: var(--bg); border-radius: var(--radius-lg); padding: 28px 24px; width: 300px; text-align: center; border: 0.5px solid var(--border); }
+  .pin-title { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+  .pin-sub { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
+  .pin-dots { display: flex; gap: 12px; justify-content: center; margin-bottom: 20px; }
+  .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border2); background: transparent; transition: background 0.15s; }
+  .pin-dot.filled { background: var(--purple); border-color: var(--purple); }
+  .pin-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px; }
+  .pin-btn { padding: 16px; font-size: 20px; font-weight: 400; cursor: pointer; border-radius: var(--radius); background: var(--bg2); border: 0.5px solid var(--border); color: var(--text); }
+  .pin-btn:active { transform: scale(0.94); }
+  .pin-error { color: var(--red-text); font-size: 12px; min-height: 18px; margin-bottom: 6px; }
+  .admin-banner { background: var(--amber-light); border: 0.5px solid var(--amber); border-radius: var(--radius); padding: 10px 14px; font-size: 13px; color: var(--amber-text); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .info-box { background: var(--blue-bg); border: 0.5px solid var(--blue-border); border-radius: var(--radius); padding: 12px 14px; font-size: 13px; color: var(--blue-text); margin-bottom: 16px; }
+  .print-table th { background: var(--purple); color: #fff; padding: 8px 10px; }
+  .print-table tr:nth-child(even) td { background: var(--bg2); }
+  .filter-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
+  .filter-row .form-group { margin-bottom: 0; min-width: 140px; }
+  @media (max-width: 480px) {
+    .form-row { grid-template-columns: 1fr; }
+    .clock-time { font-size: 40px; }
+    .filter-row { flex-direction: column; align-items: stretch; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <i class="ti ti-clock header-icon"></i>
+    <div>
+      <div class="header-title">Relógio de Ponto 2026</div>
+      <div class="header-sub">Registo de assiduidade</div>
+    </div>
+  </div>
+  <div id="admin-header" style="display:none;align-items:center;">
+    <span class="admin-badge"><i class="ti ti-shield-check"></i> Administrador</span>
+    <button class="logout-btn" onclick="logoutAdmin()">Sair</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab('ponto',event)"><i class="ti ti-fingerprint"></i> Ponto</button>
+    <button class="tab" onclick="switchTab('historico',event)"><i class="ti ti-list"></i> Histórico</button>
+    <button class="tab" onclick="switchTab('relatorio',event)"><i class="ti ti-file-analytics"></i> Relatório</button>
+    <button class="tab" onclick="switchTab('colaboradores',event)"><i class="ti ti-users"></i> Colaboradores</button>
+    <button class="tab admin-tab" onclick="switchTab('admin',event)"><i class="ti ti-shield"></i> Administração</button>
+  </div>
+
+  <!-- PONTO -->
+  <div class="section active" id="sec-ponto">
+    <div class="card">
+      <div class="clock-wrap">
+        <div class="clock-time" id="clock-time">--:--:--</div>
+        <div class="clock-date" id="clock-date"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-user-check"></i> Registar ponto</div>
+      <div class="form-group">
+        <label>Colaborador</label>
+        <select id="sel-colaborador" onchange="onEmpChange()"></select>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span style="font-size:13px;color:var(--text2);">Estado:</span>
+        <span class="badge badge-gray" id="badge-estado"><i class="ti ti-circle"></i> Sem registo hoje</span>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-green" onclick="registar('entrada')"><i class="ti ti-login"></i> Entrada</button>
+        <button class="btn btn-yellow" onclick="registar('inicio_pausa')"><i class="ti ti-coffee"></i> Início pausa</button>
+        <button class="btn btn-gray" onclick="registar('fim_pausa')"><i class="ti ti-player-play"></i> Fim pausa</button>
+        <button class="btn btn-red" onclick="registar('saida')"><i class="ti ti-logout"></i> Saída</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-clock-hour-4"></i> Registos de hoje</div>
+      <div id="hoje-log"><p style="font-size:13px;color:var(--text2);">Nenhum registo ainda.</p></div>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO -->
+  <div class="section" id="sec-historico">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-filter"></i> Filtrar</div>
+      <div class="filter-row">
+        <div class="form-group"><label>Colaborador</label><select id="hist-emp" onchange="renderHistorico()"></select></div>
+        <div class="form-group"><label>Mês</label><select id="hist-mes" onchange="renderHistorico()"></select></div>
+      </div>
+    </div>
+    <div class="card"><div id="hist-content"><p style="font-size:13px;color:var(--text2);">Selecione um colaborador e mês.</p></div></div>
+  </div>
+
+  <!-- RELATÓRIO -->
+  <div class="section" id="sec-relatorio">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-file-analytics"></i> Relatório mensal</div>
+      <div class="filter-row">
+        <div class="form-group"><label>Mês</label><select id="rel-mes"></select></div>
+        <button class="btn btn-purple" onclick="gerarRelatorio()" style="margin-top:20px;"><i class="ti ti-refresh"></i> Gerar</button>
+        <button class="btn btn-green" onclick="exportarCSV()" style="margin-top:20px;"><i class="ti ti-download"></i> Exportar CSV</button>
+      </div>
+    </div>
+    <div id="rel-output"></div>
+  </div>
+
+  <!-- COLABORADORES -->
+  <div class="section" id="sec-colaboradores">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-users"></i> Lista de colaboradores</div>
+      <div id="lista-colaboradores"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-user-plus"></i> Adicionar colaborador</div>
+      <div class="form-row">
+        <div class="form-group"><label>Nome completo</label><input type="text" id="new-nome" placeholder="Ex: João Silva" /></div>
+        <div class="form-group"><label>Departamento</label><input type="text" id="new-dept" placeholder="Ex: Produção" /></div>
+        <div class="form-group"><label>Horas diárias</label><input type="number" id="new-horas" value="8" min="1" max="12" /></div>
+        <div class="form-group"><label>Turno</label>
+          <select id="new-turno">
+            <option value="normal">Normal (9h–18h)</option>
+            <option value="manha">Manhã (6h–14h)</option>
+            <option value="tarde">Tarde (14h–22h)</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row"><button class="btn btn-purple" onclick="adicionarColaborador()"><i class="ti ti-plus"></i> Adicionar</button></div>
+    </div>
+  </div>
+
+  <!-- ADMINISTRAÇÃO -->
+  <div class="section" id="sec-admin">
+    <div id="admin-locked" style="text-align:center;padding:4rem 1rem;">
+      <i class="ti ti-lock" style="font-size:56px;color:var(--amber);display:block;margin-bottom:16px;"></i>
+      <p style="font-size:17px;font-weight:600;margin-bottom:6px;">Área restrita</p>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:20px;">Introduza o PIN de administrador para aceder.</p>
+      <button class="btn btn-amber" onclick="abrirPIN()"><i class="ti ti-key"></i> Introduzir PIN</button>
+    </div>
+    <div id="admin-panel" style="display:none;">
+      <div class="admin-banner"><i class="ti ti-shield-check"></i> Sessão de administrador ativa — pode editar todos os registos.</div>
+      <div class="seg">
+        <button class="seg-btn active" onclick="switchAdminView('registos',event)">Editar registos</button>
+        <button class="seg-btn" onclick="switchAdminView('colab',event)">Editar colaboradores</button>
+        <button class="seg-btn" onclick="switchAdminView('config',event)">Configurações</button>
+      </div>
+      <div id="admin-registos"></div>
+      <div id="admin-colab" style="display:none;"></div>
+      <div id="admin-config" style="display:none;">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-key"></i> Alterar PIN de administrador</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">PIN padrão inicial: <strong>1234</strong></p>
+          <div class="form-row">
+            <div class="form-group"><label>PIN atual</label><input type="password" id="pin-atual" maxlength="4" placeholder="••••" /></div>
+            <div class="form-group"><label>Novo PIN</label><input type="password" id="pin-novo" maxlength="4" placeholder="••••" /></div>
+            <div class="form-group"><label>Confirmar PIN</label><input type="password" id="pin-conf" maxlength="4" placeholder="••••" /></div>
+          </div>
+          <div class="btn-row"><button class="btn btn-amber" onclick="alterarPIN()"><i class="ti ti-check"></i> Alterar PIN</button></div>
+          <p id="pin-msg" style="font-size:12px;margin-top:10px;min-height:18px;"></p>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="ti ti-database-export"></i> Exportar todos os dados</div>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Exporta todos os registos de todos os colaboradores em CSV.</p>
+          <div class="btn-row">
+            <button class="btn btn-green" onclick="exportarTodosCSV()"><i class="ti ti-download"></i> Exportar todos os registos</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color:var(--red-text);"><i class="ti ti-alert-triangle"></i> Zona de perigo</div>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Elimina permanentemente todos os registos de ponto. Os colaboradores são mantidos.</p>
+          <button class="btn btn-red" onclick="limparTodos()"><i class="ti ti-trash"></i> Limpar todos os registos</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PIN OVERLAY -->
+<div class="pin-overlay" id="pin-overlay" role="dialog" aria-modal="true">
+  <div class="pin-box">
+    <div class="pin-title"><i class="ti ti-shield" style="color:var(--purple);"></i> Administrador</div>
+    <div class="pin-sub">Introduza o PIN de 4 dígitos</div>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+    </div>
+    <div class="pin-grid">
+      <button class="pin-btn" onclick="pinPress('1')">1</button><button class="pin-btn" onclick="pinPress('2')">2</button><button class="pin-btn" onclick="pinPress('3')">3</button>
+      <button class="pin-btn" onclick="pinPress('4')">4</button><button class="pin-btn" onclick="pinPress('5')">5</button><button class="pin-btn" onclick="pinPress('6')">6</button>
+      <button class="pin-btn" onclick="pinPress('7')">7</button><button class="pin-btn" onclick="pinPress('8')">8</button><button class="pin-btn" onclick="pinPress('9')">9</button>
+      <button class="pin-btn" onclick="pinPress('C')" style="font-size:13px;">Limpar</button>
+      <button class="pin-btn" onclick="pinPress('0')">0</button>
+      <button class="pin-btn" onclick="pinPress('⌫')" style="font-size:16px;">⌫</button>
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+    <button onclick="fecharPIN()" style="background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;">Cancelar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DIAS=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+const TL={entrada:'Entrada',saida:'Saída',inicio_pausa:'Início pausa',fim_pausa:'Fim pausa'};
+const TC={entrada:'badge-green',saida:'badge-red',inicio_pausa:'badge-yellow',fim_pausa:'badge-gray'};
+const TI={entrada:'ti-login',saida:'ti-logout',inicio_pausa:'ti-coffee',fim_pausa:'ti-player-play'};
+
+// Persistência via localStorage
+function salvar() {
+  try {
+    localStorage.setItem('rp_colab', JSON.stringify(colaboradores));
+    localStorage.setItem('rp_regs', JSON.stringify(registos));
+    localStorage.setItem('rp_pin', adminPIN);
+    localStorage.setItem('rp_nextid', nextId);
+  } catch(e) {}
+}
+function carregar() {
+  try {
+    const c=localStorage.getItem('rp_colab'); if(c) colaboradores=JSON.parse(c);
+    const r=localStorage.getItem('rp_regs'); if(r) registos=JSON.parse(r);
+    const p=localStorage.getItem('rp_pin'); if(p) adminPIN=p;
+    const n=localStorage.getItem('rp_nextid'); if(n) nextId=parseInt(n);
+  } catch(e) {}
+}
+
+let adminPIN='1234', adminLogado=false, pinBuffer='', nextId=4;
+let colaboradores=[
+  {id:1,nome:'Ana Silva',dept:'Recursos Humanos',horas:8,turno:'normal'},
+  {id:2,nome:'Bruno Costa',dept:'Tecnologia',horas:8,turno:'normal'},
+  {id:3,nome:'Carla Mendes',dept:'Financeiro',horas:8,turno:'tarde'},
+];
+let registos=[];
+
+carregar();
+
+function toast(msg,dur=2800) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.display='block';
+  setTimeout(()=>t.style.display='none',dur);
+}
+function initMesSelects() {
+  ['hist-mes','rel-mes'].forEach(id=>{
+    const sel=document.getElementById(id); if(!sel) return;
+    sel.innerHTML=MESES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+    sel.value=new Date().getMonth();
+  });
+}
+function populateSelects() {
+  ['sel-colaborador','hist-emp'].forEach(id=>{
+    const sel=document.getElementById(id); if(!sel) return;
+    const cur=sel.value;
+    sel.innerHTML=colaboradores.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+    if(cur) sel.value=cur;
+  });
+}
+function switchTab(tab,e) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('sec-'+tab).classList.add('active');
+  if(e) e.target.closest('.tab').classList.add('active');
+  if(tab==='historico'){populateSelects();renderHistorico();}
+  if(tab==='colaboradores') renderColaboradores();
+  if(tab==='admin'&&adminLogado) renderAdminRegistos();
+}
+function tickClock() {
+  const now=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  document.getElementById('clock-time').textContent=pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
+  document.getElementById('clock-date').textContent=DIAS[now.getDay()]+', '+now.getDate()+' de '+MESES[now.getMonth()]+' de 2026';
+}
+// PIN
+function abrirPIN(){pinBuffer='';document.getElementById('pin-error').textContent='';atualizarDots();document.getElementById('pin-overlay').style.display='flex';}
+function fecharPIN(){document.getElementById('pin-overlay').style.display='none';pinBuffer='';atualizarDots();}
+function atualizarDots(){for(let i=0;i<4;i++)document.getElementById('d'+i).classList.toggle('filled',i<pinBuffer.length);}
+function pinPress(v){
+  if(v==='C'){pinBuffer='';atualizarDots();document.getElementById('pin-error').textContent='';return;}
+  if(v==='⌫'){pinBuffer=pinBuffer.slice(0,-1);atualizarDots();return;}
+  if(pinBuffer.length>=4) return;
+  pinBuffer+=v; atualizarDots();
+  if(pinBuffer.length===4) validarPIN();
+}
+function validarPIN(){
+  if(pinBuffer===adminPIN){
+    adminLogado=true; fecharPIN();
+    document.getElementById('admin-locked').style.display='none';
+    document.getElementById('admin-panel').style.display='block';
+    document.getElementById('admin-header').style.display='flex';
+    renderAdminRegistos();
+    toast('✓ Acesso de administrador concedido');
+  } else {
+    document.getElementById('pin-error').textContent='PIN incorreto. Tente novamente.';
+    pinBuffer=''; atualizarDots();
+  }
+}
+function logoutAdmin(){
+  adminLogado=false;
+  document.getElementById('admin-locked').style.display='block';
+  document.getElementById('admin-panel').style.display='none';
+  document.getElementById('admin-header').style.display='none';
+  switchTab('ponto');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab')[0].classList.add('active');
+  toast('Sessão de administrador terminada.');
+}
+function switchAdminView(view,e){
+  document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));
+  if(e) e.target.classList.add('active');
+  document.getElementById('admin-registos').style.display=view==='registos'?'block':'none';
+  document.getElementById('admin-colab').style.display=view==='colab'?'block':'none';
+  document.getElementById('admin-config').style.display=view==='config'?'block':'none';
+  if(view==='registos') renderAdminRegistos();
+  if(view==='colab') renderAdminColab();
+}
+// Registo de ponto
+function registar(tipo){
+  const empId=parseInt(document.getElementById('sel-colaborador').value);
+  const emp=colaboradores.find(c=>c.id===empId); if(!emp) return;
+  const now=new Date();
+  const dataStr=`2026-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const hojeRegs=registos.filter(r=>r.empId===empId&&r.data===dataStr);
+  const ultimo=hojeRegs.length?hojeRegs[hojeRegs.length-1]:null;
+  if(tipo==='entrada'&&ultimo&&ultimo.tipo==='entrada'){toast('⚠ Já tem entrada registada.');return;}
+  if((tipo==='inicio_pausa'||tipo==='fim_pausa'||tipo==='saida')&&(!ultimo||ultimo.tipo==='saida')){toast('⚠ Registe primeiro a entrada.');return;}
+  if(tipo==='fim_pausa'&&ultimo&&ultimo.tipo!=='inicio_pausa'){toast('⚠ Não tem pausa em curso.');return;}
+  if(tipo==='inicio_pausa'&&ultimo&&ultimo.tipo==='inicio_pausa'){toast('⚠ Pausa já iniciada.');return;}
+  registos.push({empId,data:dataStr,hora:now.toTimeString().slice(0,8),tipo,ts:now.getTime()});
+  salvar();
+  toast('✓ '+TL[tipo]+' registada às '+now.toTimeString().slice(0,8));
+  atualizarBadge(empId,dataStr);
+  renderHojeLog(empId,dataStr);
+}
+function onEmpChange(){
+  const id=parseInt(document.getElementById('sel-colaborador').value);
+  const now=new Date();
+  const d=`2026-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  atualizarBadge(id,d); renderHojeLog(id,d);
+}
+function atualizarBadge(empId,dataStr){
+  const regs=registos.filter(r=>r.empId===empId&&r.data===dataStr);
+  const ul=regs.length?regs[regs.length-1]:null;
+  const badge=document.getElementById('badge-estado');
+  if(!ul){badge.className='badge badge-gray';badge.innerHTML='<i class="ti ti-circle"></i> Sem registo hoje';return;}
+  const map={entrada:['badge-green','ti-login','Em serviço'],saida:['badge-red','ti-logout','Saiu'],inicio_pausa:['badge-yellow','ti-coffee','Em pausa'],fim_pausa:['badge-green','ti-player-play','Em serviço']};
+  const [cls,ic,lb]=map[ul.tipo]||map.entrada;
+  badge.className='badge '+cls;
+  badge.innerHTML=`<i class="ti ${ic}"></i> ${lb}`;
+}
+function renderHojeLog(empId,dataStr){
+  const container=document.getElementById('hoje-log');
+  const regs=registos.filter(r=>r.empId===empId&&r.data===dataStr);
+  if(!regs.length){container.innerHTML='<p style="font-size:13px;color:var(--text2);">Nenhum registo ainda.</p>';return;}
+  container.innerHTML='<table><thead><tr><th>Hora</th><th>Tipo</th></tr></thead><tbody>'+
+    regs.map(r=>`<tr><td style="font-weight:600;font-variant-numeric:tabular-nums;">${r.hora}</td><td><span class="badge ${TC[r.tipo]}"><i class="ti ${TI[r.tipo]}"></i> ${TL[r.tipo]}</span></td></tr>`).join('')+
+    '</tbody></table>';
+}
+function calcHoras(regs){
+  let total=0,pausa=0,eTs=null,pTs=null;
+  regs.forEach(r=>{
+    if(r.tipo==='entrada') eTs=r.ts;
+    if(r.tipo==='saida'&&eTs){total+=r.ts-eTs;eTs=null;}
+    if(r.tipo==='inicio_pausa') pTs=r.ts;
+    if(r.tipo==='fim_pausa'&&pTs){pausa+=r.ts-pTs;pTs=null;}
+  });
+  return Math.max(0,total-pausa)/3600000;
+}
+function renderHistorico(){
+  const empId=parseInt(document.getElementById('hist-emp').value);
+  const mes=parseInt(document.getElementById('hist-mes').value);
+  const emp=colaboradores.find(c=>c.id===empId); if(!emp) return;
+  const pref='2026-'+String(mes+1).padStart(2,'0');
+  const dias={};
+  registos.filter(r=>r.empId===empId&&r.data.startsWith(pref)).forEach(r=>{if(!dias[r.data])dias[r.data]=[];dias[r.data].push(r);});
+  const container=document.getElementById('hist-content');
+  if(!Object.keys(dias).length){container.innerHTML='<p style="font-size:13px;color:var(--text2);">Sem registos para este mês.</p>';return;}
+  let rows='',totalH=0;
+  Object.keys(dias).sort().forEach(data=>{
+    const regs=dias[data];
+    const h=calcHoras(regs); totalH+=h;
+    const d=new Date(data+'T12:00:00');
+    rows+=`<tr><td style="font-weight:600;">${data.split('-').reverse().join('/')}</td><td>${DIAS[d.getDay()]}</td><td style="font-size:12px;">${regs.map(r=>`${r.hora.slice(0,5)} <span style="color:var(--text2);">${TL[r.tipo]}</span>`).join(' · ')}</td><td style="text-align:right;font-weight:600;">${h.toFixed(2)}h</td></tr>`;
+  });
+  container.innerHTML=`<p style="font-size:14px;font-weight:600;margin-bottom:12px;">${emp.nome} — ${MESES[mes]}</p>
+    <div style="overflow-x:auto;"><table><thead><tr><th>Data</th><th>Dia</th><th>Registos</th><th style="text-align:right;">Horas</th></tr></thead><tbody>${rows}</tbody>
+    <tfoot><tr><td colspan="3">Total do mês</td><td style="text-align:right;">${totalH.toFixed(2)}h</td></tr></tfoot></table></div>`;
+}
+function contarDiasUteis(mes){
+  let c=0; const d=new Date(2026,mes,1);
+  while(d.getMonth()===mes){if(d.getDay()!==0&&d.getDay()!==6)c++;d.setDate(d.getDate()+1);}
+  return c;
+}
+function gerarRelatorio(){
+  const mes=parseInt(document.getElementById('rel-mes').value);
+  const pref='2026-'+String(mes+1).padStart(2,'0');
+  const du=contarDiasUteis(mes), he=du*8;
+  let tG=0,tE=0,tF=0,rows='';
+  colaboradores.forEach(emp=>{
+    const dias={};
+    registos.filter(r=>r.empId===emp.id&&r.data.startsWith(pref)).forEach(r=>{if(!dias[r.data])dias[r.data]=[];dias[r.data].push(r);});
+    let h=0; Object.values(dias).forEach(rs=>h+=calcHoras(rs));
+    const ex=Math.max(0,h-he),fa=Math.max(0,he-h);
+    tG+=h;tE+=ex;tF+=fa;
+    const ini=emp.nome.split(' ').map(n=>n[0]).slice(0,2).join('');
+    rows+=`<tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:26px;height:26px;font-size:9px;">${ini}</div>${emp.nome}</div></td><td>${emp.dept}</td><td>${Object.keys(dias).length}</td><td>${h.toFixed(2)}h</td><td style="color:${ex>0?'var(--green-text)':'var(--text2)'};">${ex>0?'+'+ex.toFixed(2)+'h':'—'}</td><td style="color:${fa>0?'var(--red-text)':'var(--text2)'};">${fa>0?'-'+fa.toFixed(2)+'h':'—'}</td></tr>`;
+  });
+  document.getElementById('rel-output').innerHTML=`<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+      <p style="font-size:15px;font-weight:600;">${MESES[mes]} 2026</p>
+      <span style="font-size:12px;color:var(--text2);">${du} dias úteis · ${he}h esperadas/colaborador</span>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Total horas</div><div class="metric-value">${tG.toFixed(1)}h</div></div>
+      <div class="metric"><div class="metric-label">Horas extra</div><div class="metric-value" style="color:var(--green-text);">+${tE.toFixed(1)}h</div></div>
+      <div class="metric"><div class="metric-label">Em falta</div><div class="metric-value" style="color:var(--red-text);">-${tF.toFixed(1)}h</div></div>
+      <div class="metric"><div class="metric-label">Colaboradores</div><div class="metric-value">${colaboradores.length}</div></div>
+    </div>
+    <div style="overflow-x:auto;"><table class="print-table"><thead><tr><th>Colaborador</th><th>Dept.</th><th>Dias</th><th>Horas</th><th>Extra</th><th>Em falta</th></tr></thead><tbody>${rows}</tbody></table></div>
+  </div>`;
+}
+function exportarCSV(){
+  const mes=parseInt(document.getElementById('rel-mes').value);
+  const pref='2026-'+String(mes+1).padStart(2,'0');
+  const he=contarDiasUteis(mes)*8;
+  let csv='Nome,Departamento,Dias trabalhados,Horas trabalhadas,Horas extra,Horas em falta\n';
+  colaboradores.forEach(emp=>{
+    const dias={};
+    registos.filter(r=>r.empId===emp.id&&r.data.startsWith(pref)).forEach(r=>{if(!dias[r.data])dias[r.data]=[];dias[r.data].push(r);});
+    let h=0; Object.values(dias).forEach(rs=>h+=calcHoras(rs));
+    csv+=`"${emp.nome}","${emp.dept}",${Object.keys(dias).length},${h.toFixed(2)},${Math.max(0,h-he).toFixed(2)},${Math.max(0,he-h).toFixed(2)}\n`;
+  });
+  dlCSV(csv,`ponto_${MESES[mes]}_2026.csv`);
+  toast('✓ CSV exportado!');
+}
+function exportarTodosCSV(){
+  let csv='Nome,Departamento,Data,Hora,Tipo\n';
+  registos.sort((a,b)=>a.ts-b.ts).forEach(r=>{
+    const emp=colaboradores.find(c=>c.id===r.empId);
+    if(emp) csv+=`"${emp.nome}","${emp.dept}","${r.data}","${r.hora}","${TL[r.tipo]}"\n`;
+  });
+  dlCSV(csv,'todos_registos_2026.csv');
+  toast('✓ Exportação completa!');
+}
+function dlCSV(csv,nome){
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=nome; a.click();
+}
+function renderColaboradores(){
+  const c=document.getElementById('lista-colaboradores');
+  if(!colaboradores.length){c.innerHTML='<p style="font-size:13px;color:var(--text2);">Nenhum colaborador.</p>';return;}
+  c.innerHTML=colaboradores.map(emp=>{
+    const ini=emp.nome.split(' ').map(n=>n[0]).slice(0,2).join('');
+    return `<div class="emp-row"><div class="avatar">${ini}</div><div class="emp-info"><div class="emp-name">${emp.nome}</div><div class="emp-sub">${emp.dept} · ${emp.horas}h/dia · ${emp.turno}</div></div></div>`;
+  }).join('');
+}
+function adicionarColaborador(){
+  const nome=document.getElementById('new-nome').value.trim();
+  const dept=document.getElementById('new-dept').value.trim();
+  const horas=parseInt(document.getElementById('new-horas').value)||8;
+  const turno=document.getElementById('new-turno').value;
+  if(!nome){toast('⚠ Insira o nome.');return;}
+  colaboradores.push({id:nextId++,nome,dept:dept||'Geral',horas,turno});
+  salvar(); renderColaboradores(); populateSelects();
+  document.getElementById('new-nome').value='';
+  document.getElementById('new-dept').value='';
+  toast('✓ Colaborador adicionado!');
+}
+// Admin registos
+function renderAdminRegistos(){
+  const container=document.getElementById('admin-registos');
+  const fil_mes_el=document.getElementById('adm-mes');
+  const fil_emp_el=document.getElementById('adm-emp');
+  const filtMes=fil_mes_el?parseInt(fil_mes_el.value):new Date().getMonth();
+  const filtEmp=fil_emp_el?fil_emp_el.value:'todos';
+  const pref='2026-'+String(filtMes+1).padStart(2,'0');
+  let regs=registos.filter(r=>r.data.startsWith(pref));
+  if(filtEmp!=='todos') regs=regs.filter(r=>r.empId===parseInt(filtEmp));
+  regs=regs.slice().sort((a,b)=>a.ts-b.ts);
+  container.innerHTML=`<div class="card">
+    <div class="filter-row" style="margin-bottom:14px;">
+      <div class="form-group"><label>Mês</label><select id="adm-mes" onchange="renderAdminRegistos()">
+        ${MESES.map((m,i)=>`<option value="${i}" ${i===filtMes?'selected':''}>${m}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Colaborador</label><select id="adm-emp" onchange="renderAdminRegistos()">
+        <option value="todos">Todos</option>${colaboradores.map(c=>`<option value="${c.id}" ${filtEmp==c.id?'selected':''}>${c.nome}</option>`).join('')}</select></div>
+      <button class="btn btn-purple" onclick="abrirNovoRegisto()" style="margin-top:20px;"><i class="ti ti-plus"></i> Novo registo</button>
+    </div>
+    <div id="new-reg-area"></div>
+    ${regs.length===0?'<p style="font-size:13px;color:var(--text2);">Nenhum registo neste período.</p>':
+    `<div style="overflow-x:auto;"><table><thead><tr><th>Colaborador</th><th>Data</th><th>Hora</th><th>Tipo</th><th style="text-align:right;">Ações</th></tr></thead>
+    <tbody id="adm-tbody">${regs.map((r)=>{
+      const ri=registos.indexOf(r);
+      const emp=colaboradores.find(c=>c.id===r.empId);
+      return `<tr id="row-${ri}"><td style="font-size:13px;">${emp?emp.nome:'?'}</td><td style="font-size:13px;">${r.data.split('-').reverse().join('/')}</td><td style="font-variant-numeric:tabular-nums;font-size:13px;">${r.hora}</td><td><span class="badge ${TC[r.tipo]}" style="font-size:10px;"><i class="ti ${TI[r.tipo]}"></i> ${TL[r.tipo]}</span></td><td style="text-align:right;white-space:nowrap;"><button class="btn btn-blue btn-sm" onclick="editarRegisto(${ri})"><i class="ti ti-edit"></i></button> <button class="btn btn-red btn-sm" onclick="eliminarRegisto(${ri})"><i class="ti ti-trash"></i></button></td></tr>`;
+    }).join('')}</tbody></table></div>`}
+  </div>`;
+}
+function editarRegisto(ri){
+  const r=registos[ri]; if(!r) return;
+  const row=document.getElementById('row-'+ri);
+  row.style.background='var(--bg2)';
+  const empOpts=colaboradores.map(c=>`<option value="${c.id}" ${c.id===r.empId?'selected':''}>${c.nome}</option>`).join('');
+  const tipoOpts=['entrada','saida','inicio_pausa','fim_pausa'].map(t=>`<option value="${t}" ${t===r.tipo?'selected':''}>${TL[t]}</option>`).join('');
+  row.innerHTML=`<td><select class="edit-input" id="er-e-${ri}">${empOpts}</select></td>
+    <td><input class="edit-input" type="date" id="er-d-${ri}" value="${r.data}" /></td>
+    <td><input class="edit-input" type="time" id="er-h-${ri}" value="${r.hora.slice(0,5)}" step="60" style="width:90px;" /></td>
+    <td><select class="edit-input" id="er-t-${ri}">${tipoOpts}</select></td>
+    <td style="text-align:right;white-space:nowrap;">
+      <button class="btn btn-purple btn-sm" onclick="guardarRegisto(${ri})"><i class="ti ti-check"></i> Guardar</button>
+      <button class="btn btn-gray btn-sm" onclick="renderAdminRegistos()" style="margin-left:4px;">Cancelar</button>
+    </td>`;
+}
+function guardarRegisto(ri){
+  const empId=parseInt(document.getElementById('er-e-'+ri).value);
+  const data=document.getElementById('er-d-'+ri).value;
+  const hora=document.getElementById('er-h-'+ri).value+':00';
+  const tipo=document.getElementById('er-t-'+ri).value;
+  if(!data||!hora){toast('⚠ Preencha todos os campos.');return;}
+  const [y,m,d]=data.split('-').map(Number);
+  const [h,min]=hora.split(':').map(Number);
+  registos[ri]={...registos[ri],empId,data,hora,tipo,ts:new Date(y,m-1,d,h,min,0).getTime()};
+  salvar(); toast('✓ Registo atualizado!'); renderAdminRegistos();
+}
+function eliminarRegisto(ri){
+  if(!confirm('Eliminar este registo?')) return;
+  registos.splice(ri,1); salvar();
+  toast('Registo eliminado.'); renderAdminRegistos();
+}
+function abrirNovoRegisto(){
+  const mes=document.getElementById('adm-mes')?parseInt(document.getElementById('adm-mes').value):new Date().getMonth();
+  const hoje=new Date();
+  const dataHoje=`2026-${String(mes+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
+  const empOpts=colaboradores.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+  const tipoOpts=['entrada','saida','inicio_pausa','fim_pausa'].map(t=>`<option value="${t}">${TL[t]}</option>`).join('');
+  document.getElementById('new-reg-area').innerHTML=`<div style="background:var(--blue-bg);border:0.5px solid var(--blue-border);border-radius:var(--radius);padding:14px;margin-bottom:14px;">
+    <p style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--blue-text);"><i class="ti ti-plus"></i> Novo registo manual</p>
+    <div class="form-row">
+      <div class="form-group"><label>Colaborador</label><select id="nr-emp">${empOpts}</select></div>
+      <div class="form-group"><label>Tipo</label><select id="nr-tipo">${tipoOpts}</select></div>
+      <div class="form-group"><label>Data</label><input type="date" id="nr-data" value="${dataHoje}" /></div>
+      <div class="form-group"><label>Hora</label><input type="time" id="nr-hora" value="09:00" step="60" /></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-purple" onclick="criarRegisto()"><i class="ti ti-plus"></i> Criar registo</button>
+      <button class="btn btn-gray" onclick="document.getElementById('new-reg-area').innerHTML=''">Cancelar</button>
+    </div>
+  </div>`;
+}
+function criarRegisto(){
+  const empId=parseInt(document.getElementById('nr-emp').value);
+  const tipo=document.getElementById('nr-tipo').value;
+  const data=document.getElementById('nr-data').value;
+  const hora=document.getElementById('nr-hora').value+':00';
+  if(!data||!hora){toast('⚠ Preencha todos os campos.');return;}
+  const [y,m,d]=data.split('-').map(Number);
+  const [h,mn]=hora.split(':').map(Number);
+  registos.push({empId,data,hora,tipo,ts:new Date(y,m-1,d,h,mn,0).getTime()});
+  registos.sort((a,b)=>a.ts-b.ts);
+  salvar(); toast('✓ Registo criado!'); renderAdminRegistos();
+}
+function renderAdminColab(){
+  const c=document.getElementById('admin-colab');
+  c.innerHTML=`<div class="card"><div class="card-title"><i class="ti ti-users"></i> Editar colaboradores</div>
+    <div style="overflow-x:auto;"><table><thead><tr><th>Nome</th><th>Departamento</th><th>Horas</th><th>Turno</th><th style="text-align:right;">Ações</th></tr></thead>
+    <tbody>${colaboradores.map(emp=>`<tr id="crow-${emp.id}">
+      <td style="font-weight:500;">${emp.nome}</td><td>${emp.dept}</td><td>${emp.horas}h</td><td>${emp.turno}</td>
+      <td style="text-align:right;white-space:nowrap;">
+        <button class="btn btn-blue btn-sm" onclick="editarColab(${emp.id})"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-red btn-sm" onclick="eliminarColab(${emp.id})" style="margin-left:4px;"><i class="ti ti-trash"></i></button>
+      </td></tr>`).join('')}</tbody></table></div></div>`;
+}
+function editarColab(id){
+  const emp=colaboradores.find(c=>c.id===id); if(!emp) return;
+  const row=document.getElementById('crow-'+id);
+  row.style.background='var(--bg2)';
+  row.innerHTML=`<td><input class="edit-input" id="ec-n-${id}" value="${emp.nome}" /></td>
+    <td><input class="edit-input" id="ec-d-${id}" value="${emp.dept}" /></td>
+    <td><input class="edit-input" type="number" id="ec-h-${id}" value="${emp.horas}" min="1" max="12" style="width:60px;" /></td>
+    <td><select class="edit-input" id="ec-t-${id}">
+      <option value="normal" ${emp.turno==='normal'?'selected':''}>Normal</option>
+      <option value="manha" ${emp.turno==='manha'?'selected':''}>Manhã</option>
+      <option value="tarde" ${emp.turno==='tarde'?'selected':''}>Tarde</option></select></td>
+    <td style="text-align:right;white-space:nowrap;">
+      <button class="btn btn-purple btn-sm" onclick="guardarColab(${id})"><i class="ti ti-check"></i> Guardar</button>
+      <button class="btn btn-gray btn-sm" onclick="renderAdminColab()" style="margin-left:4px;">Cancelar</button>
+    </td>`;
+}
+function guardarColab(id){
+  const i=colaboradores.findIndex(c=>c.id===id); if(i<0) return;
+  const nome=document.getElementById('ec-n-'+id).value.trim();
+  if(!nome){toast('⚠ O nome não pode estar vazio.');return;}
+  colaboradores[i]={...colaboradores[i],nome,dept:document.getElementById('ec-d-'+id).value.trim()||'Geral',horas:parseInt(document.getElementById('ec-h-'+id).value)||8,turno:document.getElementById('ec-t-'+id).value};
+  salvar(); populateSelects(); toast('✓ Colaborador atualizado!'); renderAdminColab();
+}
+function eliminarColab(id){
+  const n=registos.filter(r=>r.empId===id).length;
+  if(!confirm(n>0?`Este colaborador tem ${n} registos que também serão eliminados. Confirma?`:'Eliminar este colaborador?')) return;
+  colaboradores=colaboradores.filter(c=>c.id!==id);
+  registos=registos.filter(r=>r.empId!==id);
+  salvar(); populateSelects(); toast('Colaborador eliminado.'); renderAdminColab();
+}
+function alterarPIN(){
+  const atual=document.getElementById('pin-atual').value;
+  const novo=document.getElementById('pin-novo').value;
+  const conf=document.getElementById('pin-conf').value;
+  const msg=document.getElementById('pin-msg');
+  if(atual!==adminPIN){msg.style.color='var(--red-text)';msg.textContent='PIN atual incorreto.';return;}
+  if(!/^\d{4}$/.test(novo)){msg.style.color='var(--red-text)';msg.textContent='O novo PIN deve ter 4 dígitos numéricos.';return;}
+  if(novo!==conf){msg.style.color='var(--red-text)';msg.textContent='Os PINs não coincidem.';return;}
+  adminPIN=novo; salvar();
+  msg.style.color='var(--green-text)';msg.textContent='✓ PIN alterado com sucesso!';
+  ['pin-atual','pin-novo','pin-conf'].forEach(id=>document.getElementById(id).value='');
+}
+function limparTodos(){
+  if(!confirm('Eliminar TODOS os registos de ponto? Esta ação é irreversível.')) return;
+  registos=[]; salvar(); toast('Todos os registos eliminados.'); renderAdminRegistos();
+}
+// Init
+initMesSelects();
+populateSelects();
+tickClock();
+setInterval(tickClock,1000);
+onEmpChange();
+</script>
+</body>
+</html>
