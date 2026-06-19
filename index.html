@@ -5,159 +5,198 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Relógio de Ponto 2026</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
   :root {
-    --bg: #ffffff; --bg2: #f5f5f4; --bg3: #fafaf9;
-    --text: #1c1917; --text2: #78716c; --text3: #a8a29e;
-    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
-    --purple: #3C3489; --purple-light: #EEEDFE; --purple-text: #26215C;
-    --green-bg: #f0fdf4; --green-text: #166534; --green-border: #bbf7d0;
-    --red-bg: #fef2f2; --red-text: #991b1b; --red-border: #fecaca;
-    --yellow-bg: #fffbeb; --yellow-text: #92400e; --yellow-border: #fde68a;
-    --blue-bg: #eff6ff; --blue-text: #1e40af; --blue-border: #bfdbfe;
-    --amber-light: #FAEEDA; --amber: #EF9F27; --amber-text: #854F0B;
-    --radius: 8px; --radius-lg: 12px;
+    --bg:#ffffff;--bg2:#f5f5f4;--bg3:#fafaf9;
+    --text:#1c1917;--text2:#78716c;--text3:#a8a29e;
+    --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.22);
+    --purple:#3C3489;--purple-light:#EEEDFE;--purple-text:#26215C;
+    --green-bg:#f0fdf4;--green-text:#166534;--green-border:#bbf7d0;
+    --red-bg:#fef2f2;--red-text:#991b1b;--red-border:#fecaca;
+    --yellow-bg:#fffbeb;--yellow-text:#92400e;--yellow-border:#fde68a;
+    --blue-bg:#eff6ff;--blue-text:#1e40af;--blue-border:#bfdbfe;
+    --amber-light:#FAEEDA;--amber:#EF9F27;--amber-text:#854F0B;
+    --radius:8px;--radius-lg:12px;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #1c1917; --bg2: #292524; --bg3: #1c1917;
-      --text: #fafaf9; --text2: #a8a29e; --text3: #78716c;
-      --border: rgba(255,255,255,0.10); --border2: rgba(255,255,255,0.20);
-      --purple-light: #26215C; --purple-text: #EEEDFE;
-      --green-bg: #052e16; --green-text: #86efac; --green-border: #166534;
-      --red-bg: #450a0a; --red-text: #fca5a5; --red-border: #991b1b;
-      --yellow-bg: #451a03; --yellow-text: #fcd34d; --yellow-border: #92400e;
-      --blue-bg: #1e3a5f; --blue-text: #93c5fd; --blue-border: #1e40af;
-      --amber-light: #451a03; --amber-text: #fcd34d;
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#1c1917;--bg2:#292524;--bg3:#1c1917;
+      --text:#fafaf9;--text2:#a8a29e;--text3:#78716c;
+      --border:rgba(255,255,255,0.10);--border2:rgba(255,255,255,0.20);
+      --purple-light:#26215C;--purple-text:#EEEDFE;
+      --green-bg:#052e16;--green-text:#86efac;--green-border:#166534;
+      --red-bg:#450a0a;--red-text:#fca5a5;--red-border:#991b1b;
+      --yellow-bg:#451a03;--yellow-text:#fcd34d;--yellow-border:#92400e;
+      --blue-bg:#1e3a5f;--blue-text:#93c5fd;--blue-border:#1e40af;
+      --amber-light:#451a03;--amber-text:#fcd34d;
     }
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
-  .header { background: var(--bg); border-bottom: 0.5px solid var(--border); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
-  .header-left { display: flex; align-items: center; gap: 10px; }
-  .header-icon { color: var(--purple); font-size: 24px; }
-  .header-title { font-size: 17px; font-weight: 600; }
-  .header-sub { font-size: 12px; color: var(--text2); }
-  .admin-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--amber-light); color: var(--amber-text); border: 0.5px solid var(--amber); padding: 5px 12px; border-radius: 99px; font-size: 12px; font-weight: 500; }
-  .logout-btn { background: none; border: none; color: var(--text2); font-size: 12px; cursor: pointer; text-decoration: underline; margin-left: 8px; }
-  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; display: inline-block; margin-left: 8px; transition: background 0.3s; }
-  .sync-dot.ok { background: #22c55e; }
-  .sync-dot.syncing { background: var(--amber); }
-  .sync-dot.err { background: var(--red-text); }
-  .container { max-width: 760px; margin: 0 auto; padding: 20px 16px; }
-  .tab-bar { display: flex; gap: 4px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 4px; margin-bottom: 20px; overflow-x: auto; }
-  .tab { flex: 1; min-width: fit-content; padding: 9px 14px; font-size: 13px; cursor: pointer; border: none; background: none; color: var(--text2); border-radius: var(--radius); display: flex; align-items: center; gap: 5px; white-space: nowrap; }
-  .tab.active { background: var(--purple); color: #fff; font-weight: 500; }
-  .tab.admin-tab:not(.active) { color: var(--amber-text); }
-  .section { display: none; }
-  .section.active { display: block; }
-  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; }
-  .card-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; color: var(--text); }
-  .clock-wrap { text-align: center; padding: 24px 0 16px; }
-  .clock-time { font-size: 52px; font-weight: 300; letter-spacing: 3px; font-variant-numeric: tabular-nums; }
-  .clock-date { font-size: 14px; color: var(--text2); margin-top: 4px; }
-  label { font-size: 13px; color: var(--text2); }
-  select, input[type=text], input[type=number], input[type=date], input[type=time], input[type=password] {
-    width: 100%; padding: 9px 12px; border: 0.5px solid var(--border2); border-radius: var(--radius);
-    background: var(--bg); color: var(--text); font-size: 14px; outline: none; margin-top: 4px;
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg3);color:var(--text);min-height:100vh;}
+  .header{background:var(--bg);border-bottom:0.5px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+  .header-left{display:flex;align-items:center;gap:10px;}
+  .header-icon{color:var(--purple);font-size:24px;}
+  .header-title{font-size:17px;font-weight:600;}
+  .header-sub{font-size:12px;color:var(--text2);}
+  .admin-badge{display:inline-flex;align-items:center;gap:6px;background:var(--amber-light);color:var(--amber-text);border:0.5px solid var(--amber);padding:5px 12px;border-radius:99px;font-size:12px;font-weight:500;}
+  .user-badge{display:inline-flex;align-items:center;gap:6px;background:var(--purple-light);color:var(--purple-text);border:0.5px solid var(--purple);padding:5px 12px;border-radius:99px;font-size:12px;font-weight:500;}
+  .logout-btn{background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;text-decoration:underline;margin-left:8px;}
+  .sync-dot{width:8px;height:8px;border-radius:50%;background:#ccc;display:inline-block;margin-left:8px;transition:background 0.3s;}
+  .sync-dot.ok{background:#22c55e;} .sync-dot.syncing{background:var(--amber);} .sync-dot.err{background:var(--red-text);}
+  .container{max-width:760px;margin:0 auto;padding:20px 16px;}
+  .tab-bar{display:flex;gap:4px;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:4px;margin-bottom:20px;overflow-x:auto;}
+  .tab{flex:1;min-width:fit-content;padding:9px 14px;font-size:13px;cursor:pointer;border:none;background:none;color:var(--text2);border-radius:var(--radius);display:flex;align-items:center;gap:5px;white-space:nowrap;}
+  .tab.active{background:var(--purple);color:#fff;font-weight:500;}
+  .tab.admin-tab:not(.active){color:var(--amber-text);}
+  .section{display:none;} .section.active{display:block;}
+  .card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px;}
+  .card-title{font-size:15px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;color:var(--text);}
+  .clock-wrap{text-align:center;padding:24px 0 16px;}
+  .clock-time{font-size:52px;font-weight:300;letter-spacing:3px;font-variant-numeric:tabular-nums;}
+  .clock-date{font-size:14px;color:var(--text2);margin-top:4px;}
+  label{font-size:13px;color:var(--text2);}
+  select,input[type=text],input[type=number],input[type=date],input[type=time],input[type=password]{
+    width:100%;padding:9px 12px;border:0.5px solid var(--border2);border-radius:var(--radius);
+    background:var(--bg);color:var(--text);font-size:14px;outline:none;margin-top:4px;
   }
-  select:focus, input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(60,52,137,0.12); }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .form-group { margin-bottom: 12px; }
-  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: opacity 0.15s; }
-  .btn:active { opacity: 0.8; }
-  .btn-purple { background: var(--purple); color: #fff; }
-  .btn-green { background: var(--green-bg); color: var(--green-text); border: 1px solid var(--green-border); }
-  .btn-red { background: var(--red-bg); color: var(--red-text); border: 1px solid var(--red-border); }
-  .btn-yellow { background: var(--yellow-bg); color: var(--yellow-text); border: 1px solid var(--yellow-border); }
-  .btn-gray { background: var(--bg2); color: var(--text2); border: 0.5px solid var(--border); }
-  .btn-amber { background: var(--amber-light); color: var(--amber-text); border: 1px solid var(--amber); }
-  .btn-blue { background: var(--blue-bg); color: var(--blue-text); border: 0.5px solid var(--blue-border); }
-  .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
-  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
-  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 500; }
-  .badge-green { background: var(--green-bg); color: var(--green-text); }
-  .badge-red { background: var(--red-bg); color: var(--red-text); }
-  .badge-yellow { background: var(--yellow-bg); color: var(--yellow-text); }
-  .badge-gray { background: var(--bg2); color: var(--text2); }
-  .badge-amber { background: var(--amber-light); color: var(--amber-text); }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; padding: 8px 10px; font-weight: 500; color: var(--text2); border-bottom: 0.5px solid var(--border); font-size: 12px; }
-  td { padding: 9px 10px; border-bottom: 0.5px solid var(--border); color: var(--text); vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--bg2); }
-  tfoot td { font-weight: 600; border-top: 1px solid var(--border2); border-bottom: none; }
-  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px; }
-  .metric { background: var(--bg2); border-radius: var(--radius); padding: 14px 16px; }
-  .metric-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .metric-value { font-size: 24px; font-weight: 600; }
-  .emp-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
-  .emp-row:last-child { border-bottom: none; }
-  .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--purple-light); color: var(--purple-text); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
-  .emp-info { flex: 1; min-width: 0; }
-  .emp-name { font-size: 14px; font-weight: 500; }
-  .emp-sub { font-size: 12px; color: var(--text2); }
-  .seg { display: flex; border: 0.5px solid var(--border2); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
-  .seg-btn { flex: 1; padding: 9px; font-size: 13px; cursor: pointer; border: none; background: transparent; color: var(--text2); }
-  .seg-btn.active { background: var(--purple); color: #fff; font-weight: 500; }
-  .edit-input { font-size: 12px; padding: 5px 8px; border: 0.5px solid var(--border2); border-radius: 6px; background: var(--bg); color: var(--text); width: 100%; }
-  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1c1917; color: #fafaf9; padding: 11px 24px; border-radius: var(--radius-lg); font-size: 13px; z-index: 1000; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.3); white-space: nowrap; }
-  .pin-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; display: none; align-items: center; justify-content: center; }
-  .pin-box { background: var(--bg); border-radius: var(--radius-lg); padding: 28px 24px; width: 300px; text-align: center; border: 0.5px solid var(--border); }
-  .pin-title { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
-  .pin-sub { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
-  .pin-dots { display: flex; gap: 12px; justify-content: center; margin-bottom: 20px; }
-  .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border2); background: transparent; transition: background 0.15s; }
-  .pin-dot.filled { background: var(--purple); border-color: var(--purple); }
-  .pin-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px; }
-  .pin-btn { padding: 16px; font-size: 20px; font-weight: 400; cursor: pointer; border-radius: var(--radius); background: var(--bg2); border: 0.5px solid var(--border); color: var(--text); }
-  .pin-btn:active { transform: scale(0.94); }
-  .pin-error { color: var(--red-text); font-size: 12px; min-height: 18px; margin-bottom: 6px; }
-  .admin-banner { background: var(--amber-light); border: 0.5px solid var(--amber); border-radius: var(--radius); padding: 10px 14px; font-size: 13px; color: var(--amber-text); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-  .info-box { background: var(--blue-bg); border: 0.5px solid var(--blue-border); border-radius: var(--radius); padding: 12px 14px; font-size: 13px; color: var(--blue-text); margin-bottom: 16px; }
-  .print-table th { background: var(--purple); color: #fff; padding: 8px 10px; }
-  .print-table tr:nth-child(even) td { background: var(--bg2); }
-  .filter-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
-  .filter-row .form-group { margin-bottom: 0; min-width: 140px; }
-  .loading-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; gap: 16px; }
-  .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @media (max-width: 480px) {
-    .form-row { grid-template-columns: 1fr; }
-    .clock-time { font-size: 40px; }
-    .filter-row { flex-direction: column; align-items: stretch; }
+  select:focus,input:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(60,52,137,0.12);}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .form-group{margin-bottom:12px;}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:opacity 0.15s;}
+  .btn:active{opacity:0.8;}
+  .btn-purple{background:var(--purple);color:#fff;}
+  .btn-green{background:var(--green-bg);color:var(--green-text);border:1px solid var(--green-border);}
+  .btn-red{background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);}
+  .btn-yellow{background:var(--yellow-bg);color:var(--yellow-text);border:1px solid var(--yellow-border);}
+  .btn-gray{background:var(--bg2);color:var(--text2);border:0.5px solid var(--border);}
+  .btn-amber{background:var(--amber-light);color:var(--amber-text);border:1px solid var(--amber);}
+  .btn-blue{background:var(--blue-bg);color:var(--blue-text);border:0.5px solid var(--blue-border);}
+  .btn-sm{padding:5px 10px;font-size:12px;border-radius:6px;}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:500;}
+  .badge-green{background:var(--green-bg);color:var(--green-text);}
+  .badge-red{background:var(--red-bg);color:var(--red-text);}
+  .badge-yellow{background:var(--yellow-bg);color:var(--yellow-text);}
+  .badge-gray{background:var(--bg2);color:var(--text2);}
+  .badge-amber{background:var(--amber-light);color:var(--amber-text);}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;padding:8px 10px;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--border);font-size:12px;}
+  td{padding:9px 10px;border-bottom:0.5px solid var(--border);color:var(--text);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:var(--bg2);}
+  tfoot td{font-weight:600;border-top:1px solid var(--border2);border-bottom:none;}
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px;}
+  .metric{background:var(--bg2);border-radius:var(--radius);padding:14px 16px;}
+  .metric-label{font-size:11px;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;}
+  .metric-value{font-size:24px;font-weight:600;}
+  .emp-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--border);}
+  .emp-row:last-child{border-bottom:none;}
+  .avatar{width:38px;height:38px;border-radius:50%;background:var(--purple-light);color:var(--purple-text);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
+  .emp-info{flex:1;min-width:0;}
+  .emp-name{font-size:14px;font-weight:500;}
+  .emp-sub{font-size:12px;color:var(--text2);}
+  .seg{display:flex;border:0.5px solid var(--border2);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+  .seg-btn{flex:1;padding:9px;font-size:13px;cursor:pointer;border:none;background:transparent;color:var(--text2);}
+  .seg-btn.active{background:var(--purple);color:#fff;font-weight:500;}
+  .edit-input{font-size:12px;padding:5px 8px;border:0.5px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--text);width:100%;}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c1917;color:#fafaf9;padding:11px 24px;border-radius:var(--radius-lg);font-size:13px;z-index:1000;display:none;box-shadow:0 4px 20px rgba(0,0,0,0.3);white-space:nowrap;}
+  .pin-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;display:none;align-items:center;justify-content:center;}
+  .pin-box{background:var(--bg);border-radius:var(--radius-lg);padding:28px 24px;width:300px;text-align:center;border:0.5px solid var(--border);}
+  .pin-title{font-size:17px;font-weight:600;margin-bottom:4px;}
+  .pin-sub{font-size:13px;color:var(--text2);margin-bottom:20px;}
+  .pin-dots{display:flex;gap:12px;justify-content:center;margin-bottom:20px;}
+  .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border2);background:transparent;transition:background 0.15s;}
+  .pin-dot.filled{background:var(--purple);border-color:var(--purple);}
+  .pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+  .pin-btn{padding:16px;font-size:20px;font-weight:400;cursor:pointer;border-radius:var(--radius);background:var(--bg2);border:0.5px solid var(--border);color:var(--text);}
+  .pin-btn:active{transform:scale(0.94);}
+  .pin-error{color:var(--red-text);font-size:12px;min-height:18px;margin-bottom:6px;}
+  .admin-banner{background:var(--amber-light);border:0.5px solid var(--amber);border-radius:var(--radius);padding:10px 14px;font-size:13px;color:var(--amber-text);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+  .info-box{background:var(--blue-bg);border:0.5px solid var(--blue-border);border-radius:var(--radius);padding:12px 14px;font-size:13px;color:var(--blue-text);margin-bottom:16px;}
+  .print-table th{background:var(--purple);color:#fff;padding:8px 10px;}
+  .print-table tr:nth-child(even) td{background:var(--bg2);}
+  .filter-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px;}
+  .filter-row .form-group{margin-bottom:0;min-width:140px;}
+  .loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:16px;}
+  .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  /* Ecrã de login */
+  .login-screen{position:fixed;inset:0;background:var(--bg3);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .login-box{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:32px 24px;width:100%;max-width:360px;text-align:center;}
+  .login-logo{font-size:48px;color:var(--purple);margin-bottom:12px;}
+  .login-title{font-size:20px;font-weight:700;margin-bottom:4px;}
+  .login-sub{font-size:13px;color:var(--text2);margin-bottom:24px;}
+  .login-select{text-align:left;margin-bottom:16px;}
+  @media (max-width:480px){
+    .form-row{grid-template-columns:1fr;}
+    .clock-time{font-size:40px;}
+    .filter-row{flex-direction:column;align-items:stretch;}
   }
 </style>
 </head>
 <body>
 
-<!-- Ecrã de carregamento -->
+<!-- Carregamento -->
 <div class="loading-overlay" id="loading-overlay">
   <div class="spinner"></div>
   <p style="font-size:14px;color:var(--text2);">A ligar à base de dados…</p>
+</div>
+
+<!-- Ecrã de Login -->
+<div class="login-screen" id="login-screen" style="display:none;">
+  <div class="login-box">
+    <div class="login-logo"><i class="ti ti-clock"></i></div>
+    <div class="login-title">Relógio de Ponto</div>
+    <div class="login-sub">Selecione o seu nome e introduza o seu PIN</div>
+    <div class="login-select form-group">
+      <label>Colaborador</label>
+      <select id="login-emp"></select>
+    </div>
+    <div class="pin-dots" id="login-dots">
+      <div class="pin-dot" id="ld0"></div><div class="pin-dot" id="ld1"></div>
+      <div class="pin-dot" id="ld2"></div><div class="pin-dot" id="ld3"></div>
+    </div>
+    <div class="pin-grid">
+      <button class="pin-btn" onclick="loginPin('1')">1</button><button class="pin-btn" onclick="loginPin('2')">2</button><button class="pin-btn" onclick="loginPin('3')">3</button>
+      <button class="pin-btn" onclick="loginPin('4')">4</button><button class="pin-btn" onclick="loginPin('5')">5</button><button class="pin-btn" onclick="loginPin('6')">6</button>
+      <button class="pin-btn" onclick="loginPin('7')">7</button><button class="pin-btn" onclick="loginPin('8')">8</button><button class="pin-btn" onclick="loginPin('9')">9</button>
+      <button class="pin-btn" onclick="loginPin('C')" style="font-size:13px;">Limpar</button>
+      <button class="pin-btn" onclick="loginPin('0')">0</button>
+      <button class="pin-btn" onclick="loginPin('⌫')" style="font-size:16px;">⌫</button>
+    </div>
+    <div class="pin-error" id="login-error"></div>
+    <p style="font-size:11px;color:var(--text3);margin-top:8px;">Administrador? Use o PIN de admin após entrar.</p>
+  </div>
 </div>
 
 <div class="header">
   <div class="header-left">
     <i class="ti ti-clock header-icon"></i>
     <div>
-      <div class="header-title">Relógio de Ponto 2026 <span class="sync-dot" id="sync-dot" title="Estado da ligação"></span></div>
+      <div class="header-title">Relógio de Ponto <span class="sync-dot" id="sync-dot"></span></div>
       <div class="header-sub">Registo de assiduidade</div>
     </div>
   </div>
-  <div id="admin-header" style="display:none;align-items:center;">
-    <span class="admin-badge"><i class="ti ti-shield-check"></i> Administrador</span>
-    <button class="logout-btn" onclick="logoutAdmin()">Sair</button>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div id="admin-header" style="display:none;align-items:center;">
+      <span class="admin-badge"><i class="ti ti-shield-check"></i> Administrador</span>
+      <button class="logout-btn" onclick="logoutAdmin()">↓ Utilizador</button>
+    </div>
+    <div id="user-header" style="display:none;align-items:center;">
+      <span class="user-badge"><i class="ti ti-user"></i> <span id="user-badge-nome"></span></span>
+      <button class="logout-btn" onclick="fazerLogout()">Sair</button>
+    </div>
   </div>
 </div>
 
 <div class="container">
-  <div class="tab-bar">
-    <button class="tab active" onclick="switchTab('ponto',event)"><i class="ti ti-fingerprint"></i> Ponto</button>
-    <button class="tab" onclick="switchTab('historico',event)"><i class="ti ti-list"></i> Histórico</button>
-    <button class="tab" onclick="switchTab('relatorio',event)"><i class="ti ti-file-analytics"></i> Relatório</button>
-    <button class="tab" onclick="switchTab('colaboradores',event)"><i class="ti ti-users"></i> Colaboradores</button>
-    <button class="tab admin-tab" onclick="switchTab('admin',event)"><i class="ti ti-shield"></i> Administração</button>
+  <div class="tab-bar" id="tab-bar">
+    <button class="tab active" id="tab-ponto" onclick="switchTab('ponto',event)"><i class="ti ti-fingerprint"></i> Ponto</button>
+    <button class="tab" id="tab-historico" onclick="switchTab('historico',event)"><i class="ti ti-list"></i> Histórico</button>
+    <button class="tab" id="tab-relatorio" onclick="switchTab('relatorio',event)"><i class="ti ti-file-analytics"></i> Relatório</button>
+    <button class="tab admin-tab" id="tab-admin" style="display:none;" onclick="switchTab('admin',event)"><i class="ti ti-shield"></i> Administração</button>
   </div>
 
   <!-- PONTO -->
@@ -170,9 +209,9 @@
     </div>
     <div class="card">
       <div class="card-title"><i class="ti ti-user-check"></i> Registar ponto</div>
-      <div class="form-group">
-        <label>Colaborador</label>
-        <select id="sel-colaborador" onchange="onEmpChange()"></select>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <span style="font-size:13px;color:var(--text2);">Colaborador:</span>
+        <strong id="ponto-nome" style="font-size:14px;"></strong>
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
         <span style="font-size:13px;color:var(--text2);">Estado:</span>
@@ -196,11 +235,10 @@
     <div class="card">
       <div class="card-title"><i class="ti ti-filter"></i> Filtrar</div>
       <div class="filter-row">
-        <div class="form-group"><label>Colaborador</label><select id="hist-emp" onchange="renderHistorico()"></select></div>
         <div class="form-group"><label>Mês</label><select id="hist-mes" onchange="renderHistorico()"></select></div>
       </div>
     </div>
-    <div class="card"><div id="hist-content"><p style="font-size:13px;color:var(--text2);">Selecione um colaborador e mês.</p></div></div>
+    <div class="card"><div id="hist-content"><p style="font-size:13px;color:var(--text2);">Selecione um mês.</p></div></div>
   </div>
 
   <!-- RELATÓRIO -->
@@ -210,34 +248,11 @@
       <div class="filter-row">
         <div class="form-group"><label>Mês</label><select id="rel-mes"></select></div>
         <button class="btn btn-purple" onclick="gerarRelatorio()" style="margin-top:20px;"><i class="ti ti-refresh"></i> Gerar</button>
-        <button class="btn btn-green" onclick="exportarCSV()" style="margin-top:20px;"><i class="ti ti-download"></i> Exportar CSV</button>
+        <button class="btn btn-green" onclick="exportarCSV()" style="margin-top:20px;" id="btn-csv"><i class="ti ti-download"></i> CSV</button>
+        <button class="btn btn-red" onclick="exportarPDF()" style="margin-top:20px;" id="btn-pdf"><i class="ti ti-file-type-pdf"></i> PDF</button>
       </div>
     </div>
     <div id="rel-output"></div>
-  </div>
-
-  <!-- COLABORADORES -->
-  <div class="section" id="sec-colaboradores">
-    <div class="card">
-      <div class="card-title"><i class="ti ti-users"></i> Lista de colaboradores</div>
-      <div id="lista-colaboradores"></div>
-    </div>
-    <div class="card">
-      <div class="card-title"><i class="ti ti-user-plus"></i> Adicionar colaborador</div>
-      <div class="form-row">
-        <div class="form-group"><label>Nome completo</label><input type="text" id="new-nome" placeholder="Ex: João Silva" /></div>
-        <div class="form-group"><label>Departamento</label><input type="text" id="new-dept" placeholder="Ex: Produção" /></div>
-        <div class="form-group"><label>Horas diárias</label><input type="number" id="new-horas" value="8" min="1" max="12" /></div>
-        <div class="form-group"><label>Turno</label>
-          <select id="new-turno">
-            <option value="normal">Normal (9h–18h)</option>
-            <option value="manha">Manhã (6h–14h)</option>
-            <option value="tarde">Tarde (14h–22h)</option>
-          </select>
-        </div>
-      </div>
-      <div class="btn-row"><button class="btn btn-purple" onclick="adicionarColaborador()"><i class="ti ti-plus"></i> Adicionar</button></div>
-    </div>
   </div>
 
   <!-- ADMINISTRAÇÃO -->
@@ -249,18 +264,31 @@
       <button class="btn btn-amber" onclick="abrirPIN()"><i class="ti ti-key"></i> Introduzir PIN</button>
     </div>
     <div id="admin-panel" style="display:none;">
-      <div class="admin-banner"><i class="ti ti-shield-check"></i> Sessão de administrador ativa — pode editar todos os registos.</div>
+      <div class="admin-banner"><i class="ti ti-shield-check"></i> Sessão de administrador ativa.</div>
       <div class="seg">
-        <button class="seg-btn active" onclick="switchAdminView('registos',event)">Editar registos</button>
-        <button class="seg-btn" onclick="switchAdminView('colab',event)">Editar colaboradores</button>
+        <button class="seg-btn active" onclick="switchAdminView('registos',event)">Registos</button>
+        <button class="seg-btn" onclick="switchAdminView('colab',event)">Colaboradores</button>
+        <button class="seg-btn" onclick="switchAdminView('relatorio',event)">Relatório</button>
         <button class="seg-btn" onclick="switchAdminView('config',event)">Configurações</button>
       </div>
       <div id="admin-registos"></div>
       <div id="admin-colab" style="display:none;"></div>
+      <div id="admin-relatorio" style="display:none;">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-file-analytics"></i> Relatório geral</div>
+          <div class="filter-row">
+            <div class="form-group"><label>Mês</label><select id="adm-rel-mes"></select></div>
+            <button class="btn btn-purple" onclick="gerarRelatorioAdmin()" style="margin-top:20px;"><i class="ti ti-refresh"></i> Gerar</button>
+            <button class="btn btn-green" onclick="exportarCSVAdmin()" style="margin-top:20px;"><i class="ti ti-download"></i> CSV</button>
+            <button class="btn btn-red" onclick="exportarPDFAdmin()" style="margin-top:20px;"><i class="ti ti-file-type-pdf"></i> PDF</button>
+            <button class="btn btn-gray" onclick="exportarTodosCSV()" style="margin-top:20px;"><i class="ti ti-database-export"></i> Todos os registos</button>
+          </div>
+        </div>
+        <div id="adm-rel-output"></div>
+      </div>
       <div id="admin-config" style="display:none;">
         <div class="card">
           <div class="card-title"><i class="ti ti-key"></i> Alterar PIN de administrador</div>
-          <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">PIN padrão inicial: <strong>1234</strong></p>
           <div class="form-row">
             <div class="form-group"><label>PIN atual</label><input type="password" id="pin-atual" maxlength="4" placeholder="••••" /></div>
             <div class="form-group"><label>Novo PIN</label><input type="password" id="pin-novo" maxlength="4" placeholder="••••" /></div>
@@ -270,15 +298,8 @@
           <p id="pin-msg" style="font-size:12px;margin-top:10px;min-height:18px;"></p>
         </div>
         <div class="card">
-          <div class="card-title"><i class="ti ti-database-export"></i> Exportar todos os dados</div>
-          <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Exporta todos os registos de todos os colaboradores em CSV.</p>
-          <div class="btn-row">
-            <button class="btn btn-green" onclick="exportarTodosCSV()"><i class="ti ti-download"></i> Exportar todos os registos</button>
-          </div>
-        </div>
-        <div class="card">
           <div class="card-title" style="color:var(--red-text);"><i class="ti ti-alert-triangle"></i> Zona de perigo</div>
-          <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Elimina permanentemente todos os registos de ponto. Os colaboradores são mantidos.</p>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Elimina permanentemente todos os registos de ponto.</p>
           <button class="btn btn-red" onclick="limparTodos()"><i class="ti ti-trash"></i> Limpar todos os registos</button>
         </div>
       </div>
@@ -286,7 +307,7 @@
   </div>
 </div>
 
-<!-- PIN OVERLAY -->
+<!-- PIN admin overlay -->
 <div class="pin-overlay" id="pin-overlay" role="dialog" aria-modal="true">
   <div class="pin-box">
     <div class="pin-title"><i class="ti ti-shield" style="color:var(--purple);"></i> Administrador</div>
@@ -310,251 +331,201 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getFirestore, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, setDoc, onSnapshot, query, orderBy
+  getFirestore,collection,doc,getDocs,addDoc,updateDoc,deleteDoc,setDoc,query,orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ── Configuração Firebase ──────────────────────────────────────────────────
 const firebaseConfig = {
-  apiKey: "AIzaSyDjtYdpWMEJ5VFeNG_hZRuMjP6j7vWSpXA",
-  authDomain: "relogio-ponto-c19bd.firebaseapp.com",
-  projectId: "relogio-ponto-c19bd",
-  storageBucket: "relogio-ponto-c19bd.firebasestorage.app",
-  messagingSenderId: "1022115976000",
-  appId: "1:1022115976000:web:024218130ceff681e820a5",
-  measurementId: "G-3SZW96FY1Q"
+  apiKey:"AIzaSyDjtYdpWMEJ5VFeNG_hZRuMjP6j7vWSpXA",
+  authDomain:"relogio-ponto-c19bd.firebaseapp.com",
+  projectId:"relogio-ponto-c19bd",
+  storageBucket:"relogio-ponto-c19bd.firebasestorage.app",
+  messagingSenderId:"1022115976000",
+  appId:"1:1022115976000:web:024218130ceff681e820a5"
 };
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
-
-// ── Constantes ─────────────────────────────────────────────────────────────
 const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const DIAS=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 const TL={entrada:'Entrada',saida:'Saída',inicio_pausa:'Início pausa',fim_pausa:'Fim pausa'};
 const TC={entrada:'badge-green',saida:'badge-red',inicio_pausa:'badge-yellow',fim_pausa:'badge-gray'};
 const TI={entrada:'ti-login',saida:'ti-logout',inicio_pausa:'ti-coffee',fim_pausa:'ti-player-play'};
 
-// ── Estado local (espelho do Firestore) ────────────────────────────────────
-let colaboradores = [];
-let registos      = [];
-let adminPIN      = '1234';
-let adminLogado   = false;
-let pinBuffer     = '';
-let appPronta     = false;
+let colaboradores=[], registos=[], adminPIN='1234', adminLogado=false, pinBuffer='', loginBuffer='';
+let utilizadorAtual=null; // colaborador com sessão iniciada
 
-// ── Indicador de sincronização ─────────────────────────────────────────────
-function setSyncDot(state) {
-  const d = document.getElementById('sync-dot');
-  d.className = 'sync-dot ' + state;
-}
+// ── Sync dot ───────────────────────────────────────────────────────────────
+function setSyncDot(s){document.getElementById('sync-dot').className='sync-dot '+s;}
 
 // ── Toast ──────────────────────────────────────────────────────────────────
-function toast(msg, dur=2800) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.style.display = 'block';
-  setTimeout(() => t.style.display = 'none', dur);
-}
+function toast(msg,dur=2800){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',dur);}
 
-// ── Firestore: carregar configurações (PIN) ────────────────────────────────
-async function carregarConfig() {
-  try {
-    const snap = await getDocs(collection(db, 'config'));
-    snap.forEach(d => {
-      if (d.id === 'admin') adminPIN = d.data().pin || '1234';
-    });
-  } catch(e) { console.warn('Config:', e); }
+// ── Firebase ───────────────────────────────────────────────────────────────
+async function carregarConfig(){
+  try{const snap=await getDocs(collection(db,'config'));snap.forEach(d=>{if(d.id==='admin')adminPIN=d.data().pin||'1234';});}catch(e){}
 }
-
-async function guardarConfig() {
-  try {
-    await setDoc(doc(db, 'config', 'admin'), { pin: adminPIN });
-  } catch(e) { console.error('Erro ao guardar config:', e); }
+async function guardarConfig(){
+  try{await setDoc(doc(db,'config','admin'),{pin:adminPIN});}catch(e){}
 }
-
-// ── Firestore: colaboradores ───────────────────────────────────────────────
-async function carregarColaboradores() {
-  const snap = await getDocs(collection(db, 'colaboradores'));
-  colaboradores = [];
-  snap.forEach(d => colaboradores.push({ fbId: d.id, ...d.data() }));
-  // se não houver nenhum, criar os exemplos iniciais
-  if (colaboradores.length === 0) {
-    const exemplos = [
-      { id:1, nome:'Ana Silva',    dept:'Recursos Humanos', horas:8, turno:'normal' },
-      { id:2, nome:'Bruno Costa',  dept:'Tecnologia',       horas:8, turno:'normal' },
-      { id:3, nome:'Carla Mendes', dept:'Financeiro',       horas:8, turno:'tarde'  },
+async function carregarColaboradores(){
+  const snap=await getDocs(collection(db,'colaboradores'));
+  colaboradores=[];
+  snap.forEach(d=>colaboradores.push({fbId:d.id,...d.data()}));
+  if(!colaboradores.length){
+    const ex=[
+      {id:1,nome:'Ana Silva',dept:'RH',horas:8,turno:'normal',pin:'0000'},
+      {id:2,nome:'Bruno Costa',dept:'Tecnologia',horas:8,turno:'normal',pin:'0000'},
+      {id:3,nome:'Carla Mendes',dept:'Financeiro',horas:8,turno:'tarde',pin:'0000'},
     ];
-    for (const e of exemplos) {
-      const ref = await addDoc(collection(db, 'colaboradores'), e);
-      colaboradores.push({ fbId: ref.id, ...e });
-    }
+    for(const e of ex){const r=await addDoc(collection(db,'colaboradores'),e);colaboradores.push({fbId:r.id,...e});}
   }
 }
-
-async function adicionarColaboradorDB(dados) {
+async function adicionarColaboradorDB(dados){
   setSyncDot('syncing');
-  try {
-    const maxId = colaboradores.reduce((m,c) => Math.max(m, c.id||0), 0);
-    const novoId = maxId + 1;
-    const obj = { id: novoId, ...dados };
-    const ref = await addDoc(collection(db, 'colaboradores'), obj);
-    colaboradores.push({ fbId: ref.id, ...obj });
-    setSyncDot('ok');
-    return true;
-  } catch(e) { setSyncDot('err'); console.error(e); return false; }
+  try{
+    const maxId=colaboradores.reduce((m,c)=>Math.max(m,c.id||0),0);
+    const obj={id:maxId+1,...dados};
+    const ref=await addDoc(collection(db,'colaboradores'),obj);
+    colaboradores.push({fbId:ref.id,...obj});
+    setSyncDot('ok');return true;
+  }catch(e){setSyncDot('err');return false;}
 }
-
-async function atualizarColaboradorDB(fbId, dados) {
+async function atualizarColaboradorDB(fbId,dados){
   setSyncDot('syncing');
-  try {
-    await updateDoc(doc(db, 'colaboradores', fbId), dados);
-    const i = colaboradores.findIndex(c => c.fbId === fbId);
-    if (i >= 0) colaboradores[i] = { ...colaboradores[i], ...dados };
-    setSyncDot('ok');
-    return true;
-  } catch(e) { setSyncDot('err'); console.error(e); return false; }
+  try{
+    await updateDoc(doc(db,'colaboradores',fbId),dados);
+    const i=colaboradores.findIndex(c=>c.fbId===fbId);
+    if(i>=0)colaboradores[i]={...colaboradores[i],...dados};
+    setSyncDot('ok');return true;
+  }catch(e){setSyncDot('err');return false;}
 }
-
-async function eliminarColaboradorDB(fbId) {
+async function eliminarColaboradorDB(fbId){
   setSyncDot('syncing');
-  try {
-    await deleteDoc(doc(db, 'colaboradores', fbId));
-    colaboradores = colaboradores.filter(c => c.fbId !== fbId);
-    setSyncDot('ok');
-    return true;
-  } catch(e) { setSyncDot('err'); console.error(e); return false; }
+  try{await deleteDoc(doc(db,'colaboradores',fbId));colaboradores=colaboradores.filter(c=>c.fbId!==fbId);setSyncDot('ok');return true;}
+  catch(e){setSyncDot('err');return false;}
 }
-
-// ── Firestore: registos ────────────────────────────────────────────────────
-async function carregarRegistos() {
-  const snap = await getDocs(query(collection(db, 'registos'), orderBy('ts')));
-  registos = [];
-  snap.forEach(d => registos.push({ fbId: d.id, ...d.data() }));
+async function carregarRegistos(){
+  const snap=await getDocs(query(collection(db,'registos'),orderBy('ts')));
+  registos=[];snap.forEach(d=>registos.push({fbId:d.id,...d.data()}));
 }
-
-async function adicionarRegistoDB(obj) {
+async function adicionarRegistoDB(obj){
   setSyncDot('syncing');
-  try {
-    const ref = await addDoc(collection(db, 'registos'), obj);
-    registos.push({ fbId: ref.id, ...obj });
-    registos.sort((a,b) => a.ts - b.ts);
-    setSyncDot('ok');
-    return true;
-  } catch(e) { setSyncDot('err'); console.error(e); return false; }
+  try{const ref=await addDoc(collection(db,'registos'),obj);registos.push({fbId:ref.id,...obj});registos.sort((a,b)=>a.ts-b.ts);setSyncDot('ok');return true;}
+  catch(e){setSyncDot('err');return false;}
 }
-
-async function atualizarRegistoDB(fbId, dados) {
+async function atualizarRegistoDB(fbId,dados){
   setSyncDot('syncing');
-  try {
-    await updateDoc(doc(db, 'registos', fbId), dados);
-    const i = registos.findIndex(r => r.fbId === fbId);
-    if (i >= 0) registos[i] = { ...registos[i], ...dados };
-    setSyncDot('ok');
-    return true;
-  } catch(e) { setSyncDot('err'); console.error(e); return false; }
+  try{await updateDoc(doc(db,'registos',fbId),dados);const i=registos.findIndex(r=>r.fbId===fbId);if(i>=0)registos[i]={...registos[i],...dados};setSyncDot('ok');return true;}
+  catch(e){setSyncDot('err');return false;}
 }
-
-async function eliminarRegistoDB(fbId) {
+async function eliminarRegistoDB(fbId){
   setSyncDot('syncing');
-  try {
-    await deleteDoc(doc(db, 'registos', fbId));
-    registos = registos.filter(r => r.fbId !== fbId);
-    setSyncDot('ok');
-    return true;
-  } catch(e) { setSyncDot('err'); console.error(e); return false; }
+  try{await deleteDoc(doc(db,'registos',fbId));registos=registos.filter(r=>r.fbId!==fbId);setSyncDot('ok');return true;}
+  catch(e){setSyncDot('err');return false;}
 }
-
-async function limparTodosRegistosDB() {
+async function limparTodosRegistosDB(){
   setSyncDot('syncing');
-  try {
-    const snap = await getDocs(collection(db, 'registos'));
-    const promises = snap.docs.map(d => deleteDoc(d.ref));
-    await Promise.all(promises);
-    registos = [];
-    setSyncDot('ok');
-    return true;
-  } catch(e) { setSyncDot('err'); console.error(e); return false; }
+  try{const snap=await getDocs(collection(db,'registos'));await Promise.all(snap.docs.map(d=>deleteDoc(d.ref)));registos=[];setSyncDot('ok');return true;}
+  catch(e){setSyncDot('err');return false;}
 }
 
-// ── Inicialização ──────────────────────────────────────────────────────────
-async function iniciar() {
-  try {
-    setSyncDot('syncing');
-    await Promise.all([carregarConfig(), carregarColaboradores(), carregarRegistos()]);
-    setSyncDot('ok');
-  } catch(e) {
-    setSyncDot('err');
-    console.error('Erro ao ligar ao Firebase:', e);
-    toast('⚠ Sem ligação à base de dados. A tentar reconectar…', 4000);
+// ── Login ──────────────────────────────────────────────────────────────────
+function mostrarLoginScreen(){
+  const sel=document.getElementById('login-emp');
+  sel.innerHTML=colaboradores.map(c=>`<option value="${c.fbId}">${c.nome}</option>`).join('');
+  loginBuffer='';atualizarLoginDots();
+  document.getElementById('login-error').textContent='';
+  document.getElementById('login-screen').style.display='flex';
+}
+function atualizarLoginDots(){for(let i=0;i<4;i++)document.getElementById('ld'+i).classList.toggle('filled',i<loginBuffer.length);}
+function loginPin(v){
+  if(v==='C'){loginBuffer='';atualizarLoginDots();document.getElementById('login-error').textContent='';return;}
+  if(v==='⌫'){loginBuffer=loginBuffer.slice(0,-1);atualizarLoginDots();return;}
+  if(loginBuffer.length>=4)return;
+  loginBuffer+=v;atualizarLoginDots();
+  if(loginBuffer.length===4)validarLogin();
+}
+function validarLogin(){
+  const fbId=document.getElementById('login-emp').value;
+  const emp=colaboradores.find(c=>c.fbId===fbId);
+  if(!emp){document.getElementById('login-error').textContent='Colaborador não encontrado.';loginBuffer='';atualizarLoginDots();return;}
+  const pinEsperado=emp.pin||'0000';
+  if(loginBuffer===pinEsperado){
+    utilizadorAtual=emp;
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('user-header').style.display='flex';
+    document.getElementById('user-badge-nome').textContent=emp.nome;
+    document.getElementById('ponto-nome').textContent=emp.nome;
+    document.getElementById('tab-admin').style.display='none';
+    initMesSelects();
+    const now=new Date();
+    const d=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    atualizarBadge(emp.id,d);renderHojeLog(emp.id,d);
+  } else {
+    document.getElementById('login-error').textContent='PIN incorreto. Tente novamente.';
+    loginBuffer='';atualizarLoginDots();
   }
-  document.getElementById('loading-overlay').style.display = 'none';
-  appPronta = true;
-  initMesSelects();
-  populateSelects();
-  tickClock();
-  setInterval(tickClock, 1000);
-  onEmpChange();
+}
+function fazerLogout(){
+  utilizadorAtual=null;adminLogado=false;
+  document.getElementById('user-header').style.display='none';
+  document.getElementById('admin-header').style.display='none';
+  document.getElementById('admin-locked').style.display='block';
+  document.getElementById('admin-panel').style.display='none';
+  document.getElementById('tab-admin').style.display='none';
+  switchTabDirect('ponto');
+  mostrarLoginScreen();
+}
+window.loginPin=loginPin;window.fazerLogout=fazerLogout;
+
+// ── Clock ──────────────────────────────────────────────────────────────────
+function tickClock(){
+  const now=new Date();const pad=n=>String(n).padStart(2,'0');
+  document.getElementById('clock-time').textContent=pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
+  document.getElementById('clock-date').textContent=DIAS[now.getDay()]+', '+now.getDate()+' de '+MESES[now.getMonth()]+' de '+now.getFullYear();
 }
 
-// ── UI helpers ─────────────────────────────────────────────────────────────
-function initMesSelects() {
-  ['hist-mes','rel-mes'].forEach(id => {
-    const sel = document.getElementById(id); if(!sel) return;
-    sel.innerHTML = MESES.map((m,i) => `<option value="${i}">${m}</option>`).join('');
-    sel.value = new Date().getMonth();
-  });
-}
-function populateSelects() {
-  ['sel-colaborador','hist-emp'].forEach(id => {
-    const sel = document.getElementById(id); if(!sel) return;
-    const cur = sel.value;
-    sel.innerHTML = colaboradores.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-    if(cur) sel.value = cur;
-  });
-}
-function switchTab(tab, e) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+// ── Tabs ───────────────────────────────────────────────────────────────────
+function switchTabDirect(tab){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('sec-'+tab).classList.add('active');
-  if(e) e.target.closest('.tab').classList.add('active');
-  if(tab==='historico'){populateSelects();renderHistorico();}
-  if(tab==='colaboradores') renderColaboradores();
-  if(tab==='admin'&&adminLogado) renderAdminRegistos();
+  const tabEl=document.getElementById('tab-'+tab);if(tabEl)tabEl.classList.add('active');
 }
-window.switchTab = switchTab;
-
-function tickClock() {
-  const now = new Date();
-  const pad = n => String(n).padStart(2,'0');
-  document.getElementById('clock-time').textContent = pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
-  document.getElementById('clock-date').textContent = DIAS[now.getDay()]+', '+now.getDate()+' de '+MESES[now.getMonth()]+' de '+now.getFullYear();
+function switchTab(tab,e){
+  switchTabDirect(tab);
+  if(tab==='historico')renderHistorico();
+  if(tab==='admin'&&adminLogado)renderAdminRegistos();
 }
+window.switchTab=switchTab;
 
-// ── PIN ────────────────────────────────────────────────────────────────────
+// ── PIN admin ──────────────────────────────────────────────────────────────
 function abrirPIN(){pinBuffer='';document.getElementById('pin-error').textContent='';atualizarDots();document.getElementById('pin-overlay').style.display='flex';}
 function fecharPIN(){document.getElementById('pin-overlay').style.display='none';pinBuffer='';atualizarDots();}
 function atualizarDots(){for(let i=0;i<4;i++)document.getElementById('d'+i).classList.toggle('filled',i<pinBuffer.length);}
 function pinPress(v){
   if(v==='C'){pinBuffer='';atualizarDots();document.getElementById('pin-error').textContent='';return;}
   if(v==='⌫'){pinBuffer=pinBuffer.slice(0,-1);atualizarDots();return;}
-  if(pinBuffer.length>=4) return;
-  pinBuffer+=v; atualizarDots();
-  if(pinBuffer.length===4) validarPIN();
+  if(pinBuffer.length>=4)return;
+  pinBuffer+=v;atualizarDots();
+  if(pinBuffer.length===4)validarPIN();
 }
 function validarPIN(){
   if(pinBuffer===adminPIN){
-    adminLogado=true; fecharPIN();
+    adminLogado=true;fecharPIN();
     document.getElementById('admin-locked').style.display='none';
     document.getElementById('admin-panel').style.display='block';
     document.getElementById('admin-header').style.display='flex';
+    document.getElementById('user-header').style.display='none';
+    document.getElementById('tab-admin').style.display='flex';
+    initAdmRelMes();
     renderAdminRegistos();
     toast('✓ Acesso de administrador concedido');
   } else {
-    document.getElementById('pin-error').textContent='PIN incorreto. Tente novamente.';
-    pinBuffer=''; atualizarDots();
+    document.getElementById('pin-error').textContent='PIN incorreto.';pinBuffer='';atualizarDots();
   }
 }
 function logoutAdmin(){
@@ -562,28 +533,29 @@ function logoutAdmin(){
   document.getElementById('admin-locked').style.display='block';
   document.getElementById('admin-panel').style.display='none';
   document.getElementById('admin-header').style.display='none';
-  switchTab('ponto');
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.tab')[0].classList.add('active');
+  document.getElementById('user-header').style.display='flex';
+  document.getElementById('tab-admin').style.display='none';
+  switchTabDirect('ponto');
   toast('Sessão de administrador terminada.');
 }
-window.abrirPIN=abrirPIN; window.fecharPIN=fecharPIN; window.pinPress=pinPress; window.logoutAdmin=logoutAdmin;
+window.abrirPIN=abrirPIN;window.fecharPIN=fecharPIN;window.pinPress=pinPress;window.logoutAdmin=logoutAdmin;
 
 function switchAdminView(view,e){
   document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));
-  if(e) e.target.classList.add('active');
-  document.getElementById('admin-registos').style.display=view==='registos'?'block':'none';
-  document.getElementById('admin-colab').style.display=view==='colab'?'block':'none';
-  document.getElementById('admin-config').style.display=view==='config'?'block':'none';
-  if(view==='registos') renderAdminRegistos();
-  if(view==='colab') renderAdminColab();
+  if(e)e.target.classList.add('active');
+  ['registos','colab','relatorio','config'].forEach(v=>{
+    document.getElementById('admin-'+v).style.display=v===view?'block':'none';
+  });
+  if(view==='registos')renderAdminRegistos();
+  if(view==='colab')renderAdminColab();
+  if(view==='relatorio')gerarRelatorioAdmin();
 }
 window.switchAdminView=switchAdminView;
 
 // ── Registo de ponto ───────────────────────────────────────────────────────
 async function registar(tipo){
-  const empId=parseInt(document.getElementById('sel-colaborador').value);
-  const emp=colaboradores.find(c=>c.id===empId); if(!emp) return;
+  if(!utilizadorAtual){toast('⚠ Sessão não iniciada.');return;}
+  const empId=utilizadorAtual.id;
   const now=new Date();
   const dataStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   const hojeRegs=registos.filter(r=>r.empId===empId&&r.data===dataStr);
@@ -593,22 +565,10 @@ async function registar(tipo){
   if(tipo==='fim_pausa'&&ultimo&&ultimo.tipo!=='inicio_pausa'){toast('⚠ Não tem pausa em curso.');return;}
   if(tipo==='inicio_pausa'&&ultimo&&ultimo.tipo==='inicio_pausa'){toast('⚠ Pausa já iniciada.');return;}
   const obj={empId,data:dataStr,hora:now.toTimeString().slice(0,8),tipo,ts:now.getTime()};
-  const ok = await adicionarRegistoDB(obj);
-  if(ok){
-    toast('✓ '+TL[tipo]+' registada às '+now.toTimeString().slice(0,8));
-    atualizarBadge(empId,dataStr);
-    renderHojeLog(empId,dataStr);
-  }
+  const ok=await adicionarRegistoDB(obj);
+  if(ok){toast('✓ '+TL[tipo]+' registada às '+now.toTimeString().slice(0,8));atualizarBadge(empId,dataStr);renderHojeLog(empId,dataStr);}
 }
 window.registar=registar;
-
-function onEmpChange(){
-  const id=parseInt(document.getElementById('sel-colaborador').value);
-  const now=new Date();
-  const d=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-  atualizarBadge(id,d); renderHojeLog(id,d);
-}
-window.onEmpChange=onEmpChange;
 
 function atualizarBadge(empId,dataStr){
   const regs=registos.filter(r=>r.empId===empId&&r.data===dataStr);
@@ -616,36 +576,39 @@ function atualizarBadge(empId,dataStr){
   const badge=document.getElementById('badge-estado');
   if(!ul){badge.className='badge badge-gray';badge.innerHTML='<i class="ti ti-circle"></i> Sem registo hoje';return;}
   const map={entrada:['badge-green','ti-login','Em serviço'],saida:['badge-red','ti-logout','Saiu'],inicio_pausa:['badge-yellow','ti-coffee','Em pausa'],fim_pausa:['badge-green','ti-player-play','Em serviço']};
-  const [cls,ic,lb]=map[ul.tipo]||map.entrada;
-  badge.className='badge '+cls;
-  badge.innerHTML=`<i class="ti ${ic}"></i> ${lb}`;
+  const[cls,ic,lb]=map[ul.tipo]||map.entrada;
+  badge.className='badge '+cls;badge.innerHTML=`<i class="ti ${ic}"></i> ${lb}`;
 }
-
 function renderHojeLog(empId,dataStr){
   const container=document.getElementById('hoje-log');
   const regs=registos.filter(r=>r.empId===empId&&r.data===dataStr);
   if(!regs.length){container.innerHTML='<p style="font-size:13px;color:var(--text2);">Nenhum registo ainda.</p>';return;}
   container.innerHTML='<table><thead><tr><th>Hora</th><th>Tipo</th></tr></thead><tbody>'+
-    regs.map(r=>`<tr><td style="font-weight:600;font-variant-numeric:tabular-nums;">${r.hora}</td><td><span class="badge ${TC[r.tipo]}"><i class="ti ${TI[r.tipo]}"></i> ${TL[r.tipo]}</span></td></tr>`).join('')+
-    '</tbody></table>';
+    regs.map(r=>`<tr><td style="font-weight:600;font-variant-numeric:tabular-nums;">${r.hora}</td><td><span class="badge ${TC[r.tipo]}"><i class="ti ${TI[r.tipo]}"></i> ${TL[r.tipo]}</span></td></tr>`).join('')+'</tbody></table>';
 }
-
 function calcHoras(regs){
   let total=0,pausa=0,eTs=null,pTs=null;
   regs.forEach(r=>{
-    if(r.tipo==='entrada') eTs=r.ts;
+    if(r.tipo==='entrada')eTs=r.ts;
     if(r.tipo==='saida'&&eTs){total+=r.ts-eTs;eTs=null;}
-    if(r.tipo==='inicio_pausa') pTs=r.ts;
+    if(r.tipo==='inicio_pausa')pTs=r.ts;
     if(r.tipo==='fim_pausa'&&pTs){pausa+=r.ts-pTs;pTs=null;}
   });
   return Math.max(0,total-pausa)/3600000;
 }
 
-// ── Histórico ──────────────────────────────────────────────────────────────
+// ── Histórico (colaborador) ────────────────────────────────────────────────
+function initMesSelects(){
+  ['hist-mes','rel-mes'].forEach(id=>{
+    const sel=document.getElementById(id);if(!sel)return;
+    sel.innerHTML=MESES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+    sel.value=new Date().getMonth();
+  });
+}
 function renderHistorico(){
-  const empId=parseInt(document.getElementById('hist-emp').value);
+  if(!utilizadorAtual)return;
   const mes=parseInt(document.getElementById('hist-mes').value);
-  const emp=colaboradores.find(c=>c.id===empId); if(!emp) return;
+  const empId=utilizadorAtual.id;
   const pref=new Date().getFullYear()+'-'+String(mes+1).padStart(2,'0');
   const dias={};
   registos.filter(r=>r.empId===empId&&r.data.startsWith(pref)).forEach(r=>{if(!dias[r.data])dias[r.data]=[];dias[r.data].push(r);});
@@ -653,114 +616,173 @@ function renderHistorico(){
   if(!Object.keys(dias).length){container.innerHTML='<p style="font-size:13px;color:var(--text2);">Sem registos para este mês.</p>';return;}
   let rows='',totalH=0;
   Object.keys(dias).sort().forEach(data=>{
-    const regs=dias[data];
-    const h=calcHoras(regs); totalH+=h;
+    const regs=dias[data];const h=calcHoras(regs);totalH+=h;
     const d=new Date(data+'T12:00:00');
     rows+=`<tr><td style="font-weight:600;">${data.split('-').reverse().join('/')}</td><td>${DIAS[d.getDay()]}</td><td style="font-size:12px;">${regs.map(r=>`${r.hora.slice(0,5)} <span style="color:var(--text2);">${TL[r.tipo]}</span>`).join(' · ')}</td><td style="text-align:right;font-weight:600;">${h.toFixed(2)}h</td></tr>`;
   });
-  container.innerHTML=`<p style="font-size:14px;font-weight:600;margin-bottom:12px;">${emp.nome} — ${MESES[mes]}</p>
+  container.innerHTML=`<p style="font-size:14px;font-weight:600;margin-bottom:12px;">${utilizadorAtual.nome} — ${MESES[mes]}</p>
     <div style="overflow-x:auto;"><table><thead><tr><th>Data</th><th>Dia</th><th>Registos</th><th style="text-align:right;">Horas</th></tr></thead><tbody>${rows}</tbody>
     <tfoot><tr><td colspan="3">Total do mês</td><td style="text-align:right;">${totalH.toFixed(2)}h</td></tr></tfoot></table></div>`;
 }
 window.renderHistorico=renderHistorico;
 
-// ── Relatório ──────────────────────────────────────────────────────────────
+// ── Relatório (colaborador) ────────────────────────────────────────────────
 function contarDiasUteis(mes){
-  let c=0; const d=new Date(new Date().getFullYear(),mes,1);
+  let c=0;const d=new Date(new Date().getFullYear(),mes,1);
   while(d.getMonth()===mes){if(d.getDay()!==0&&d.getDay()!==6)c++;d.setDate(d.getDate()+1);}
   return c;
 }
-function gerarRelatorio(){
-  const mes=parseInt(document.getElementById('rel-mes').value);
+function dadosRelatorioColaborador(empId,mes){
   const pref=new Date().getFullYear()+'-'+String(mes+1).padStart(2,'0');
-  const du=contarDiasUteis(mes), he=du*8;
-  let tG=0,tE=0,tF=0,rows='';
-  colaboradores.forEach(emp=>{
-    const dias={};
-    registos.filter(r=>r.empId===emp.id&&r.data.startsWith(pref)).forEach(r=>{if(!dias[r.data])dias[r.data]=[];dias[r.data].push(r);});
-    let h=0; Object.values(dias).forEach(rs=>h+=calcHoras(rs));
-    const ex=Math.max(0,h-he),fa=Math.max(0,he-h);
-    tG+=h;tE+=ex;tF+=fa;
-    const ini=emp.nome.split(' ').map(n=>n[0]).slice(0,2).join('');
-    rows+=`<tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:26px;height:26px;font-size:9px;">${ini}</div>${emp.nome}</div></td><td>${emp.dept}</td><td>${Object.keys(dias).length}</td><td>${h.toFixed(2)}h</td><td style="color:${ex>0?'var(--green-text)':'var(--text2)'};">${ex>0?'+'+ex.toFixed(2)+'h':'—'}</td><td style="color:${fa>0?'var(--red-text)':'var(--text2)'};">${fa>0?'-'+fa.toFixed(2)+'h':'—'}</td></tr>`;
+  const dias={};
+  registos.filter(r=>r.empId===empId&&r.data.startsWith(pref)).forEach(r=>{if(!dias[r.data])dias[r.data]=[];dias[r.data].push(r);});
+  let h=0;Object.values(dias).forEach(rs=>h+=calcHoras(rs));
+  const du=contarDiasUteis(mes),he=du*8;
+  return{dias,h,du,he,ex:Math.max(0,h-he),fa:Math.max(0,he-h)};
+}
+function gerarRelatorio(){
+  if(!utilizadorAtual)return;
+  const mes=parseInt(document.getElementById('rel-mes').value);
+  const emp=utilizadorAtual;
+  const{dias,h,du,he,ex,fa}=dadosRelatorioColaborador(emp.id,mes);
+  let rows='';
+  Object.keys(dias).sort().forEach(data=>{
+    const regs=dias[data];const hd=calcHoras(regs);
+    const d=new Date(data+'T12:00:00');
+    rows+=`<tr><td>${data.split('-').reverse().join('/')}</td><td>${DIAS[d.getDay()]}</td><td style="font-size:12px;">${regs.map(r=>r.hora.slice(0,5)+' '+TL[r.tipo]).join(', ')}</td><td style="text-align:right;">${hd.toFixed(2)}h</td></tr>`;
   });
   document.getElementById('rel-output').innerHTML=`<div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
-      <p style="font-size:15px;font-weight:600;">${MESES[mes]} ${new Date().getFullYear()}</p>
-      <span style="font-size:12px;color:var(--text2);">${du} dias úteis · ${he}h esperadas/colaborador</span>
-    </div>
+    <p style="font-size:15px;font-weight:600;margin-bottom:4px;">${emp.nome} — ${MESES[mes]} ${new Date().getFullYear()}</p>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">${du} dias úteis · ${he}h esperadas</p>
     <div class="metrics">
-      <div class="metric"><div class="metric-label">Total horas</div><div class="metric-value">${tG.toFixed(1)}h</div></div>
-      <div class="metric"><div class="metric-label">Horas extra</div><div class="metric-value" style="color:var(--green-text);">+${tE.toFixed(1)}h</div></div>
-      <div class="metric"><div class="metric-label">Em falta</div><div class="metric-value" style="color:var(--red-text);">-${tF.toFixed(1)}h</div></div>
-      <div class="metric"><div class="metric-label">Colaboradores</div><div class="metric-value">${colaboradores.length}</div></div>
+      <div class="metric"><div class="metric-label">Horas trabalhadas</div><div class="metric-value">${h.toFixed(1)}h</div></div>
+      <div class="metric"><div class="metric-label">Dias presentes</div><div class="metric-value">${Object.keys(dias).length}</div></div>
+      <div class="metric"><div class="metric-label">Horas extra</div><div class="metric-value" style="color:var(--green-text);">+${ex.toFixed(1)}h</div></div>
+      <div class="metric"><div class="metric-label">Em falta</div><div class="metric-value" style="color:var(--red-text);">-${fa.toFixed(1)}h</div></div>
     </div>
-    <div style="overflow-x:auto;"><table class="print-table"><thead><tr><th>Colaborador</th><th>Dept.</th><th>Dias</th><th>Horas</th><th>Extra</th><th>Em falta</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div style="overflow-x:auto;"><table class="print-table"><thead><tr><th>Data</th><th>Dia</th><th>Registos</th><th style="text-align:right;">Horas</th></tr></thead><tbody>${rows}</tbody></table></div>
   </div>`;
 }
 window.gerarRelatorio=gerarRelatorio;
 
 function exportarCSV(){
+  if(!utilizadorAtual)return;
   const mes=parseInt(document.getElementById('rel-mes').value);
-  const pref=new Date().getFullYear()+'-'+String(mes+1).padStart(2,'0');
-  const he=contarDiasUteis(mes)*8;
-  let csv='Nome,Departamento,Dias trabalhados,Horas trabalhadas,Horas extra,Horas em falta\n';
-  colaboradores.forEach(emp=>{
-    const dias={};
-    registos.filter(r=>r.empId===emp.id&&r.data.startsWith(pref)).forEach(r=>{if(!dias[r.data])dias[r.data]=[];dias[r.data].push(r);});
-    let h=0; Object.values(dias).forEach(rs=>h+=calcHoras(rs));
-    csv+=`"${emp.nome}","${emp.dept}",${Object.keys(dias).length},${h.toFixed(2)},${Math.max(0,h-he).toFixed(2)},${Math.max(0,he-h).toFixed(2)}\n`;
+  const emp=utilizadorAtual;
+  const{dias,he}=dadosRelatorioColaborador(emp.id,mes);
+  let csv='Data,Dia,Hora,Tipo\n';
+  Object.keys(dias).sort().forEach(data=>{
+    const d=new Date(data+'T12:00:00');
+    dias[data].forEach(r=>{csv+=`"${data.split('-').reverse().join('/')}","${DIAS[d.getDay()]}","${r.hora}","${TL[r.tipo]}"\n`;});
   });
-  dlCSV(csv,`ponto_${MESES[mes]}.csv`);
+  dlCSV(csv,`ponto_${emp.nome.replace(/ /g,'_')}_${MESES[mes]}.csv`);
   toast('✓ CSV exportado!');
 }
 window.exportarCSV=exportarCSV;
 
-function exportarTodosCSV(){
-  let csv='Nome,Departamento,Data,Hora,Tipo\n';
-  registos.sort((a,b)=>a.ts-b.ts).forEach(r=>{
-    const emp=colaboradores.find(c=>c.id===r.empId);
-    if(emp) csv+=`"${emp.nome}","${emp.dept}","${r.data}","${r.hora}","${TL[r.tipo]}"\n`;
+function exportarPDF(){
+  if(!utilizadorAtual)return;
+  const mes=parseInt(document.getElementById('rel-mes').value);
+  const emp=utilizadorAtual;
+  const{dias,h,du,he,ex,fa}=dadosRelatorioColaborador(emp.id,mes);
+  const{jsPDF}=window.jspdf;
+  const pdf=new jsPDF();
+  pdf.setFontSize(16);pdf.setFont(undefined,'bold');
+  pdf.text('Relatório de Ponto',14,18);
+  pdf.setFontSize(11);pdf.setFont(undefined,'normal');
+  pdf.text(`Colaborador: ${emp.nome}`,14,28);
+  pdf.text(`Departamento: ${emp.dept||'—'}`,14,35);
+  pdf.text(`Mês: ${MESES[mes]} ${new Date().getFullYear()}`,14,42);
+  pdf.text(`Dias úteis: ${du}  |  Horas esperadas: ${he}h  |  Horas trabalhadas: ${h.toFixed(2)}h  |  Extra: +${ex.toFixed(2)}h  |  Em falta: -${fa.toFixed(2)}h`,14,49);
+  const rows=[];
+  Object.keys(dias).sort().forEach(data=>{
+    const d=new Date(data+'T12:00:00');
+    const hd=calcHoras(dias[data]);
+    rows.push([data.split('-').reverse().join('/'),DIAS[d.getDay()],dias[data].map(r=>r.hora.slice(0,5)+' '+TL[r.tipo]).join('\n'),hd.toFixed(2)+'h']);
   });
-  dlCSV(csv,'todos_registos.csv');
-  toast('✓ Exportação completa!');
+  pdf.autoTable({startY:56,head:[['Data','Dia','Registos','Horas']],body:rows,styles:{fontSize:9},headStyles:{fillColor:[60,52,137]},columnStyles:{2:{cellWidth:80}}});
+  pdf.save(`ponto_${emp.nome.replace(/ /g,'_')}_${MESES[mes]}.pdf`);
+  toast('✓ PDF exportado!');
 }
-window.exportarTodosCSV=exportarTodosCSV;
+window.exportarPDF=exportarPDF;
 
-function dlCSV(csv,nome){
-  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download=nome; a.click();
+// ── Admin: colaboradores ───────────────────────────────────────────────────
+function renderAdminColab(){
+  const c=document.getElementById('admin-colab');
+  c.innerHTML=`<div class="card"><div class="card-title"><i class="ti ti-users"></i> Colaboradores</div>
+    <div style="overflow-x:auto;"><table><thead><tr><th>Nome</th><th>Departamento</th><th>Horas</th><th>Turno</th><th>PIN</th><th style="text-align:right;">Ações</th></tr></thead>
+    <tbody>${colaboradores.map(emp=>`<tr id="crow-${emp.fbId}">
+      <td style="font-weight:500;">${emp.nome}</td><td>${emp.dept}</td><td>${emp.horas}h</td><td>${emp.turno}</td>
+      <td><span style="font-family:monospace;">••••</span></td>
+      <td style="text-align:right;white-space:nowrap;">
+        <button class="btn btn-blue btn-sm" onclick="editarColab('${emp.fbId}')"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-red btn-sm" onclick="eliminarColab('${emp.fbId}')" style="margin-left:4px;"><i class="ti ti-trash"></i></button>
+      </td></tr>`).join('')}</tbody></table></div>
+    <div class="card" style="margin-top:16px;border:none;padding:0;">
+      <div class="card-title" style="margin-top:16px;"><i class="ti ti-user-plus"></i> Adicionar colaborador</div>
+      <div class="form-row">
+        <div class="form-group"><label>Nome</label><input type="text" id="new-nome" placeholder="Ex: João Silva" /></div>
+        <div class="form-group"><label>Departamento</label><input type="text" id="new-dept" placeholder="Ex: Produção" /></div>
+        <div class="form-group"><label>Horas diárias</label><input type="number" id="new-horas" value="8" min="1" max="12" /></div>
+        <div class="form-group"><label>Turno</label><select id="new-turno"><option value="normal">Normal (9h–18h)</option><option value="manha">Manhã (6h–14h)</option><option value="tarde">Tarde (14h–22h)</option></select></div>
+        <div class="form-group"><label>PIN pessoal (4 dígitos)</label><input type="password" id="new-pin" maxlength="4" placeholder="••••" /></div>
+      </div>
+      <div class="btn-row"><button class="btn btn-purple" onclick="adicionarColaborador()"><i class="ti ti-plus"></i> Adicionar</button></div>
+    </div>
+  </div>`;
 }
+window.renderAdminColab=renderAdminColab;
 
-// ── Colaboradores ──────────────────────────────────────────────────────────
-function renderColaboradores(){
-  const c=document.getElementById('lista-colaboradores');
-  if(!colaboradores.length){c.innerHTML='<p style="font-size:13px;color:var(--text2);">Nenhum colaborador.</p>';return;}
-  c.innerHTML=colaboradores.map(emp=>{
-    const ini=emp.nome.split(' ').map(n=>n[0]).slice(0,2).join('');
-    return `<div class="emp-row"><div class="avatar">${ini}</div><div class="emp-info"><div class="emp-name">${emp.nome}</div><div class="emp-sub">${emp.dept} · ${emp.horas}h/dia · ${emp.turno}</div></div></div>`;
-  }).join('');
+function editarColab(fbId){
+  const emp=colaboradores.find(c=>c.fbId===fbId);if(!emp)return;
+  const row=document.getElementById('crow-'+fbId);row.style.background='var(--bg2)';
+  row.innerHTML=`<td><input class="edit-input" id="ec-n-${fbId}" value="${emp.nome}" /></td>
+    <td><input class="edit-input" id="ec-d-${fbId}" value="${emp.dept}" /></td>
+    <td><input class="edit-input" type="number" id="ec-h-${fbId}" value="${emp.horas}" min="1" max="12" style="width:60px;" /></td>
+    <td><select class="edit-input" id="ec-t-${fbId}"><option value="normal" ${emp.turno==='normal'?'selected':''}>Normal</option><option value="manha" ${emp.turno==='manha'?'selected':''}>Manhã</option><option value="tarde" ${emp.turno==='tarde'?'selected':''}>Tarde</option></select></td>
+    <td><input class="edit-input" type="password" id="ec-p-${fbId}" placeholder="Novo PIN" maxlength="4" style="width:80px;" /></td>
+    <td style="text-align:right;white-space:nowrap;">
+      <button class="btn btn-purple btn-sm" onclick="guardarColab('${fbId}')"><i class="ti ti-check"></i> Guardar</button>
+      <button class="btn btn-gray btn-sm" onclick="renderAdminColab()" style="margin-left:4px;">Cancelar</button>
+    </td>`;
 }
-window.renderColaboradores=renderColaboradores;
+window.editarColab=editarColab;
+
+async function guardarColab(fbId){
+  const nome=document.getElementById('ec-n-'+fbId).value.trim();
+  if(!nome){toast('⚠ O nome não pode estar vazio.');return;}
+  const novoPIN=document.getElementById('ec-p-'+fbId).value;
+  const emp=colaboradores.find(c=>c.fbId===fbId);
+  const dados={nome,dept:document.getElementById('ec-d-'+fbId).value.trim()||'Geral',horas:parseInt(document.getElementById('ec-h-'+fbId).value)||8,turno:document.getElementById('ec-t-'+fbId).value,pin:novoPIN&&/^\d{4}$/.test(novoPIN)?novoPIN:(emp?emp.pin||'0000':'0000')};
+  const ok=await atualizarColaboradorDB(fbId,dados);
+  if(ok){toast('✓ Colaborador atualizado!');renderAdminColab();}
+}
+window.guardarColab=guardarColab;
 
 async function adicionarColaborador(){
   const nome=document.getElementById('new-nome').value.trim();
   const dept=document.getElementById('new-dept').value.trim();
   const horas=parseInt(document.getElementById('new-horas').value)||8;
   const turno=document.getElementById('new-turno').value;
+  const pin=document.getElementById('new-pin').value;
   if(!nome){toast('⚠ Insira o nome.');return;}
-  const ok = await adicionarColaboradorDB({nome,dept:dept||'Geral',horas,turno});
-  if(ok){
-    renderColaboradores(); populateSelects();
-    document.getElementById('new-nome').value='';
-    document.getElementById('new-dept').value='';
-    toast('✓ Colaborador adicionado!');
-  }
+  if(!pin||!/^\d{4}$/.test(pin)){toast('⚠ O PIN deve ter 4 dígitos numéricos.');return;}
+  const ok=await adicionarColaboradorDB({nome,dept:dept||'Geral',horas,turno,pin});
+  if(ok){toast('✓ Colaborador adicionado!');renderAdminColab();}
 }
 window.adicionarColaborador=adicionarColaborador;
 
-// ── Admin registos ─────────────────────────────────────────────────────────
+async function eliminarColab(fbId){
+  const emp=colaboradores.find(c=>c.fbId===fbId);if(!emp)return;
+  const n=registos.filter(r=>r.empId===emp.id).length;
+  if(!confirm(n>0?`Este colaborador tem ${n} registos que também serão eliminados. Confirma?`:'Eliminar este colaborador?'))return;
+  for(const r of registos.filter(r=>r.empId===emp.id))await eliminarRegistoDB(r.fbId);
+  const ok=await eliminarColaboradorDB(fbId);
+  if(ok){toast('Colaborador eliminado.');renderAdminColab();}
+}
+window.eliminarColab=eliminarColab;
+
+// ── Admin: registos ────────────────────────────────────────────────────────
 function renderAdminRegistos(){
   const container=document.getElementById('admin-registos');
   const fil_mes_el=document.getElementById('adm-mes');
@@ -769,31 +791,27 @@ function renderAdminRegistos(){
   const filtEmp=fil_emp_el?fil_emp_el.value:'todos';
   const pref=new Date().getFullYear()+'-'+String(filtMes+1).padStart(2,'0');
   let regs=registos.filter(r=>r.data.startsWith(pref));
-  if(filtEmp!=='todos') regs=regs.filter(r=>r.empId===parseInt(filtEmp));
+  if(filtEmp!=='todos')regs=regs.filter(r=>r.empId===parseInt(filtEmp));
   regs=regs.slice().sort((a,b)=>a.ts-b.ts);
   container.innerHTML=`<div class="card">
     <div class="filter-row" style="margin-bottom:14px;">
-      <div class="form-group"><label>Mês</label><select id="adm-mes" onchange="renderAdminRegistos()">
-        ${MESES.map((m,i)=>`<option value="${i}" ${i===filtMes?'selected':''}>${m}</option>`).join('')}</select></div>
-      <div class="form-group"><label>Colaborador</label><select id="adm-emp" onchange="renderAdminRegistos()">
-        <option value="todos">Todos</option>${colaboradores.map(c=>`<option value="${c.id}" ${filtEmp==c.id?'selected':''}>${c.nome}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Mês</label><select id="adm-mes" onchange="renderAdminRegistos()">${MESES.map((m,i)=>`<option value="${i}" ${i===filtMes?'selected':''}>${m}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Colaborador</label><select id="adm-emp" onchange="renderAdminRegistos()"><option value="todos">Todos</option>${colaboradores.map(c=>`<option value="${c.id}" ${filtEmp==c.id?'selected':''}>${c.nome}</option>`).join('')}</select></div>
       <button class="btn btn-purple" onclick="abrirNovoRegisto()" style="margin-top:20px;"><i class="ti ti-plus"></i> Novo registo</button>
     </div>
     <div id="new-reg-area"></div>
     ${regs.length===0?'<p style="font-size:13px;color:var(--text2);">Nenhum registo neste período.</p>':
     `<div style="overflow-x:auto;"><table><thead><tr><th>Colaborador</th><th>Data</th><th>Hora</th><th>Tipo</th><th style="text-align:right;">Ações</th></tr></thead>
-    <tbody>${regs.map((r)=>{
-      const emp=colaboradores.find(c=>c.id===r.empId);
-      return `<tr id="row-${r.fbId}"><td style="font-size:13px;">${emp?emp.nome:'?'}</td><td style="font-size:13px;">${r.data.split('-').reverse().join('/')}</td><td style="font-variant-numeric:tabular-nums;font-size:13px;">${r.hora}</td><td><span class="badge ${TC[r.tipo]}" style="font-size:10px;"><i class="ti ${TI[r.tipo]}"></i> ${TL[r.tipo]}</span></td><td style="text-align:right;white-space:nowrap;"><button class="btn btn-blue btn-sm" onclick="editarRegisto('${r.fbId}')"><i class="ti ti-edit"></i></button> <button class="btn btn-red btn-sm" onclick="eliminarRegisto('${r.fbId}')"><i class="ti ti-trash"></i></button></td></tr>`;
+    <tbody>${regs.map(r=>{const emp=colaboradores.find(c=>c.id===r.empId);
+      return `<tr id="row-${r.fbId}"><td>${emp?emp.nome:'?'}</td><td>${r.data.split('-').reverse().join('/')}</td><td style="font-variant-numeric:tabular-nums;">${r.hora}</td><td><span class="badge ${TC[r.tipo]}" style="font-size:10px;"><i class="ti ${TI[r.tipo]}"></i> ${TL[r.tipo]}</span></td><td style="text-align:right;white-space:nowrap;"><button class="btn btn-blue btn-sm" onclick="editarRegisto('${r.fbId}')"><i class="ti ti-edit"></i></button> <button class="btn btn-red btn-sm" onclick="eliminarRegisto('${r.fbId}')"><i class="ti ti-trash"></i></button></td></tr>`;
     }).join('')}</tbody></table></div>`}
   </div>`;
 }
 window.renderAdminRegistos=renderAdminRegistos;
 
 function editarRegisto(fbId){
-  const r=registos.find(x=>x.fbId===fbId); if(!r) return;
-  const row=document.getElementById('row-'+fbId);
-  row.style.background='var(--bg2)';
+  const r=registos.find(x=>x.fbId===fbId);if(!r)return;
+  const row=document.getElementById('row-'+fbId);row.style.background='var(--bg2)';
   const empOpts=colaboradores.map(c=>`<option value="${c.id}" ${c.id===r.empId?'selected':''}>${c.nome}</option>`).join('');
   const tipoOpts=['entrada','saida','inicio_pausa','fim_pausa'].map(t=>`<option value="${t}" ${t===r.tipo?'selected':''}>${TL[t]}</option>`).join('');
   row.innerHTML=`<td><select class="edit-input" id="er-e-${fbId}">${empOpts}</select></td>
@@ -813,17 +831,16 @@ async function guardarRegisto(fbId){
   const hora=document.getElementById('er-h-'+fbId).value+':00';
   const tipo=document.getElementById('er-t-'+fbId).value;
   if(!data||!hora){toast('⚠ Preencha todos os campos.');return;}
-  const [y,m,d]=data.split('-').map(Number);
-  const [h,min]=hora.split(':').map(Number);
-  const ok = await atualizarRegistoDB(fbId,{empId,data,hora,tipo,ts:new Date(y,m-1,d,h,min,0).getTime()});
-  if(ok){toast('✓ Registo atualizado!'); renderAdminRegistos();}
+  const[y,m,d]=data.split('-').map(Number);const[h,min]=hora.split(':').map(Number);
+  const ok=await atualizarRegistoDB(fbId,{empId,data,hora,tipo,ts:new Date(y,m-1,d,h,min,0).getTime()});
+  if(ok){toast('✓ Registo atualizado!');renderAdminRegistos();}
 }
 window.guardarRegisto=guardarRegisto;
 
 async function eliminarRegisto(fbId){
-  if(!confirm('Eliminar este registo?')) return;
-  const ok = await eliminarRegistoDB(fbId);
-  if(ok){toast('Registo eliminado.'); renderAdminRegistos();}
+  if(!confirm('Eliminar este registo?'))return;
+  const ok=await eliminarRegistoDB(fbId);
+  if(ok){toast('Registo eliminado.');renderAdminRegistos();}
 }
 window.eliminarRegisto=eliminarRegisto;
 
@@ -855,67 +872,103 @@ async function criarRegisto(){
   const data=document.getElementById('nr-data').value;
   const hora=document.getElementById('nr-hora').value+':00';
   if(!data||!hora){toast('⚠ Preencha todos os campos.');return;}
-  const [y,m,d]=data.split('-').map(Number);
-  const [h,mn]=hora.split(':').map(Number);
-  const ok = await adicionarRegistoDB({empId,data,hora,tipo,ts:new Date(y,m-1,d,h,mn,0).getTime()});
-  if(ok){toast('✓ Registo criado!'); renderAdminRegistos();}
+  const[y,m,d]=data.split('-').map(Number);const[h,mn]=hora.split(':').map(Number);
+  const ok=await adicionarRegistoDB({empId,data,hora,tipo,ts:new Date(y,m-1,d,h,mn,0).getTime()});
+  if(ok){toast('✓ Registo criado!');renderAdminRegistos();}
 }
 window.criarRegisto=criarRegisto;
 
-// ── Admin colaboradores ────────────────────────────────────────────────────
-function renderAdminColab(){
-  const c=document.getElementById('admin-colab');
-  c.innerHTML=`<div class="card"><div class="card-title"><i class="ti ti-users"></i> Editar colaboradores</div>
-    <div style="overflow-x:auto;"><table><thead><tr><th>Nome</th><th>Departamento</th><th>Horas</th><th>Turno</th><th style="text-align:right;">Ações</th></tr></thead>
-    <tbody>${colaboradores.map(emp=>`<tr id="crow-${emp.fbId}">
-      <td style="font-weight:500;">${emp.nome}</td><td>${emp.dept}</td><td>${emp.horas}h</td><td>${emp.turno}</td>
-      <td style="text-align:right;white-space:nowrap;">
-        <button class="btn btn-blue btn-sm" onclick="editarColab('${emp.fbId}')"><i class="ti ti-edit"></i></button>
-        <button class="btn btn-red btn-sm" onclick="eliminarColab('${emp.fbId}')" style="margin-left:4px;"><i class="ti ti-trash"></i></button>
-      </td></tr>`).join('')}</tbody></table></div></div>`;
+// ── Admin: relatório geral ─────────────────────────────────────────────────
+function initAdmRelMes(){
+  const sel=document.getElementById('adm-rel-mes');if(!sel)return;
+  sel.innerHTML=MESES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+  sel.value=new Date().getMonth();
 }
-window.renderAdminColab=renderAdminColab;
-
-function editarColab(fbId){
-  const emp=colaboradores.find(c=>c.fbId===fbId); if(!emp) return;
-  const row=document.getElementById('crow-'+fbId);
-  row.style.background='var(--bg2)';
-  row.innerHTML=`<td><input class="edit-input" id="ec-n-${fbId}" value="${emp.nome}" /></td>
-    <td><input class="edit-input" id="ec-d-${fbId}" value="${emp.dept}" /></td>
-    <td><input class="edit-input" type="number" id="ec-h-${fbId}" value="${emp.horas}" min="1" max="12" style="width:60px;" /></td>
-    <td><select class="edit-input" id="ec-t-${fbId}">
-      <option value="normal" ${emp.turno==='normal'?'selected':''}>Normal</option>
-      <option value="manha" ${emp.turno==='manha'?'selected':''}>Manhã</option>
-      <option value="tarde" ${emp.turno==='tarde'?'selected':''}>Tarde</option></select></td>
-    <td style="text-align:right;white-space:nowrap;">
-      <button class="btn btn-purple btn-sm" onclick="guardarColab('${fbId}')"><i class="ti ti-check"></i> Guardar</button>
-      <button class="btn btn-gray btn-sm" onclick="renderAdminColab()" style="margin-left:4px;">Cancelar</button>
-    </td>`;
+function gerarRelatorioAdmin(){
+  const sel=document.getElementById('adm-rel-mes');
+  const mes=sel?parseInt(sel.value):new Date().getMonth();
+  const pref=new Date().getFullYear()+'-'+String(mes+1).padStart(2,'0');
+  const du=contarDiasUteis(mes),he=du*8;
+  let tG=0,tE=0,tF=0,rows='';
+  colaboradores.forEach(emp=>{
+    const dias={};
+    registos.filter(r=>r.empId===emp.id&&r.data.startsWith(pref)).forEach(r=>{if(!dias[r.data])dias[r.data]=[];dias[r.data].push(r);});
+    let h=0;Object.values(dias).forEach(rs=>h+=calcHoras(rs));
+    const ex=Math.max(0,h-he),fa=Math.max(0,he-h);
+    tG+=h;tE+=ex;tF+=fa;
+    const ini=emp.nome.split(' ').map(n=>n[0]).slice(0,2).join('');
+    rows+=`<tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:26px;height:26px;font-size:9px;">${ini}</div>${emp.nome}</div></td><td>${emp.dept}</td><td>${Object.keys(dias).length}</td><td>${h.toFixed(2)}h</td><td style="color:${ex>0?'var(--green-text)':'var(--text2)'};">${ex>0?'+'+ex.toFixed(2)+'h':'—'}</td><td style="color:${fa>0?'var(--red-text)':'var(--text2)'};">${fa>0?'-'+fa.toFixed(2)+'h':'—'}</td></tr>`;
+  });
+  document.getElementById('adm-rel-output').innerHTML=`<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+      <p style="font-size:15px;font-weight:600;">${MESES[mes]} ${new Date().getFullYear()}</p>
+      <span style="font-size:12px;color:var(--text2);">${du} dias úteis · ${he}h esperadas/colaborador</span>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Total horas</div><div class="metric-value">${tG.toFixed(1)}h</div></div>
+      <div class="metric"><div class="metric-label">Horas extra</div><div class="metric-value" style="color:var(--green-text);">+${tE.toFixed(1)}h</div></div>
+      <div class="metric"><div class="metric-label">Em falta</div><div class="metric-value" style="color:var(--red-text);">-${tF.toFixed(1)}h</div></div>
+      <div class="metric"><div class="metric-label">Colaboradores</div><div class="metric-value">${colaboradores.length}</div></div>
+    </div>
+    <div style="overflow-x:auto;"><table class="print-table"><thead><tr><th>Colaborador</th><th>Dept.</th><th>Dias</th><th>Horas</th><th>Extra</th><th>Em falta</th></tr></thead><tbody>${rows}</tbody></table></div>
+  </div>`;
 }
-window.editarColab=editarColab;
+window.gerarRelatorioAdmin=gerarRelatorioAdmin;
 
-async function guardarColab(fbId){
-  const nome=document.getElementById('ec-n-'+fbId).value.trim();
-  if(!nome){toast('⚠ O nome não pode estar vazio.');return;}
-  const dados={nome,dept:document.getElementById('ec-d-'+fbId).value.trim()||'Geral',horas:parseInt(document.getElementById('ec-h-'+fbId).value)||8,turno:document.getElementById('ec-t-'+fbId).value};
-  const ok = await atualizarColaboradorDB(fbId, dados);
-  if(ok){populateSelects(); toast('✓ Colaborador atualizado!'); renderAdminColab();}
+function exportarCSVAdmin(){
+  const mes=parseInt(document.getElementById('adm-rel-mes').value);
+  const pref=new Date().getFullYear()+'-'+String(mes+1).padStart(2,'0');
+  const he=contarDiasUteis(mes)*8;
+  let csv='Nome,Departamento,Dias trabalhados,Horas trabalhadas,Horas extra,Horas em falta\n';
+  colaboradores.forEach(emp=>{
+    const dias={};
+    registos.filter(r=>r.empId===emp.id&&r.data.startsWith(pref)).forEach(r=>{if(!dias[r.data])dias[r.data]=[];dias[r.data].push(r);});
+    let h=0;Object.values(dias).forEach(rs=>h+=calcHoras(rs));
+    csv+=`"${emp.nome}","${emp.dept}",${Object.keys(dias).length},${h.toFixed(2)},${Math.max(0,h-he).toFixed(2)},${Math.max(0,he-h).toFixed(2)}\n`;
+  });
+  dlCSV(csv,`relatorio_${MESES[mes]}.csv`);toast('✓ CSV exportado!');
 }
-window.guardarColab=guardarColab;
+window.exportarCSVAdmin=exportarCSVAdmin;
 
-async function eliminarColab(fbId){
-  const emp=colaboradores.find(c=>c.fbId===fbId); if(!emp) return;
-  const n=registos.filter(r=>r.empId===emp.id).length;
-  if(!confirm(n>0?`Este colaborador tem ${n} registos que também serão eliminados. Confirma?`:'Eliminar este colaborador?')) return;
-  // eliminar registos associados
-  const regsAssoc = registos.filter(r=>r.empId===emp.id);
-  for(const r of regsAssoc) await eliminarRegistoDB(r.fbId);
-  const ok = await eliminarColaboradorDB(fbId);
-  if(ok){populateSelects(); toast('Colaborador eliminado.'); renderAdminColab();}
+function exportarPDFAdmin(){
+  const mes=parseInt(document.getElementById('adm-rel-mes').value);
+  const pref=new Date().getFullYear()+'-'+String(mes+1).padStart(2,'0');
+  const du=contarDiasUteis(mes),he=du*8;
+  const{jsPDF}=window.jspdf;
+  const pdf=new jsPDF();
+  pdf.setFontSize(16);pdf.setFont(undefined,'bold');
+  pdf.text('Relatório Geral de Ponto',14,18);
+  pdf.setFontSize(11);pdf.setFont(undefined,'normal');
+  pdf.text(`${MESES[mes]} ${new Date().getFullYear()}  |  ${du} dias úteis  |  ${he}h esperadas por colaborador`,14,28);
+  const rows=[];
+  colaboradores.forEach(emp=>{
+    const dias={};
+    registos.filter(r=>r.empId===emp.id&&r.data.startsWith(pref)).forEach(r=>{if(!dias[r.data])dias[r.data]=[];dias[r.data].push(r);});
+    let h=0;Object.values(dias).forEach(rs=>h+=calcHoras(rs));
+    rows.push([emp.nome,emp.dept,Object.keys(dias).length,h.toFixed(2)+'h',(Math.max(0,h-he)).toFixed(2)+'h',(Math.max(0,he-h)).toFixed(2)+'h']);
+  });
+  pdf.autoTable({startY:35,head:[['Colaborador','Dept.','Dias','Horas','Extra','Em falta']],body:rows,styles:{fontSize:9},headStyles:{fillColor:[60,52,137]}});
+  pdf.save(`relatorio_${MESES[mes]}.pdf`);toast('✓ PDF exportado!');
 }
-window.eliminarColab=eliminarColab;
+window.exportarPDFAdmin=exportarPDFAdmin;
 
-// ── Alterar PIN ────────────────────────────────────────────────────────────
+function exportarTodosCSV(){
+  let csv='Nome,Departamento,Data,Hora,Tipo\n';
+  registos.sort((a,b)=>a.ts-b.ts).forEach(r=>{
+    const emp=colaboradores.find(c=>c.id===r.empId);
+    if(emp)csv+=`"${emp.nome}","${emp.dept}","${r.data}","${r.hora}","${TL[r.tipo]}"\n`;
+  });
+  dlCSV(csv,'todos_registos.csv');toast('✓ Exportação completa!');
+}
+window.exportarTodosCSV=exportarTodosCSV;
+
+function dlCSV(csv,nome){
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=nome;a.click();
+}
+
+// ── Config ─────────────────────────────────────────────────────────────────
 async function alterarPIN(){
   const atual=document.getElementById('pin-atual').value;
   const novo=document.getElementById('pin-novo').value;
@@ -924,23 +977,31 @@ async function alterarPIN(){
   if(atual!==adminPIN){msg.style.color='var(--red-text)';msg.textContent='PIN atual incorreto.';return;}
   if(!/^\d{4}$/.test(novo)){msg.style.color='var(--red-text)';msg.textContent='O novo PIN deve ter 4 dígitos numéricos.';return;}
   if(novo!==conf){msg.style.color='var(--red-text)';msg.textContent='Os PINs não coincidem.';return;}
-  adminPIN=novo;
-  await guardarConfig();
+  adminPIN=novo;await guardarConfig();
   msg.style.color='var(--green-text)';msg.textContent='✓ PIN alterado com sucesso!';
   ['pin-atual','pin-novo','pin-conf'].forEach(id=>document.getElementById(id).value='');
 }
 window.alterarPIN=alterarPIN;
 
 async function limparTodos(){
-  if(!confirm('Eliminar TODOS os registos de ponto? Esta ação é irreversível.')) return;
-  const ok = await limparTodosRegistosDB();
-  if(ok){toast('Todos os registos eliminados.'); renderAdminRegistos();}
+  if(!confirm('Eliminar TODOS os registos de ponto? Esta ação é irreversível.'))return;
+  const ok=await limparTodosRegistosDB();
+  if(ok){toast('Todos os registos eliminados.');renderAdminRegistos();}
 }
 window.limparTodos=limparTodos;
 
 // ── Arranque ───────────────────────────────────────────────────────────────
+async function iniciar(){
+  try{
+    setSyncDot('syncing');
+    await Promise.all([carregarConfig(),carregarColaboradores(),carregarRegistos()]);
+    setSyncDot('ok');
+  }catch(e){setSyncDot('err');toast('⚠ Sem ligação à base de dados.',4000);}
+  document.getElementById('loading-overlay').style.display='none';
+  tickClock();setInterval(tickClock,1000);
+  mostrarLoginScreen();
+}
 iniciar();
-
 </script>
 </body>
 </html>
