@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Relógio de Ponto 2026</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
   :root {
     --bg: #ffffff; --bg2: #f5f5f4; --bg3: #fafaf9;
@@ -42,6 +40,10 @@
   .header-sub { font-size: 12px; color: var(--text2); }
   .admin-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--amber-light); color: var(--amber-text); border: 0.5px solid var(--amber); padding: 5px 12px; border-radius: 99px; font-size: 12px; font-weight: 500; }
   .logout-btn { background: none; border: none; color: var(--text2); font-size: 12px; cursor: pointer; text-decoration: underline; margin-left: 8px; }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; display: inline-block; margin-left: 8px; transition: background 0.3s; }
+  .sync-dot.ok { background: #22c55e; }
+  .sync-dot.syncing { background: var(--amber); }
+  .sync-dot.err { background: var(--red-text); }
   .container { max-width: 760px; margin: 0 auto; padding: 20px 16px; }
   .tab-bar { display: flex; gap: 4px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 4px; margin-bottom: 20px; overflow-x: auto; }
   .tab { flex: 1; min-width: fit-content; padding: 9px 14px; font-size: 13px; cursor: pointer; border: none; background: none; color: var(--text2); border-radius: var(--radius); display: flex; align-items: center; gap: 5px; white-space: nowrap; }
@@ -117,6 +119,9 @@
   .print-table tr:nth-child(even) td { background: var(--bg2); }
   .filter-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
   .filter-row .form-group { margin-bottom: 0; min-width: 140px; }
+  .loading-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; gap: 16px; }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
   @media (max-width: 480px) {
     .form-row { grid-template-columns: 1fr; }
     .clock-time { font-size: 40px; }
@@ -126,11 +131,17 @@
 </head>
 <body>
 
+<!-- Ecrã de carregamento -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <p style="font-size:14px;color:var(--text2);">A ligar à base de dados…</p>
+</div>
+
 <div class="header">
   <div class="header-left">
     <i class="ti ti-clock header-icon"></i>
     <div>
-      <div class="header-title">Relógio de Ponto 2026</div>
+      <div class="header-title">Relógio de Ponto 2026 <span class="sync-dot" id="sync-dot" title="Estado da ligação"></span></div>
       <div class="header-sub">Registo de assiduidade</div>
     </div>
   </div>
@@ -200,7 +211,6 @@
         <div class="form-group"><label>Mês</label><select id="rel-mes"></select></div>
         <button class="btn btn-purple" onclick="gerarRelatorio()" style="margin-top:20px;"><i class="ti ti-refresh"></i> Gerar</button>
         <button class="btn btn-green" onclick="exportarCSV()" style="margin-top:20px;"><i class="ti ti-download"></i> Exportar CSV</button>
-        <button class="btn btn-red" onclick="exportarRelatorioPDF()" style="margin-top:20px;"><i class="ti ti-file-type-pdf"></i> Exportar PDF</button>
       </div>
     </div>
     <div id="rel-output"></div>
@@ -263,8 +273,7 @@
           <div class="card-title"><i class="ti ti-database-export"></i> Exportar todos os dados</div>
           <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Exporta todos os registos de todos os colaboradores em CSV.</p>
           <div class="btn-row">
-            <button class="btn btn-green" onclick="exportarTodosCSV()"><i class="ti ti-download"></i> Exportar todos os registos (CSV)</button>
-            <button class="btn btn-red" onclick="exportarTodosPDF()"><i class="ti ti-file-type-pdf"></i> Exportar todos os registos (PDF)</button>
+            <button class="btn btn-green" onclick="exportarTodosCSV()"><i class="ti ti-download"></i> Exportar todos os registos</button>
           </div>
         </div>
         <div class="card">
@@ -301,77 +310,230 @@
 
 <div class="toast" id="toast"></div>
 
-<script>
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, setDoc, onSnapshot, query, orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ── Configuração Firebase ──────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyDjtYdpWMEJ5VFeNG_hZRuMjP6j7vWSpXA",
+  authDomain: "relogio-ponto-c19bd.firebaseapp.com",
+  projectId: "relogio-ponto-c19bd",
+  storageBucket: "relogio-ponto-c19bd.firebasestorage.app",
+  messagingSenderId: "1022115976000",
+  appId: "1:1022115976000:web:024218130ceff681e820a5",
+  measurementId: "G-3SZW96FY1Q"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// ── Constantes ─────────────────────────────────────────────────────────────
 const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const DIAS=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 const TL={entrada:'Entrada',saida:'Saída',inicio_pausa:'Início pausa',fim_pausa:'Fim pausa'};
 const TC={entrada:'badge-green',saida:'badge-red',inicio_pausa:'badge-yellow',fim_pausa:'badge-gray'};
 const TI={entrada:'ti-login',saida:'ti-logout',inicio_pausa:'ti-coffee',fim_pausa:'ti-player-play'};
 
-// Persistência via localStorage
-function salvar() {
+// ── Estado local (espelho do Firestore) ────────────────────────────────────
+let colaboradores = [];
+let registos      = [];
+let adminPIN      = '1234';
+let adminLogado   = false;
+let pinBuffer     = '';
+let appPronta     = false;
+
+// ── Indicador de sincronização ─────────────────────────────────────────────
+function setSyncDot(state) {
+  const d = document.getElementById('sync-dot');
+  d.className = 'sync-dot ' + state;
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function toast(msg, dur=2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', dur);
+}
+
+// ── Firestore: carregar configurações (PIN) ────────────────────────────────
+async function carregarConfig() {
   try {
-    localStorage.setItem('rp_colab', JSON.stringify(colaboradores));
-    localStorage.setItem('rp_regs', JSON.stringify(registos));
-    localStorage.setItem('rp_pin', adminPIN);
-    localStorage.setItem('rp_nextid', nextId);
-  } catch(e) {}
+    const snap = await getDocs(collection(db, 'config'));
+    snap.forEach(d => {
+      if (d.id === 'admin') adminPIN = d.data().pin || '1234';
+    });
+  } catch(e) { console.warn('Config:', e); }
 }
-function carregar() {
+
+async function guardarConfig() {
   try {
-    const c=localStorage.getItem('rp_colab'); if(c) colaboradores=JSON.parse(c);
-    const r=localStorage.getItem('rp_regs'); if(r) registos=JSON.parse(r);
-    const p=localStorage.getItem('rp_pin'); if(p) adminPIN=p;
-    const n=localStorage.getItem('rp_nextid'); if(n) nextId=parseInt(n);
-  } catch(e) {}
+    await setDoc(doc(db, 'config', 'admin'), { pin: adminPIN });
+  } catch(e) { console.error('Erro ao guardar config:', e); }
 }
 
-let adminPIN='1234', adminLogado=false, pinBuffer='', nextId=4;
-let colaboradores=[
-  {id:1,nome:'Ana Silva',dept:'Recursos Humanos',horas:8,turno:'normal'},
-  {id:2,nome:'Bruno Costa',dept:'Tecnologia',horas:8,turno:'normal'},
-  {id:3,nome:'Carla Mendes',dept:'Financeiro',horas:8,turno:'tarde'},
-];
-let registos=[];
-
-carregar();
-
-function toast(msg,dur=2800) {
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.style.display='block';
-  setTimeout(()=>t.style.display='none',dur);
+// ── Firestore: colaboradores ───────────────────────────────────────────────
+async function carregarColaboradores() {
+  const snap = await getDocs(collection(db, 'colaboradores'));
+  colaboradores = [];
+  snap.forEach(d => colaboradores.push({ fbId: d.id, ...d.data() }));
+  // se não houver nenhum, criar os exemplos iniciais
+  if (colaboradores.length === 0) {
+    const exemplos = [
+      { id:1, nome:'Ana Silva',    dept:'Recursos Humanos', horas:8, turno:'normal' },
+      { id:2, nome:'Bruno Costa',  dept:'Tecnologia',       horas:8, turno:'normal' },
+      { id:3, nome:'Carla Mendes', dept:'Financeiro',       horas:8, turno:'tarde'  },
+    ];
+    for (const e of exemplos) {
+      const ref = await addDoc(collection(db, 'colaboradores'), e);
+      colaboradores.push({ fbId: ref.id, ...e });
+    }
+  }
 }
+
+async function adicionarColaboradorDB(dados) {
+  setSyncDot('syncing');
+  try {
+    const maxId = colaboradores.reduce((m,c) => Math.max(m, c.id||0), 0);
+    const novoId = maxId + 1;
+    const obj = { id: novoId, ...dados };
+    const ref = await addDoc(collection(db, 'colaboradores'), obj);
+    colaboradores.push({ fbId: ref.id, ...obj });
+    setSyncDot('ok');
+    return true;
+  } catch(e) { setSyncDot('err'); console.error(e); return false; }
+}
+
+async function atualizarColaboradorDB(fbId, dados) {
+  setSyncDot('syncing');
+  try {
+    await updateDoc(doc(db, 'colaboradores', fbId), dados);
+    const i = colaboradores.findIndex(c => c.fbId === fbId);
+    if (i >= 0) colaboradores[i] = { ...colaboradores[i], ...dados };
+    setSyncDot('ok');
+    return true;
+  } catch(e) { setSyncDot('err'); console.error(e); return false; }
+}
+
+async function eliminarColaboradorDB(fbId) {
+  setSyncDot('syncing');
+  try {
+    await deleteDoc(doc(db, 'colaboradores', fbId));
+    colaboradores = colaboradores.filter(c => c.fbId !== fbId);
+    setSyncDot('ok');
+    return true;
+  } catch(e) { setSyncDot('err'); console.error(e); return false; }
+}
+
+// ── Firestore: registos ────────────────────────────────────────────────────
+async function carregarRegistos() {
+  const snap = await getDocs(query(collection(db, 'registos'), orderBy('ts')));
+  registos = [];
+  snap.forEach(d => registos.push({ fbId: d.id, ...d.data() }));
+}
+
+async function adicionarRegistoDB(obj) {
+  setSyncDot('syncing');
+  try {
+    const ref = await addDoc(collection(db, 'registos'), obj);
+    registos.push({ fbId: ref.id, ...obj });
+    registos.sort((a,b) => a.ts - b.ts);
+    setSyncDot('ok');
+    return true;
+  } catch(e) { setSyncDot('err'); console.error(e); return false; }
+}
+
+async function atualizarRegistoDB(fbId, dados) {
+  setSyncDot('syncing');
+  try {
+    await updateDoc(doc(db, 'registos', fbId), dados);
+    const i = registos.findIndex(r => r.fbId === fbId);
+    if (i >= 0) registos[i] = { ...registos[i], ...dados };
+    setSyncDot('ok');
+    return true;
+  } catch(e) { setSyncDot('err'); console.error(e); return false; }
+}
+
+async function eliminarRegistoDB(fbId) {
+  setSyncDot('syncing');
+  try {
+    await deleteDoc(doc(db, 'registos', fbId));
+    registos = registos.filter(r => r.fbId !== fbId);
+    setSyncDot('ok');
+    return true;
+  } catch(e) { setSyncDot('err'); console.error(e); return false; }
+}
+
+async function limparTodosRegistosDB() {
+  setSyncDot('syncing');
+  try {
+    const snap = await getDocs(collection(db, 'registos'));
+    const promises = snap.docs.map(d => deleteDoc(d.ref));
+    await Promise.all(promises);
+    registos = [];
+    setSyncDot('ok');
+    return true;
+  } catch(e) { setSyncDot('err'); console.error(e); return false; }
+}
+
+// ── Inicialização ──────────────────────────────────────────────────────────
+async function iniciar() {
+  try {
+    setSyncDot('syncing');
+    await Promise.all([carregarConfig(), carregarColaboradores(), carregarRegistos()]);
+    setSyncDot('ok');
+  } catch(e) {
+    setSyncDot('err');
+    console.error('Erro ao ligar ao Firebase:', e);
+    toast('⚠ Sem ligação à base de dados. A tentar reconectar…', 4000);
+  }
+  document.getElementById('loading-overlay').style.display = 'none';
+  appPronta = true;
+  initMesSelects();
+  populateSelects();
+  tickClock();
+  setInterval(tickClock, 1000);
+  onEmpChange();
+}
+
+// ── UI helpers ─────────────────────────────────────────────────────────────
 function initMesSelects() {
-  ['hist-mes','rel-mes'].forEach(id=>{
-    const sel=document.getElementById(id); if(!sel) return;
-    sel.innerHTML=MESES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
-    sel.value=new Date().getMonth();
+  ['hist-mes','rel-mes'].forEach(id => {
+    const sel = document.getElementById(id); if(!sel) return;
+    sel.innerHTML = MESES.map((m,i) => `<option value="${i}">${m}</option>`).join('');
+    sel.value = new Date().getMonth();
   });
 }
 function populateSelects() {
-  ['sel-colaborador','hist-emp'].forEach(id=>{
-    const sel=document.getElementById(id); if(!sel) return;
-    const cur=sel.value;
-    sel.innerHTML=colaboradores.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
-    if(cur) sel.value=cur;
+  ['sel-colaborador','hist-emp'].forEach(id => {
+    const sel = document.getElementById(id); if(!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = colaboradores.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    if(cur) sel.value = cur;
   });
 }
-function switchTab(tab,e) {
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+function switchTab(tab, e) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('sec-'+tab).classList.add('active');
   if(e) e.target.closest('.tab').classList.add('active');
   if(tab==='historico'){populateSelects();renderHistorico();}
   if(tab==='colaboradores') renderColaboradores();
   if(tab==='admin'&&adminLogado) renderAdminRegistos();
 }
+window.switchTab = switchTab;
+
 function tickClock() {
-  const now=new Date();
-  const pad=n=>String(n).padStart(2,'0');
-  document.getElementById('clock-time').textContent=pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
-  document.getElementById('clock-date').textContent=DIAS[now.getDay()]+', '+now.getDate()+' de '+MESES[now.getMonth()]+' de 2026';
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById('clock-time').textContent = pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
+  document.getElementById('clock-date').textContent = DIAS[now.getDay()]+', '+now.getDate()+' de '+MESES[now.getMonth()]+' de '+now.getFullYear();
 }
-// PIN
+
+// ── PIN ────────────────────────────────────────────────────────────────────
 function abrirPIN(){pinBuffer='';document.getElementById('pin-error').textContent='';atualizarDots();document.getElementById('pin-overlay').style.display='flex';}
 function fecharPIN(){document.getElementById('pin-overlay').style.display='none';pinBuffer='';atualizarDots();}
 function atualizarDots(){for(let i=0;i<4;i++)document.getElementById('d'+i).classList.toggle('filled',i<pinBuffer.length);}
@@ -405,6 +567,8 @@ function logoutAdmin(){
   document.querySelectorAll('.tab')[0].classList.add('active');
   toast('Sessão de administrador terminada.');
 }
+window.abrirPIN=abrirPIN; window.fecharPIN=fecharPIN; window.pinPress=pinPress; window.logoutAdmin=logoutAdmin;
+
 function switchAdminView(view,e){
   document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));
   if(e) e.target.classList.add('active');
@@ -414,30 +578,38 @@ function switchAdminView(view,e){
   if(view==='registos') renderAdminRegistos();
   if(view==='colab') renderAdminColab();
 }
-// Registo de ponto
-function registar(tipo){
+window.switchAdminView=switchAdminView;
+
+// ── Registo de ponto ───────────────────────────────────────────────────────
+async function registar(tipo){
   const empId=parseInt(document.getElementById('sel-colaborador').value);
   const emp=colaboradores.find(c=>c.id===empId); if(!emp) return;
   const now=new Date();
-  const dataStr=`2026-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const dataStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   const hojeRegs=registos.filter(r=>r.empId===empId&&r.data===dataStr);
   const ultimo=hojeRegs.length?hojeRegs[hojeRegs.length-1]:null;
   if(tipo==='entrada'&&ultimo&&ultimo.tipo==='entrada'){toast('⚠ Já tem entrada registada.');return;}
   if((tipo==='inicio_pausa'||tipo==='fim_pausa'||tipo==='saida')&&(!ultimo||ultimo.tipo==='saida')){toast('⚠ Registe primeiro a entrada.');return;}
   if(tipo==='fim_pausa'&&ultimo&&ultimo.tipo!=='inicio_pausa'){toast('⚠ Não tem pausa em curso.');return;}
   if(tipo==='inicio_pausa'&&ultimo&&ultimo.tipo==='inicio_pausa'){toast('⚠ Pausa já iniciada.');return;}
-  registos.push({empId,data:dataStr,hora:now.toTimeString().slice(0,8),tipo,ts:now.getTime()});
-  salvar();
-  toast('✓ '+TL[tipo]+' registada às '+now.toTimeString().slice(0,8));
-  atualizarBadge(empId,dataStr);
-  renderHojeLog(empId,dataStr);
+  const obj={empId,data:dataStr,hora:now.toTimeString().slice(0,8),tipo,ts:now.getTime()};
+  const ok = await adicionarRegistoDB(obj);
+  if(ok){
+    toast('✓ '+TL[tipo]+' registada às '+now.toTimeString().slice(0,8));
+    atualizarBadge(empId,dataStr);
+    renderHojeLog(empId,dataStr);
+  }
 }
+window.registar=registar;
+
 function onEmpChange(){
   const id=parseInt(document.getElementById('sel-colaborador').value);
   const now=new Date();
-  const d=`2026-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const d=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   atualizarBadge(id,d); renderHojeLog(id,d);
 }
+window.onEmpChange=onEmpChange;
+
 function atualizarBadge(empId,dataStr){
   const regs=registos.filter(r=>r.empId===empId&&r.data===dataStr);
   const ul=regs.length?regs[regs.length-1]:null;
@@ -448,6 +620,7 @@ function atualizarBadge(empId,dataStr){
   badge.className='badge '+cls;
   badge.innerHTML=`<i class="ti ${ic}"></i> ${lb}`;
 }
+
 function renderHojeLog(empId,dataStr){
   const container=document.getElementById('hoje-log');
   const regs=registos.filter(r=>r.empId===empId&&r.data===dataStr);
@@ -456,6 +629,7 @@ function renderHojeLog(empId,dataStr){
     regs.map(r=>`<tr><td style="font-weight:600;font-variant-numeric:tabular-nums;">${r.hora}</td><td><span class="badge ${TC[r.tipo]}"><i class="ti ${TI[r.tipo]}"></i> ${TL[r.tipo]}</span></td></tr>`).join('')+
     '</tbody></table>';
 }
+
 function calcHoras(regs){
   let total=0,pausa=0,eTs=null,pTs=null;
   regs.forEach(r=>{
@@ -466,11 +640,13 @@ function calcHoras(regs){
   });
   return Math.max(0,total-pausa)/3600000;
 }
+
+// ── Histórico ──────────────────────────────────────────────────────────────
 function renderHistorico(){
   const empId=parseInt(document.getElementById('hist-emp').value);
   const mes=parseInt(document.getElementById('hist-mes').value);
   const emp=colaboradores.find(c=>c.id===empId); if(!emp) return;
-  const pref='2026-'+String(mes+1).padStart(2,'0');
+  const pref=new Date().getFullYear()+'-'+String(mes+1).padStart(2,'0');
   const dias={};
   registos.filter(r=>r.empId===empId&&r.data.startsWith(pref)).forEach(r=>{if(!dias[r.data])dias[r.data]=[];dias[r.data].push(r);});
   const container=document.getElementById('hist-content');
@@ -483,20 +659,20 @@ function renderHistorico(){
     rows+=`<tr><td style="font-weight:600;">${data.split('-').reverse().join('/')}</td><td>${DIAS[d.getDay()]}</td><td style="font-size:12px;">${regs.map(r=>`${r.hora.slice(0,5)} <span style="color:var(--text2);">${TL[r.tipo]}</span>`).join(' · ')}</td><td style="text-align:right;font-weight:600;">${h.toFixed(2)}h</td></tr>`;
   });
   container.innerHTML=`<p style="font-size:14px;font-weight:600;margin-bottom:12px;">${emp.nome} — ${MESES[mes]}</p>
-    <div class="btn-row" style="margin-bottom:12px;">
-      <button class="btn btn-red btn-sm" onclick="exportarHistoricoPDF(${empId},${mes})"><i class="ti ti-file-type-pdf"></i> Exportar PDF</button>
-    </div>
     <div style="overflow-x:auto;"><table><thead><tr><th>Data</th><th>Dia</th><th>Registos</th><th style="text-align:right;">Horas</th></tr></thead><tbody>${rows}</tbody>
     <tfoot><tr><td colspan="3">Total do mês</td><td style="text-align:right;">${totalH.toFixed(2)}h</td></tr></tfoot></table></div>`;
 }
+window.renderHistorico=renderHistorico;
+
+// ── Relatório ──────────────────────────────────────────────────────────────
 function contarDiasUteis(mes){
-  let c=0; const d=new Date(2026,mes,1);
+  let c=0; const d=new Date(new Date().getFullYear(),mes,1);
   while(d.getMonth()===mes){if(d.getDay()!==0&&d.getDay()!==6)c++;d.setDate(d.getDate()+1);}
   return c;
 }
 function gerarRelatorio(){
   const mes=parseInt(document.getElementById('rel-mes').value);
-  const pref='2026-'+String(mes+1).padStart(2,'0');
+  const pref=new Date().getFullYear()+'-'+String(mes+1).padStart(2,'0');
   const du=contarDiasUteis(mes), he=du*8;
   let tG=0,tE=0,tF=0,rows='';
   colaboradores.forEach(emp=>{
@@ -510,7 +686,7 @@ function gerarRelatorio(){
   });
   document.getElementById('rel-output').innerHTML=`<div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
-      <p style="font-size:15px;font-weight:600;">${MESES[mes]} 2026</p>
+      <p style="font-size:15px;font-weight:600;">${MESES[mes]} ${new Date().getFullYear()}</p>
       <span style="font-size:12px;color:var(--text2);">${du} dias úteis · ${he}h esperadas/colaborador</span>
     </div>
     <div class="metrics">
@@ -522,9 +698,11 @@ function gerarRelatorio(){
     <div style="overflow-x:auto;"><table class="print-table"><thead><tr><th>Colaborador</th><th>Dept.</th><th>Dias</th><th>Horas</th><th>Extra</th><th>Em falta</th></tr></thead><tbody>${rows}</tbody></table></div>
   </div>`;
 }
+window.gerarRelatorio=gerarRelatorio;
+
 function exportarCSV(){
   const mes=parseInt(document.getElementById('rel-mes').value);
-  const pref='2026-'+String(mes+1).padStart(2,'0');
+  const pref=new Date().getFullYear()+'-'+String(mes+1).padStart(2,'0');
   const he=contarDiasUteis(mes)*8;
   let csv='Nome,Departamento,Dias trabalhados,Horas trabalhadas,Horas extra,Horas em falta\n';
   colaboradores.forEach(emp=>{
@@ -533,23 +711,29 @@ function exportarCSV(){
     let h=0; Object.values(dias).forEach(rs=>h+=calcHoras(rs));
     csv+=`"${emp.nome}","${emp.dept}",${Object.keys(dias).length},${h.toFixed(2)},${Math.max(0,h-he).toFixed(2)},${Math.max(0,he-h).toFixed(2)}\n`;
   });
-  dlCSV(csv,`ponto_${MESES[mes]}_2026.csv`);
+  dlCSV(csv,`ponto_${MESES[mes]}.csv`);
   toast('✓ CSV exportado!');
 }
+window.exportarCSV=exportarCSV;
+
 function exportarTodosCSV(){
   let csv='Nome,Departamento,Data,Hora,Tipo\n';
   registos.sort((a,b)=>a.ts-b.ts).forEach(r=>{
     const emp=colaboradores.find(c=>c.id===r.empId);
     if(emp) csv+=`"${emp.nome}","${emp.dept}","${r.data}","${r.hora}","${TL[r.tipo]}"\n`;
   });
-  dlCSV(csv,'todos_registos_2026.csv');
+  dlCSV(csv,'todos_registos.csv');
   toast('✓ Exportação completa!');
 }
+window.exportarTodosCSV=exportarTodosCSV;
+
 function dlCSV(csv,nome){
   const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a'); a.href=url; a.download=nome; a.click();
 }
+
+// ── Colaboradores ──────────────────────────────────────────────────────────
 function renderColaboradores(){
   const c=document.getElementById('lista-colaboradores');
   if(!colaboradores.length){c.innerHTML='<p style="font-size:13px;color:var(--text2);">Nenhum colaborador.</p>';return;}
@@ -558,26 +742,32 @@ function renderColaboradores(){
     return `<div class="emp-row"><div class="avatar">${ini}</div><div class="emp-info"><div class="emp-name">${emp.nome}</div><div class="emp-sub">${emp.dept} · ${emp.horas}h/dia · ${emp.turno}</div></div></div>`;
   }).join('');
 }
-function adicionarColaborador(){
+window.renderColaboradores=renderColaboradores;
+
+async function adicionarColaborador(){
   const nome=document.getElementById('new-nome').value.trim();
   const dept=document.getElementById('new-dept').value.trim();
   const horas=parseInt(document.getElementById('new-horas').value)||8;
   const turno=document.getElementById('new-turno').value;
   if(!nome){toast('⚠ Insira o nome.');return;}
-  colaboradores.push({id:nextId++,nome,dept:dept||'Geral',horas,turno});
-  salvar(); renderColaboradores(); populateSelects();
-  document.getElementById('new-nome').value='';
-  document.getElementById('new-dept').value='';
-  toast('✓ Colaborador adicionado!');
+  const ok = await adicionarColaboradorDB({nome,dept:dept||'Geral',horas,turno});
+  if(ok){
+    renderColaboradores(); populateSelects();
+    document.getElementById('new-nome').value='';
+    document.getElementById('new-dept').value='';
+    toast('✓ Colaborador adicionado!');
+  }
 }
-// Admin registos
+window.adicionarColaborador=adicionarColaborador;
+
+// ── Admin registos ─────────────────────────────────────────────────────────
 function renderAdminRegistos(){
   const container=document.getElementById('admin-registos');
   const fil_mes_el=document.getElementById('adm-mes');
   const fil_emp_el=document.getElementById('adm-emp');
   const filtMes=fil_mes_el?parseInt(fil_mes_el.value):new Date().getMonth();
   const filtEmp=fil_emp_el?fil_emp_el.value:'todos';
-  const pref='2026-'+String(filtMes+1).padStart(2,'0');
+  const pref=new Date().getFullYear()+'-'+String(filtMes+1).padStart(2,'0');
   let regs=registos.filter(r=>r.data.startsWith(pref));
   if(filtEmp!=='todos') regs=regs.filter(r=>r.empId===parseInt(filtEmp));
   regs=regs.slice().sort((a,b)=>a.ts-b.ts);
@@ -592,48 +782,55 @@ function renderAdminRegistos(){
     <div id="new-reg-area"></div>
     ${regs.length===0?'<p style="font-size:13px;color:var(--text2);">Nenhum registo neste período.</p>':
     `<div style="overflow-x:auto;"><table><thead><tr><th>Colaborador</th><th>Data</th><th>Hora</th><th>Tipo</th><th style="text-align:right;">Ações</th></tr></thead>
-    <tbody id="adm-tbody">${regs.map((r)=>{
-      const ri=registos.indexOf(r);
+    <tbody>${regs.map((r)=>{
       const emp=colaboradores.find(c=>c.id===r.empId);
-      return `<tr id="row-${ri}"><td style="font-size:13px;">${emp?emp.nome:'?'}</td><td style="font-size:13px;">${r.data.split('-').reverse().join('/')}</td><td style="font-variant-numeric:tabular-nums;font-size:13px;">${r.hora}</td><td><span class="badge ${TC[r.tipo]}" style="font-size:10px;"><i class="ti ${TI[r.tipo]}"></i> ${TL[r.tipo]}</span></td><td style="text-align:right;white-space:nowrap;"><button class="btn btn-blue btn-sm" onclick="editarRegisto(${ri})"><i class="ti ti-edit"></i></button> <button class="btn btn-red btn-sm" onclick="eliminarRegisto(${ri})"><i class="ti ti-trash"></i></button></td></tr>`;
+      return `<tr id="row-${r.fbId}"><td style="font-size:13px;">${emp?emp.nome:'?'}</td><td style="font-size:13px;">${r.data.split('-').reverse().join('/')}</td><td style="font-variant-numeric:tabular-nums;font-size:13px;">${r.hora}</td><td><span class="badge ${TC[r.tipo]}" style="font-size:10px;"><i class="ti ${TI[r.tipo]}"></i> ${TL[r.tipo]}</span></td><td style="text-align:right;white-space:nowrap;"><button class="btn btn-blue btn-sm" onclick="editarRegisto('${r.fbId}')"><i class="ti ti-edit"></i></button> <button class="btn btn-red btn-sm" onclick="eliminarRegisto('${r.fbId}')"><i class="ti ti-trash"></i></button></td></tr>`;
     }).join('')}</tbody></table></div>`}
   </div>`;
 }
-function editarRegisto(ri){
-  const r=registos[ri]; if(!r) return;
-  const row=document.getElementById('row-'+ri);
+window.renderAdminRegistos=renderAdminRegistos;
+
+function editarRegisto(fbId){
+  const r=registos.find(x=>x.fbId===fbId); if(!r) return;
+  const row=document.getElementById('row-'+fbId);
   row.style.background='var(--bg2)';
   const empOpts=colaboradores.map(c=>`<option value="${c.id}" ${c.id===r.empId?'selected':''}>${c.nome}</option>`).join('');
   const tipoOpts=['entrada','saida','inicio_pausa','fim_pausa'].map(t=>`<option value="${t}" ${t===r.tipo?'selected':''}>${TL[t]}</option>`).join('');
-  row.innerHTML=`<td><select class="edit-input" id="er-e-${ri}">${empOpts}</select></td>
-    <td><input class="edit-input" type="date" id="er-d-${ri}" value="${r.data}" /></td>
-    <td><input class="edit-input" type="time" id="er-h-${ri}" value="${r.hora.slice(0,5)}" step="60" style="width:90px;" /></td>
-    <td><select class="edit-input" id="er-t-${ri}">${tipoOpts}</select></td>
+  row.innerHTML=`<td><select class="edit-input" id="er-e-${fbId}">${empOpts}</select></td>
+    <td><input class="edit-input" type="date" id="er-d-${fbId}" value="${r.data}" /></td>
+    <td><input class="edit-input" type="time" id="er-h-${fbId}" value="${r.hora.slice(0,5)}" step="60" style="width:90px;" /></td>
+    <td><select class="edit-input" id="er-t-${fbId}">${tipoOpts}</select></td>
     <td style="text-align:right;white-space:nowrap;">
-      <button class="btn btn-purple btn-sm" onclick="guardarRegisto(${ri})"><i class="ti ti-check"></i> Guardar</button>
+      <button class="btn btn-purple btn-sm" onclick="guardarRegisto('${fbId}')"><i class="ti ti-check"></i> Guardar</button>
       <button class="btn btn-gray btn-sm" onclick="renderAdminRegistos()" style="margin-left:4px;">Cancelar</button>
     </td>`;
 }
-function guardarRegisto(ri){
-  const empId=parseInt(document.getElementById('er-e-'+ri).value);
-  const data=document.getElementById('er-d-'+ri).value;
-  const hora=document.getElementById('er-h-'+ri).value+':00';
-  const tipo=document.getElementById('er-t-'+ri).value;
+window.editarRegisto=editarRegisto;
+
+async function guardarRegisto(fbId){
+  const empId=parseInt(document.getElementById('er-e-'+fbId).value);
+  const data=document.getElementById('er-d-'+fbId).value;
+  const hora=document.getElementById('er-h-'+fbId).value+':00';
+  const tipo=document.getElementById('er-t-'+fbId).value;
   if(!data||!hora){toast('⚠ Preencha todos os campos.');return;}
   const [y,m,d]=data.split('-').map(Number);
   const [h,min]=hora.split(':').map(Number);
-  registos[ri]={...registos[ri],empId,data,hora,tipo,ts:new Date(y,m-1,d,h,min,0).getTime()};
-  salvar(); toast('✓ Registo atualizado!'); renderAdminRegistos();
+  const ok = await atualizarRegistoDB(fbId,{empId,data,hora,tipo,ts:new Date(y,m-1,d,h,min,0).getTime()});
+  if(ok){toast('✓ Registo atualizado!'); renderAdminRegistos();}
 }
-function eliminarRegisto(ri){
+window.guardarRegisto=guardarRegisto;
+
+async function eliminarRegisto(fbId){
   if(!confirm('Eliminar este registo?')) return;
-  registos.splice(ri,1); salvar();
-  toast('Registo eliminado.'); renderAdminRegistos();
+  const ok = await eliminarRegistoDB(fbId);
+  if(ok){toast('Registo eliminado.'); renderAdminRegistos();}
 }
+window.eliminarRegisto=eliminarRegisto;
+
 function abrirNovoRegisto(){
   const mes=document.getElementById('adm-mes')?parseInt(document.getElementById('adm-mes').value):new Date().getMonth();
   const hoje=new Date();
-  const dataHoje=`2026-${String(mes+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
+  const dataHoje=`${hoje.getFullYear()}-${String(mes+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
   const empOpts=colaboradores.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
   const tipoOpts=['entrada','saida','inicio_pausa','fim_pausa'].map(t=>`<option value="${t}">${TL[t]}</option>`).join('');
   document.getElementById('new-reg-area').innerHTML=`<div style="background:var(--blue-bg);border:0.5px solid var(--blue-border);border-radius:var(--radius);padding:14px;margin-bottom:14px;">
@@ -650,7 +847,9 @@ function abrirNovoRegisto(){
     </div>
   </div>`;
 }
-function criarRegisto(){
+window.abrirNovoRegisto=abrirNovoRegisto;
+
+async function criarRegisto(){
   const empId=parseInt(document.getElementById('nr-emp').value);
   const tipo=document.getElementById('nr-tipo').value;
   const data=document.getElementById('nr-data').value;
@@ -658,52 +857,66 @@ function criarRegisto(){
   if(!data||!hora){toast('⚠ Preencha todos os campos.');return;}
   const [y,m,d]=data.split('-').map(Number);
   const [h,mn]=hora.split(':').map(Number);
-  registos.push({empId,data,hora,tipo,ts:new Date(y,m-1,d,h,mn,0).getTime()});
-  registos.sort((a,b)=>a.ts-b.ts);
-  salvar(); toast('✓ Registo criado!'); renderAdminRegistos();
+  const ok = await adicionarRegistoDB({empId,data,hora,tipo,ts:new Date(y,m-1,d,h,mn,0).getTime()});
+  if(ok){toast('✓ Registo criado!'); renderAdminRegistos();}
 }
+window.criarRegisto=criarRegisto;
+
+// ── Admin colaboradores ────────────────────────────────────────────────────
 function renderAdminColab(){
   const c=document.getElementById('admin-colab');
   c.innerHTML=`<div class="card"><div class="card-title"><i class="ti ti-users"></i> Editar colaboradores</div>
     <div style="overflow-x:auto;"><table><thead><tr><th>Nome</th><th>Departamento</th><th>Horas</th><th>Turno</th><th style="text-align:right;">Ações</th></tr></thead>
-    <tbody>${colaboradores.map(emp=>`<tr id="crow-${emp.id}">
+    <tbody>${colaboradores.map(emp=>`<tr id="crow-${emp.fbId}">
       <td style="font-weight:500;">${emp.nome}</td><td>${emp.dept}</td><td>${emp.horas}h</td><td>${emp.turno}</td>
       <td style="text-align:right;white-space:nowrap;">
-        <button class="btn btn-blue btn-sm" onclick="editarColab(${emp.id})"><i class="ti ti-edit"></i></button>
-        <button class="btn btn-red btn-sm" onclick="eliminarColab(${emp.id})" style="margin-left:4px;"><i class="ti ti-trash"></i></button>
+        <button class="btn btn-blue btn-sm" onclick="editarColab('${emp.fbId}')"><i class="ti ti-edit"></i></button>
+        <button class="btn btn-red btn-sm" onclick="eliminarColab('${emp.fbId}')" style="margin-left:4px;"><i class="ti ti-trash"></i></button>
       </td></tr>`).join('')}</tbody></table></div></div>`;
 }
-function editarColab(id){
-  const emp=colaboradores.find(c=>c.id===id); if(!emp) return;
-  const row=document.getElementById('crow-'+id);
+window.renderAdminColab=renderAdminColab;
+
+function editarColab(fbId){
+  const emp=colaboradores.find(c=>c.fbId===fbId); if(!emp) return;
+  const row=document.getElementById('crow-'+fbId);
   row.style.background='var(--bg2)';
-  row.innerHTML=`<td><input class="edit-input" id="ec-n-${id}" value="${emp.nome}" /></td>
-    <td><input class="edit-input" id="ec-d-${id}" value="${emp.dept}" /></td>
-    <td><input class="edit-input" type="number" id="ec-h-${id}" value="${emp.horas}" min="1" max="12" style="width:60px;" /></td>
-    <td><select class="edit-input" id="ec-t-${id}">
+  row.innerHTML=`<td><input class="edit-input" id="ec-n-${fbId}" value="${emp.nome}" /></td>
+    <td><input class="edit-input" id="ec-d-${fbId}" value="${emp.dept}" /></td>
+    <td><input class="edit-input" type="number" id="ec-h-${fbId}" value="${emp.horas}" min="1" max="12" style="width:60px;" /></td>
+    <td><select class="edit-input" id="ec-t-${fbId}">
       <option value="normal" ${emp.turno==='normal'?'selected':''}>Normal</option>
       <option value="manha" ${emp.turno==='manha'?'selected':''}>Manhã</option>
       <option value="tarde" ${emp.turno==='tarde'?'selected':''}>Tarde</option></select></td>
     <td style="text-align:right;white-space:nowrap;">
-      <button class="btn btn-purple btn-sm" onclick="guardarColab(${id})"><i class="ti ti-check"></i> Guardar</button>
+      <button class="btn btn-purple btn-sm" onclick="guardarColab('${fbId}')"><i class="ti ti-check"></i> Guardar</button>
       <button class="btn btn-gray btn-sm" onclick="renderAdminColab()" style="margin-left:4px;">Cancelar</button>
     </td>`;
 }
-function guardarColab(id){
-  const i=colaboradores.findIndex(c=>c.id===id); if(i<0) return;
-  const nome=document.getElementById('ec-n-'+id).value.trim();
+window.editarColab=editarColab;
+
+async function guardarColab(fbId){
+  const nome=document.getElementById('ec-n-'+fbId).value.trim();
   if(!nome){toast('⚠ O nome não pode estar vazio.');return;}
-  colaboradores[i]={...colaboradores[i],nome,dept:document.getElementById('ec-d-'+id).value.trim()||'Geral',horas:parseInt(document.getElementById('ec-h-'+id).value)||8,turno:document.getElementById('ec-t-'+id).value};
-  salvar(); populateSelects(); toast('✓ Colaborador atualizado!'); renderAdminColab();
+  const dados={nome,dept:document.getElementById('ec-d-'+fbId).value.trim()||'Geral',horas:parseInt(document.getElementById('ec-h-'+fbId).value)||8,turno:document.getElementById('ec-t-'+fbId).value};
+  const ok = await atualizarColaboradorDB(fbId, dados);
+  if(ok){populateSelects(); toast('✓ Colaborador atualizado!'); renderAdminColab();}
 }
-function eliminarColab(id){
-  const n=registos.filter(r=>r.empId===id).length;
+window.guardarColab=guardarColab;
+
+async function eliminarColab(fbId){
+  const emp=colaboradores.find(c=>c.fbId===fbId); if(!emp) return;
+  const n=registos.filter(r=>r.empId===emp.id).length;
   if(!confirm(n>0?`Este colaborador tem ${n} registos que também serão eliminados. Confirma?`:'Eliminar este colaborador?')) return;
-  colaboradores=colaboradores.filter(c=>c.id!==id);
-  registos=registos.filter(r=>r.empId!==id);
-  salvar(); populateSelects(); toast('Colaborador eliminado.'); renderAdminColab();
+  // eliminar registos associados
+  const regsAssoc = registos.filter(r=>r.empId===emp.id);
+  for(const r of regsAssoc) await eliminarRegistoDB(r.fbId);
+  const ok = await eliminarColaboradorDB(fbId);
+  if(ok){populateSelects(); toast('Colaborador eliminado.'); renderAdminColab();}
 }
-function alterarPIN(){
+window.eliminarColab=eliminarColab;
+
+// ── Alterar PIN ────────────────────────────────────────────────────────────
+async function alterarPIN(){
   const atual=document.getElementById('pin-atual').value;
   const novo=document.getElementById('pin-novo').value;
   const conf=document.getElementById('pin-conf').value;
@@ -711,222 +924,23 @@ function alterarPIN(){
   if(atual!==adminPIN){msg.style.color='var(--red-text)';msg.textContent='PIN atual incorreto.';return;}
   if(!/^\d{4}$/.test(novo)){msg.style.color='var(--red-text)';msg.textContent='O novo PIN deve ter 4 dígitos numéricos.';return;}
   if(novo!==conf){msg.style.color='var(--red-text)';msg.textContent='Os PINs não coincidem.';return;}
-  adminPIN=novo; salvar();
+  adminPIN=novo;
+  await guardarConfig();
   msg.style.color='var(--green-text)';msg.textContent='✓ PIN alterado com sucesso!';
   ['pin-atual','pin-novo','pin-conf'].forEach(id=>document.getElementById(id).value='');
 }
-function limparTodos(){
+window.alterarPIN=alterarPIN;
+
+async function limparTodos(){
   if(!confirm('Eliminar TODOS os registos de ponto? Esta ação é irreversível.')) return;
-  registos=[]; salvar(); toast('Todos os registos eliminados.'); renderAdminRegistos();
+  const ok = await limparTodosRegistosDB();
+  if(ok){toast('Todos os registos eliminados.'); renderAdminRegistos();}
 }
-// ── PDF Export Functions ──────────────────────────────────────────────────────
-function getPDF(title, subtitle) {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const purple = [60, 52, 137];
-  const gray = [120, 113, 108];
-  const lightGray = [245, 245, 244];
+window.limparTodos=limparTodos;
 
-  // Header bar
-  doc.setFillColor(...purple);
-  doc.rect(0, 0, 210, 22, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
-  doc.setTextColor(255, 255, 255);
-  doc.text('Relógio de Ponto 2026', 14, 10);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Registo de assiduidade', 14, 16);
-  const now = new Date();
-  doc.text('Gerado em: ' + now.toLocaleDateString('pt-PT') + ' ' + now.toLocaleTimeString('pt-PT', {hour:'2-digit',minute:'2-digit'}), 196, 10, {align:'right'});
+// ── Arranque ───────────────────────────────────────────────────────────────
+iniciar();
 
-  // Title section
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...purple);
-  doc.text(title, 14, 34);
-  if (subtitle) {
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...gray);
-    doc.text(subtitle, 14, 40);
-  }
-  return { doc, purple, gray, lightGray, startY: subtitle ? 46 : 40 };
-}
-
-function exportarRelatorioPDF() {
-  const mes = parseInt(document.getElementById('rel-mes').value);
-  const pref = '2026-' + String(mes + 1).padStart(2, '0');
-  const du = contarDiasUteis(mes), he = du * 8;
-  let tG = 0, tE = 0, tF = 0;
-  const rows = [];
-
-  colaboradores.forEach(emp => {
-    const dias = {};
-    registos.filter(r => r.empId === emp.id && r.data.startsWith(pref)).forEach(r => { if (!dias[r.data]) dias[r.data] = []; dias[r.data].push(r); });
-    let h = 0; Object.values(dias).forEach(rs => h += calcHoras(rs));
-    const ex = Math.max(0, h - he), fa = Math.max(0, he - h);
-    tG += h; tE += ex; tF += fa;
-    rows.push([emp.nome, emp.dept, Object.keys(dias).length, h.toFixed(2) + 'h', ex > 0 ? '+' + ex.toFixed(2) + 'h' : '—', fa > 0 ? '-' + fa.toFixed(2) + 'h' : '—']);
-  });
-
-  const { doc, purple, gray, lightGray, startY } = getPDF(
-    'Relatório Mensal — ' + MESES[mes] + ' 2026',
-    du + ' dias úteis · ' + he + 'h esperadas por colaborador · ' + colaboradores.length + ' colaborador(es)'
-  );
-
-  // Metrics boxes
-  const metrics = [
-    { label: 'Total horas', value: tG.toFixed(1) + 'h', color: [60,52,137] },
-    { label: 'Horas extra', value: '+' + tE.toFixed(1) + 'h', color: [22,101,52] },
-    { label: 'Em falta', value: '-' + tF.toFixed(1) + 'h', color: [153,27,27] },
-    { label: 'Colaboradores', value: colaboradores.length.toString(), color: [30,64,175] },
-  ];
-  const boxW = 43, boxH = 16, gap = 4, startX = 14;
-  metrics.forEach((m, i) => {
-    const x = startX + i * (boxW + gap);
-    doc.setFillColor(...lightGray);
-    doc.roundedRect(x, startY, boxW, boxH, 2, 2, 'F');
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...gray);
-    doc.text(m.label.toUpperCase(), x + 4, startY + 5);
-    doc.setFontSize(13);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...m.color);
-    doc.text(m.value, x + 4, startY + 13);
-  });
-
-  doc.autoTable({
-    startY: startY + boxH + 6,
-    head: [['Colaborador', 'Depto.', 'Dias', 'Horas', 'Extra', 'Em falta']],
-    body: rows,
-    styles: { fontSize: 9, cellPadding: 3, textColor: [28,25,23] },
-    headStyles: { fillColor: purple, textColor: [255,255,255], fontStyle: 'bold', fontSize: 9 },
-    alternateRowStyles: { fillColor: lightGray },
-    columnStyles: { 0: { cellWidth: 55 }, 1: { cellWidth: 35 }, 2: { cellWidth: 18, halign:'center' }, 3: { cellWidth: 22, halign:'right' }, 4: { cellWidth: 22, halign:'right', textColor:[22,101,52] }, 5: { cellWidth: 22, halign:'right', textColor:[153,27,27] } },
-    margin: { left: 14, right: 14 },
-    foot: [['Total geral', '', '', tG.toFixed(2) + 'h', '+' + tE.toFixed(2) + 'h', '-' + tF.toFixed(2) + 'h']],
-    footStyles: { fillColor: [235,233,254], textColor: [38,33,92], fontStyle: 'bold' },
-  });
-
-  // Footer
-  addPDFFooter(doc);
-  doc.save('relatorio_' + MESES[mes].toLowerCase() + '_2026.pdf');
-  toast('✓ PDF do relatório exportado!');
-}
-
-function exportarHistoricoPDF(empId, mes) {
-  const emp = colaboradores.find(c => c.id === empId); if (!emp) return;
-  const pref = '2026-' + String(mes + 1).padStart(2, '0');
-  const dias = {};
-  registos.filter(r => r.empId === empId && r.data.startsWith(pref)).forEach(r => { if (!dias[r.data]) dias[r.data] = []; dias[r.data].push(r); });
-
-  let totalH = 0;
-  const rows = [];
-  Object.keys(dias).sort().forEach(data => {
-    const regs = dias[data];
-    const h = calcHoras(regs); totalH += h;
-    const d = new Date(data + 'T12:00:00');
-    const registosStr = regs.map(r => r.hora.slice(0,5) + ' ' + TL[r.tipo]).join('  ·  ');
-    rows.push([data.split('-').reverse().join('/'), DIAS[d.getDay()], registosStr, h.toFixed(2) + 'h']);
-  });
-
-  const he = contarDiasUteis(mes) * 8;
-  const extra = Math.max(0, totalH - he), falta = Math.max(0, he - totalH);
-  const { doc, purple, gray, lightGray, startY } = getPDF(
-    'Histórico — ' + emp.nome,
-    MESES[mes] + ' 2026 · ' + emp.dept + ' · Turno: ' + emp.turno
-  );
-
-  // Summary boxes
-  const metrics2 = [
-    { label: 'Dias trabalhados', value: Object.keys(dias).length.toString(), color: [60,52,137] },
-    { label: 'Total horas', value: totalH.toFixed(2) + 'h', color: [28,25,23] },
-    { label: 'Horas extra', value: '+' + extra.toFixed(2) + 'h', color: [22,101,52] },
-    { label: 'Em falta', value: '-' + falta.toFixed(2) + 'h', color: [153,27,27] },
-  ];
-  const boxW = 43, boxH = 16, gap = 4;
-  metrics2.forEach((m, i) => {
-    const x = 14 + i * (boxW + gap);
-    doc.setFillColor(...lightGray);
-    doc.roundedRect(x, startY, boxW, boxH, 2, 2, 'F');
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...gray);
-    doc.text(m.label.toUpperCase(), x + 4, startY + 5);
-    doc.setFontSize(13);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...m.color);
-    doc.text(m.value, x + 4, startY + 13);
-  });
-
-  doc.autoTable({
-    startY: startY + boxH + 6,
-    head: [['Data', 'Dia', 'Registos', 'Horas']],
-    body: rows,
-    styles: { fontSize: 8.5, cellPadding: 3, textColor: [28,25,23] },
-    headStyles: { fillColor: purple, textColor: [255,255,255], fontStyle: 'bold', fontSize: 9 },
-    alternateRowStyles: { fillColor: lightGray },
-    columnStyles: { 0: { cellWidth: 22 }, 1: { cellWidth: 22 }, 2: { cellWidth: 120 }, 3: { cellWidth: 18, halign:'right', fontStyle:'bold' } },
-    margin: { left: 14, right: 14 },
-    foot: [['', '', 'Total do mês', totalH.toFixed(2) + 'h']],
-    footStyles: { fillColor: [235,233,254], textColor: [38,33,92], fontStyle: 'bold' },
-  });
-
-  addPDFFooter(doc);
-  doc.save('historico_' + emp.nome.replace(/ /g,'_').toLowerCase() + '_' + MESES[mes].toLowerCase() + '_2026.pdf');
-  toast('✓ PDF do histórico exportado!');
-}
-
-function exportarTodosPDF() {
-  const { doc, purple, gray, lightGray, startY } = getPDF(
-    'Todos os Registos de Ponto — 2026',
-    'Exportação completa · ' + registos.length + ' registos · ' + colaboradores.length + ' colaboradores'
-  );
-
-  const sorted = registos.slice().sort((a,b) => a.ts - b.ts);
-  const rows = sorted.map(r => {
-    const emp = colaboradores.find(c => c.id === r.empId);
-    return [emp ? emp.nome : '?', emp ? emp.dept : '?', r.data.split('-').reverse().join('/'), r.hora.slice(0,5), TL[r.tipo]];
-  });
-
-  doc.autoTable({
-    startY,
-    head: [['Colaborador', 'Departamento', 'Data', 'Hora', 'Tipo']],
-    body: rows,
-    styles: { fontSize: 9, cellPadding: 3, textColor: [28,25,23] },
-    headStyles: { fillColor: purple, textColor: [255,255,255], fontStyle: 'bold', fontSize: 9 },
-    alternateRowStyles: { fillColor: lightGray },
-    columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 40 }, 2: { cellWidth: 28 }, 3: { cellWidth: 20, halign:'center' }, 4: { cellWidth: 40 } },
-    margin: { left: 14, right: 14 },
-  });
-
-  addPDFFooter(doc);
-  doc.save('todos_registos_2026.pdf');
-  toast('✓ PDF completo exportado!');
-}
-
-function addPDFFooter(doc) {
-  const pageCount = doc.internal.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(168, 162, 158);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Relógio de Ponto 2026 — Registo de assiduidade', 14, 290);
-    doc.text('Página ' + i + ' de ' + pageCount, 196, 290, { align: 'right' });
-    doc.setDrawColor(229, 225, 220);
-    doc.line(14, 287, 196, 287);
-  }
-}
-
-// Init
-initMesSelects();
-populateSelects();
-tickClock();
-setInterval(tickClock,1000);
-onEmpChange();
 </script>
 </body>
 </html>
