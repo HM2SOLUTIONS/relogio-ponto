@@ -60,7 +60,8 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg3);color:
 .tab{flex:1;min-width:fit-content;padding:8px 13px;font-size:13px;cursor:pointer;border:none;background:none;color:var(--text2);border-radius:var(--r);display:flex;align-items:center;gap:5px;white-space:nowrap;transition:all .15s;}
 .tab.on{background:var(--purple);color:#fff;font-weight:600;box-shadow:0 2px 8px rgba(60,52,137,.3);}
 .tab:not(.on):hover{background:var(--bg2);}
-.sec{display:none;}.sec.on{display:block;}
+.sec{display:none;}.sec.on{display:block;animation:secIn .18s ease;}
+@keyframes secIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
 
 /* ── Cards ── */
 .card{background:var(--bg);border:.5px solid var(--border);border-radius:var(--rl);padding:20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.03);}
@@ -87,6 +88,7 @@ select:focus,input:focus,textarea:focus{border-color:var(--purple);box-shadow:0 
 /* ── Buttons ── */
 .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;white-space:nowrap;}
 .btn:active{transform:scale(.97);}
+.btn:disabled{opacity:.5;cursor:default;transform:none;}
 .bp{background:var(--purple);color:#fff;box-shadow:0 2px 8px rgba(60,52,137,.25);}
 .bp:hover{background:#2d2666;}
 .bg{background:var(--green-bg);color:var(--green-text);border:1px solid var(--green-border);}
@@ -168,6 +170,8 @@ tfoot td{font-weight:700;border-top:1px solid var(--border2);border-bottom:none;
 .pin-dots{display:flex;gap:14px;justify-content:center;margin-bottom:18px;}
 .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border2);background:transparent;transition:all .15s;}
 .pin-dot.on{background:var(--purple);border-color:var(--purple);transform:scale(1.1);}
+.pin-dots.shake{animation:pinshake .4s;}
+@keyframes pinshake{10%,90%{transform:translateX(-1px);}20%,80%{transform:translateX(3px);}30%,50%,70%{transform:translateX(-6px);}40%,60%{transform:translateX(6px);}}
 .pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
 .pin-btn{padding:16px;font-size:20px;font-weight:300;cursor:pointer;border-radius:var(--r);background:var(--bg2);border:.5px solid var(--border);color:var(--text);transition:all .1s;}
 .pin-btn:active{transform:scale(.93);background:var(--purple-light);}
@@ -215,7 +219,10 @@ tfoot td{font-weight:700;border-top:1px solid var(--border2);border-bottom:none;
 .seg-b.on{background:var(--purple);color:#fff;font-weight:600;}
 
 /* ── Toast ── */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c1917;color:#fafaf9;padding:11px 24px;border-radius:var(--rl);font-size:13px;z-index:1000;display:none;box-shadow:0 4px 20px rgba(0,0,0,.3);white-space:nowrap;animation:fadeIn .2s ease;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:#1c1917;color:#fafaf9;padding:11px 24px;border-radius:var(--rl);font-size:13px;z-index:1000;opacity:0;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.3);white-space:nowrap;transition:opacity .2s ease,transform .2s ease;}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.err{background:#9f1d1d;}
+.toast.ok{background:#15633a;}
 
 /* ── Inline edit form ── */
 .inline-edit{background:var(--blue-bg);border:.5px solid var(--blue-border);border-radius:var(--r);padding:12px 14px;margin-top:8px;}
@@ -319,10 +326,10 @@ tfoot td{font-weight:700;border-top:1px solid var(--border2);border-bottom:none;
       </div>
       <div id="horas-hoje" style="font-size:13px;color:var(--text2);margin-bottom:14px;"></div>
       <div class="btn-row" style="margin-top:0;">
-        <button class="btn bg" onclick="reg('entrada')"><i class="ti ti-login"></i> Entrada</button>
-        <button class="btn by" onclick="reg('inicio_pausa')"><i class="ti ti-coffee"></i> Pausa</button>
-        <button class="btn bgy" onclick="reg('fim_pausa')"><i class="ti ti-player-play"></i> Retomar</button>
-        <button class="btn br" onclick="reg('saida')"><i class="ti ti-logout"></i> Saída</button>
+        <button class="btn bg" id="btn-entrada" onclick="reg('entrada')"><i class="ti ti-login"></i> Entrada</button>
+        <button class="btn by" id="btn-pausa" onclick="reg('inicio_pausa')"><i class="ti ti-coffee"></i> Pausa</button>
+        <button class="btn bgy" id="btn-retomar" onclick="reg('fim_pausa')"><i class="ti ti-player-play"></i> Retomar</button>
+        <button class="btn br" id="btn-saida" onclick="reg('saida')"><i class="ti ti-logout"></i> Saída</button>
       </div>
     </div>
     <div class="card">
@@ -536,7 +543,7 @@ tfoot td{font-weight:700;border-top:1px solid var(--border2);border-bottom:none;
 
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import{getFirestore,collection,doc,getDocs,addDoc,updateDoc,deleteDoc,setDoc,query,orderBy}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import{getFirestore,collection,doc,getDocs,addDoc,updateDoc,deleteDoc,setDoc,query,orderBy,onSnapshot}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const FC={apiKey:"AIzaSyDjtYdpWMEJ5VFeNG_hZRuMjP6j7vWSpXA",authDomain:"relogio-ponto-c19bd.firebaseapp.com",projectId:"relogio-ponto-c19bd",storageBucket:"relogio-ponto-c19bd.firebasestorage.app",messagingSenderId:"1022115976000",appId:"1:1022115976000:web:024218130ceff681e820a5"};
 const app=initializeApp(FC);const db=getFirestore(app);
@@ -567,7 +574,16 @@ let calDiaAtivo=null;
 const ss=s=>document.getElementById('sync').className='sync '+s;
 
 // ── Toast ──
-function toast(msg,d=2800){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',d);}
+function toast(msg,d=2800){
+  const t=document.getElementById('toast');
+  const kind=msg.startsWith('⚠')?'err':msg.startsWith('✓')?'ok':'';
+  t.textContent=msg;t.className='toast on '+kind;
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),d);
+}
+function pinShake(){
+  const el=document.querySelector('.pin-dots');if(!el)return;
+  el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');
+}
 
 // ── Firebase helpers ──
 async function fbGet(col,ord){const snap=ord?await getDocs(query(collection(db,col),orderBy(ord))):await getDocs(collection(db,col));return snap.docs.map(d=>({fbId:d.id,...d.data()}));}
@@ -595,10 +611,59 @@ async function init(){
       for(const e of ex){const id=await fbAdd('colaboradores',e);colaboradores.push({fbId:id,...e});}
     }
     ss('ok');
+    ligarSincronizacaoEmTempoReal();
   }catch(e){ss('err');toast('⚠ Erro ao ligar. Verifique a ligação.',4000);}
   document.getElementById('loading').style.display='none';
   tickClock();setInterval(tickClock,1000);setInterval(atualizarHojeH,30000);
   mostrarLogin();
+}
+
+// ── Sincronização em tempo real ─────────────────────────────────────────────
+// Em vez de só carregar os dados uma vez, ficamos "à escuta" do Firestore.
+// Quando alguém regista um ponto, pede uma ausência ou um pedido é aprovado
+// — em qualquer dispositivo — todos os ecrãs relevantes atualizam-se sós,
+// sem precisar de recarregar a página. Só atualizamos automaticamente vistas
+// "seguras" (sem edição em curso); os ecrãs de edição inline do admin
+// (Registos, Colaboradores, Turnos) só atualizam quando o próprio admin agir,
+// para nunca perder uma edição a meio.
+function ligarSincronizacaoEmTempoReal(){
+  const ligar=(col,ord)=>{
+    const q=ord?query(collection(db,col),orderBy(ord)):collection(db,col);
+    onSnapshot(q,snap=>{
+      const arr=snap.docs.map(d=>({fbId:d.id,...d.data()}));
+      if(col==='registos')registos=arr;
+      else if(col==='ausencias')ausencias=arr;
+      else if(col==='pedidos')pedidos=arr;
+      else if(col==='colaboradores')colaboradores=arr;
+      else if(col==='turnos')turnos=arr;
+      liveSync();
+    },err=>console.error('Sync '+col,err));
+  };
+  ligar('registos','ts');ligar('ausencias','dataInicio');ligar('pedidos','criadoEm');ligar('colaboradores',null);ligar('turnos','nome');
+}
+
+function liveSync(){
+  const lw=document.getElementById('login-wrap');
+  if(lw&&lw.style.display==='flex'){
+    const s=document.getElementById('login-emp');
+    if(s)s.innerHTML=colaboradores.map(c=>`<option value="${c.fbId}">${c.nome}</option>`).join('');
+  }
+  atualizarNotifC();atualizarNotifA();
+  if(utilizadorAtual){
+    if(document.getElementById('sc-ponto')?.classList.contains('on')){
+      atualizarBadge(utilizadorAtual.id,hoje());renderHojeLog(utilizadorAtual.id,hoje());atualizarHojeH();
+    }
+    if(document.getElementById('sc-cal')?.classList.contains('on')){
+      renderCal();
+      if(calDiaAtivo)renderDiaDetail(calDiaAtivo);
+    }
+    if(document.getElementById('sc-aus')?.classList.contains('on')){renderAusColab();renderFeriasSaldo();}
+    if(document.getElementById('sc-ped')?.classList.contains('on'))renderPedColab();
+  } else if(document.getElementById('tabs-a')?.style.display==='flex'){
+    if(document.getElementById('sa-dash')?.classList.contains('on'))renderDash();
+    if(document.getElementById('sa-ped')?.classList.contains('on'))renderAdmPed();
+    if(document.getElementById('sa-aus')?.classList.contains('on'))renderAdmAus();
+  }
 }
 
 // ── Helpers de data ──
@@ -631,11 +696,11 @@ function lp(v){
 function validLogin(){
   if(loginModo==='admin'){
     if(lBuf===adminPIN)entrarAdmin();
-    else{document.getElementById('login-err').textContent='PIN incorreto.';lBuf='';updLD();}
+    else{document.getElementById('login-err').textContent='PIN incorreto.';lBuf='';updLD();pinShake();}
   } else {
     const fbId=document.getElementById('login-emp').value;
     const emp=colaboradores.find(c=>c.fbId===fbId);
-    if(!emp||lBuf!==(emp.pin||'0000')){document.getElementById('login-err').textContent='PIN incorreto.';lBuf='';updLD();return;}
+    if(!emp||lBuf!==(emp.pin||'0000')){document.getElementById('login-err').textContent='PIN incorreto.';lBuf='';updLD();pinShake();return;}
     entrarColab(emp);
   }
 }
@@ -714,8 +779,12 @@ function tickClock(){
 }
 
 // ── Registo ponto ──
+let regBusy=false;
+function setPontoBtns(busy){
+  ['btn-entrada','btn-pausa','btn-retomar','btn-saida'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=busy;});
+}
 async function reg(tipo){
-  if(!utilizadorAtual)return;
+  if(!utilizadorAtual||regBusy)return;
   const empId=utilizadorAtual.id;
   const hojeRegs=registos.filter(r=>r.empId===empId&&r.data===hoje());
   const ul=hojeRegs.length?hojeRegs[hojeRegs.length-1]:null;
@@ -723,12 +792,23 @@ async function reg(tipo){
   if((tipo==='saida'||tipo==='inicio_pausa'||tipo==='fim_pausa')&&(!ul||ul.tipo==='saida')){toast('⚠ Registe primeiro a entrada.');return;}
   if(tipo==='fim_pausa'&&ul&&ul.tipo!=='inicio_pausa'){toast('⚠ Não tem pausa em curso.');return;}
   if(tipo==='inicio_pausa'&&ul&&ul.tipo==='inicio_pausa'){toast('⚠ Pausa já iniciada.');return;}
+  regBusy=true;setPontoBtns(true);
   const now=new Date();
   const obj={empId,data:hoje(),hora:now.toTimeString().slice(0,8),tipo,ts:now.getTime(),aprovadoExtra:false};
-  const id=await fbAdd('registos',obj);
-  registos.push({fbId:id,...obj});registos.sort((a,b)=>a.ts-b.ts);
+  const tempId='tmp_'+now.getTime();
+  registos.push({fbId:tempId,...obj});registos.sort((a,b)=>a.ts-b.ts);
   toast('✓ '+TL[tipo]+' registada às '+now.toTimeString().slice(0,5));
   atualizarBadge(empId,hoje());renderHojeLog(empId,hoje());atualizarHojeH();
+  try{
+    await fbAdd('registos',obj);
+    // A subscrição em tempo real vai trazer o registo definitivo (e substituir
+    // este temporário) em breve — não é preciso fazer mais nada aqui.
+  }catch(e){
+    registos=registos.filter(r=>r.fbId!==tempId);
+    atualizarBadge(empId,hoje());renderHojeLog(empId,hoje());atualizarHojeH();
+    toast('⚠ Falha a gravar. Tente novamente.',4000);
+  }
+  regBusy=false;setPontoBtns(false);
 }
 window.reg=reg;
 
@@ -837,6 +917,11 @@ window.calNav=calNav;
 function abrirDia(ds){
   if(calDiaAtivo===ds){calDiaAtivo=null;document.getElementById('day-detail-wrap').innerHTML='';return;}
   calDiaAtivo=ds;
+  renderDiaDetail(ds);
+}
+window.abrirDia=abrirDia;
+function renderDiaDetail(ds){
+  if(!utilizadorAtual)return;
   const empId=utilizadorAtual.id;
   const regs=registos.filter(r=>r.empId===empId&&r.data===ds).sort((a,b)=>a.ts-b.ts);
   const aus=ausencias.filter(a=>a.empId===empId&&ds>=(a.dataInicio||'')&&ds<=(a.dataFim||a.dataInicio||'')&&a.estado==='aprovado');
@@ -864,7 +949,6 @@ function abrirDia(ds){
   html+=`<div id="corr-form-${ds}"></div></div>`;
   document.getElementById('day-detail-wrap').innerHTML=html;
 }
-window.abrirDia=abrirDia;
 
 function pedirCorrDia(ds){
   const formId=`corr-form-${ds}`;
@@ -894,7 +978,7 @@ async function enviarCorrDia(ds){
   const obj={empId:utilizadorAtual.id,tipoPedido:'correcao',tipo,data:ds,hora:hora+':00',motivo:mot,estado:'pendente',criadoEm:Date.now()};
   const id=await fbAdd('pedidos',obj);pedidos.push({fbId:id,...obj});
   toast('✓ Pedido enviado ao administrador.');atualizarNotifA();
-  abrirDia(ds);// refresh
+  renderDiaDetail(ds);// atualiza o painel sem o fechar
 }
 window.enviarCorrDia=enviarCorrDia;
 
@@ -962,6 +1046,7 @@ async function pedirAus(){
   const obj={empId:utilizadorAtual.id,tipo,dataInicio:di,dataFim:df,motivo:mot,estado:'pendente',criadoEm:Date.now(),tipoPedido:'ausencia'};
   const id=await fbAdd('pedidos',obj);pedidos.push({fbId:id,...obj});
   toast('✓ Pedido enviado ao administrador.');renderPedColab();atualizarNotifA();
+  ['aus-di','aus-df','aus-mot'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
 }
 window.pedirAus=pedirAus;
 
