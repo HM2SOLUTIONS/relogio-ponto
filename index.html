@@ -661,13 +661,20 @@ function liveSync(){
   }
   atualizarNotifC();atualizarNotifA();
   if(utilizadorAtual){
-    if(document.getElementById('sc-ponto')?.classList.contains('on')){
-      atualizarBadge(utilizadorAtual.id,hoje());renderHojeLog(utilizadorAtual.id,hoje());atualizarHojeH();
-    }
+    // Ponto: atualizar sempre (badge + log de hoje)
+    atualizarBadge(utilizadorAtual.id,hoje());renderHojeLog(utilizadorAtual.id,hoje());atualizarHojeH();
+
+    // Calendário: atualizar sempre em background (dados podem ter mudado em qualquer separador)
+    // Se o separador estiver visível, re-renderiza imediatamente;
+    // se estiver escondido, marca como "sujo" para re-renderizar ao abrir.
     if(document.getElementById('sc-cal')?.classList.contains('on')){
       renderCal();
       if(calDiaAtivo)renderDiaDetail(calDiaAtivo);
+    } else {
+      // Marcar que o calendário precisa de ser atualizado quando voltar a ser aberto
+      window._calDirty=true;
     }
+
     if(document.getElementById('sc-aus')?.classList.contains('on')){renderAusColab();renderFeriasSaldo();}
     if(document.getElementById('sc-ped')?.classList.contains('on'))renderPedColab();
   } else if(document.getElementById('tabs-a')?.style.display==='flex'){
@@ -762,7 +769,12 @@ function swC(id){
     if(sec)sec.classList.toggle('on',s===id);
     if(tab)tab.classList.toggle('on',s===id);
   });
-  if(id==='cal')renderCal();
+  if(id==='cal'){
+    // Renderizar sempre — e se havia um dia aberto, reoabrir com dados atualizados
+    renderCal();
+    if(calDiaAtivo)renderDiaDetail(calDiaAtivo);
+    window._calDirty=false;
+  }
   if(id==='aus'){renderAusColab();renderFeriasSaldo();}
   if(id==='ped')renderPedColab();
 }
@@ -1100,8 +1112,11 @@ function renderPedColab(){
   c.innerHTML='<div style="overflow-x:auto;"><table><thead><tr><th>Tipo</th><th>Detalhe</th><th>Estado</th><th></th></tr></thead><tbody>'+
     list.map(p=>{
       const detalhe=p.tipoPedido==='correcao'||p.tipoPedido==='correcaoExistente'?`Correção: ${TL[p.tipo]||p.tipo} em ${(p.data||'').split('-').reverse().join('/')} às ${(p.hora||'').slice(0,5)}`:`Ausência: ${AUSL[p.tipo]||p.tipo} ${p.dataInicio?(p.dataInicio).split('-').reverse().join('/'):''}`;
-      const cancelBtn=p.estado==='pendente'?`<button class="btn br xs" onclick="cancelarPed('${p.fbId}')">Cancelar</button>`:'';
-      return`<tr><td><span class="bdg ${p.tipoPedido==='correcao'||p.tipoPedido==='correcaoExistente'?'bdg-p':'bdg-b'}" style="font-size:10px;">${p.tipoPedido==='correcao'||p.tipoPedido==='correcaoExistente'?'Correção':'Ausência'}</span></td><td style="font-size:12px;">${detalhe}${p.motivo?' <span style="color:var(--text2);">— '+p.motivo+'</span>':''}</td><td><span class="bdg ${p.estado==='aprovado'?'bdg-g':p.estado==='rejeitado'?'bdg-r':'bdg-y'}" style="font-size:10px;">${p.estado}</span></td><td>${cancelBtn}</td></tr>`;
+      const isCorr=p.tipoPedido==='correcao'||p.tipoPedido==='correcaoExistente';
+      let acaoBtn='';
+      if(p.estado==='pendente') acaoBtn=`<button class="btn br xs" onclick="cancelarPed('${p.fbId}')">Cancelar</button>`;
+      else if(p.estado==='aprovado'&&isCorr&&p.data) acaoBtn=`<button class="btn bg xs" onclick="swC('cal');calMes=new Date('${p.data}T12:00:00').getMonth();calAno=new Date('${p.data}T12:00:00').getFullYear();setTimeout(()=>{renderCal();abrirDia('${p.data}');},50);"><i class="ti ti-calendar"></i> Ver no calendário</button>`;
+      return`<tr><td><span class="bdg ${isCorr?'bdg-p':'bdg-b'}" style="font-size:10px;">${isCorr?'Correção':'Ausência'}</span></td><td style="font-size:12px;">${detalhe}${p.motivo?' <span style="color:var(--text2);">— '+p.motivo+'</span>':''}</td><td><span class="bdg ${p.estado==='aprovado'?'bdg-g':p.estado==='rejeitado'?'bdg-r':'bdg-y'}" style="font-size:10px;">${p.estado}</span></td><td>${acaoBtn}</td></tr>`;
     }).join('')+'</tbody></table></div>';
 }
 async function cancelarPed(fbId){
@@ -1303,47 +1318,106 @@ async function delAus(fbId){
 window.delAus=delAus;
 
 // ── Admin: Pedidos ──
+function pedDetalheHTML(p){
+  // Gera HTML detalhado descrevendo o que o pedido fez/fará — usado em pendentes e no histórico
+  const emp=colaboradores.find(c=>c.id===p.empId);
+  let det='',contexto='',alteracoes='';
+
+  if(p.tipoPedido==='correcao'){
+    const jaExiste=registos.find(r=>r.empId===p.empId&&r.data===p.data&&r.tipo===p.tipo);
+    det=`Registo em falta: <strong>${TL[p.tipo]||p.tipo}</strong> em <strong>${(p.data||'').split('-').reverse().join('/')}</strong> às <strong>${(p.hora||'').slice(0,5)}</strong>`;
+    if(jaExiste)contexto=`<span class="bdg bdg-y" style="font-size:10px;margin-left:6px;"><i class="ti ti-replace"></i> Substitui registo das ${jaExiste.hora.slice(0,5)}</span>`;
+    else contexto=`<span class="bdg bdg-b" style="font-size:10px;margin-left:6px;"><i class="ti ti-plus"></i> Cria novo registo</span>`;
+
+    // Para histórico: mostrar o que foi efetivamente alterado
+    if(p.estado==='aprovado'&&p.snapshotAntes){
+      const antes=p.snapshotAntes;
+      alteracoes=`<div style="margin-top:6px;padding:6px 10px;background:var(--bg2);border-radius:6px;border-left:3px solid var(--green-border);font-size:11px;">
+        <div style="font-weight:600;color:var(--green-text);margin-bottom:3px;"><i class="ti ti-history"></i> O que foi alterado</div>
+        ${antes.acao==='criado'?
+          `<span style="color:var(--green-text);">✦ Novo registo criado: <strong>${TL[antes.tipo]||antes.tipo}</strong> às <strong>${(antes.hora||'').slice(0,5)}</strong></span>`:
+          `<span style="color:var(--amber-text);">⇄ Hora atualizada: <strong>${(antes.horaAnterior||'').slice(0,5)}</strong> → <strong>${(antes.hora||'').slice(0,5)}</strong></span>`
+        }
+      </div>`;
+    }
+
+  } else if(p.tipoPedido==='correcaoExistente'){
+    const orig=registos.find(r=>r.fbId===p.registoId);
+    const horaOrigText=p.snapshotAntes?.horaAnterior||(orig?orig.hora.slice(0,5):'?');
+    const tipoOrigText=p.snapshotAntes?.tipoAnterior||(orig?TL[orig.tipo]||orig.tipo:'?');
+    det=`Correção de registo: <strong>${tipoOrigText}</strong> em <strong>${(p.data||'').split('-').reverse().join('/')}</strong>`;
+    contexto=`<span class="bdg bdg-y" style="font-size:10px;margin-left:6px;"><i class="ti ti-replace"></i> ${horaOrigText} → ${(p.hora||'').slice(0,5)}</span>`;
+
+    if(p.estado==='aprovado'&&p.snapshotAntes){
+      const antes=p.snapshotAntes;
+      const linhas=[];
+      if(antes.horaAnterior&&antes.horaAnterior.slice(0,5)!==p.hora.slice(0,5))
+        linhas.push(`Hora: <strong>${antes.horaAnterior.slice(0,5)}</strong> → <strong>${p.hora.slice(0,5)}</strong>`);
+      if(antes.tipoAnterior&&antes.tipoAnterior!==p.tipo)
+        linhas.push(`Tipo: <strong>${TL[antes.tipoAnterior]||antes.tipoAnterior}</strong> → <strong>${TL[p.tipo]||p.tipo}</strong>`);
+      if(linhas.length)alteracoes=`<div style="margin-top:6px;padding:6px 10px;background:var(--bg2);border-radius:6px;border-left:3px solid var(--amber);font-size:11px;">
+        <div style="font-weight:600;color:var(--amber-text);margin-bottom:3px;"><i class="ti ti-history"></i> O que foi alterado</div>
+        ${linhas.map(l=>`<div style="color:var(--text);">${l}</div>`).join('')}
+      </div>`;
+    }
+
+  } else {
+    // ausência
+    const di=(p.dataInicio||p.data||'').split('-').reverse().join('/');
+    const df=(p.dataFim||p.dataInicio||p.data||'').split('-').reverse().join('/');
+    const periodo=di===df?`<strong>${di}</strong>`:`<strong>${di}</strong> a <strong>${df}</strong>`;
+    det=`Ausência: <strong>${AUSL[p.tipo]||p.tipo}</strong> — ${periodo}`;
+
+    if(p.estado==='aprovado'&&p.snapshotAntes){
+      alteracoes=`<div style="margin-top:6px;padding:6px 10px;background:var(--bg2);border-radius:6px;border-left:3px solid var(--blue-border);font-size:11px;">
+        <div style="font-weight:600;color:var(--blue-text);margin-bottom:3px;"><i class="ti ti-history"></i> O que foi criado</div>
+        <span style="color:var(--text);">Ausência registada: <strong>${AUSL[p.tipo]||p.tipo}</strong> de ${di} a ${df}</span>
+      </div>`;
+    }
+  }
+
+  const dataAcao=p.resolvidoEm?new Date(p.resolvidoEm).toLocaleString('pt-PT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+
+  return{emp,det,contexto,alteracoes,dataAcao};
+}
+
 function renderAdmPed(){
   const pend=pedidos.filter(p=>p.estado==='pendente').sort((a,b)=>b.criadoEm-a.criadoEm);
-  const hist=pedidos.filter(p=>p.estado!=='pendente').sort((a,b)=>b.criadoEm-a.criadoEm);
-  const row=p=>{
-    const emp=colaboradores.find(c=>c.id===p.empId);
-    let det='',contexto='';
-    if(p.tipoPedido==='correcao'){
-      // Mostrar se já existe registo do mesmo tipo (risco de duplicado → será substituído)
-      const jaExiste=registos.find(r=>r.empId===p.empId&&r.data===p.data&&r.tipo===p.tipo);
-      det=`Registo em falta: <strong>${TL[p.tipo]||p.tipo}</strong> em ${(p.data||'').split('-').reverse().join('/')} às <strong>${(p.hora||'').slice(0,5)}</strong>`;
-      if(jaExiste)contexto=`<span class="bdg bdg-y" style="font-size:10px;margin-left:6px;"><i class="ti ti-replace"></i> Substitui registo existente das ${jaExiste.hora.slice(0,5)}</span>`;
-      else contexto=`<span class="bdg bdg-b" style="font-size:10px;margin-left:6px;"><i class="ti ti-plus"></i> Cria novo registo</span>`;
-    } else if(p.tipoPedido==='correcaoExistente'){
-      const orig=registos.find(r=>r.fbId===p.registoId);
-      det=`Correção de registo: <strong>${TL[p.tipo]||p.tipo}</strong> em ${(p.data||'').split('-').reverse().join('/')} → nova hora <strong>${(p.hora||'').slice(0,5)}</strong>`;
-      if(orig)contexto=`<span class="bdg bdg-y" style="font-size:10px;margin-left:6px;"><i class="ti ti-replace"></i> Atualiza registo das ${orig.hora.slice(0,5)}</span>`;
-    } else {
-      det=`Ausência: ${AUSL[p.tipo]||p.tipo} de ${p.dataInicio?(p.dataInicio).split('-').reverse().join('/'):'?'}`;
-    }
-    return`<tr><td style="font-size:13px;font-weight:600;">${emp?emp.nome:'?'}</td><td style="font-size:12px;">${det}${contexto}${p.motivo?`<br><span style="color:var(--text2);font-size:11px;"><i class="ti ti-message"></i> ${p.motivo}</span>`:''}`;
-  };
+  const hist=pedidos.filter(p=>p.estado!=='pendente').sort((a,b)=>(b.resolvidoEm||b.criadoEm)-(a.resolvidoEm||a.criadoEm));
+
   const c=document.getElementById('adm-ped-pend');
   c.innerHTML=!pend.length?'<p style="font-size:13px;color:var(--text2);">Sem pedidos pendentes.</p>':
     '<div style="overflow-x:auto;"><table><thead><tr><th>Colaborador</th><th>Pedido</th><th style="text-align:right;">Ações</th></tr></thead><tbody>'+
-    pend.map(p=>row(p)+`<td style="text-align:right;white-space:nowrap;"><button class="btn bg sm" onclick="aprovPed('${p.fbId}')"><i class="ti ti-check"></i> Aprovar</button> <button class="btn br sm" onclick="rejPed('${p.fbId}')"><i class="ti ti-x"></i> Rejeitar</button></td></tr>`).join('')+'</tbody></table></div>';
+    pend.map(p=>{
+      const{emp,det,contexto}=pedDetalheHTML(p);
+      return`<tr><td style="font-size:13px;font-weight:600;">${emp?emp.nome:'?'}</td><td style="font-size:12px;">${det}${contexto}${p.motivo?`<br><span style="color:var(--text2);font-size:11px;"><i class="ti ti-message"></i> ${p.motivo}</span>`:''}</td><td style="text-align:right;white-space:nowrap;"><button class="btn bg sm" onclick="aprovPed('${p.fbId}')"><i class="ti ti-check"></i> Aprovar</button> <button class="btn br sm" onclick="rejPed('${p.fbId}')"><i class="ti ti-x"></i> Rejeitar</button></td></tr>`;
+    }).join('')+'</tbody></table></div>';
+
   const h=document.getElementById('adm-ped-hist');
-  h.innerHTML=!hist.length?'<p style="font-size:13px;color:var(--text2);">Sem histórico.</p>':
-    '<div style="overflow-x:auto;"><table><thead><tr><th>Colaborador</th><th>Pedido</th><th>Estado</th></tr></thead><tbody>'+
-    hist.slice(0,40).map(p=>row(p)+`<td><span class="bdg ${p.estado==='aprovado'?'bdg-g':'bdg-r'}" style="font-size:10px;">${p.estado}</span></td></tr>`).join('')+'</tbody></table></div>';
+  if(!hist.length){h.innerHTML='<p style="font-size:13px;color:var(--text2);">Sem histórico.</p>';return;}
+  h.innerHTML='<div style="overflow-x:auto;"><table><thead><tr><th>Colaborador</th><th>Pedido e alterações</th><th>Estado</th><th style="text-align:right;">Ações</th></tr></thead><tbody>'+
+    hist.slice(0,40).map(p=>{
+      const{emp,det,contexto,alteracoes,dataAcao}=pedDetalheHTML(p);
+      const isAprov=p.estado==='aprovado';
+      const estadoBdg=`<span class="bdg ${isAprov?'bdg-g':'bdg-r'}" style="font-size:10px;">${isAprov?'✓ Aprovado':'✗ Rejeitado'}</span>${dataAcao?`<div style="font-size:10px;color:var(--text3);margin-top:3px;">${dataAcao}</div>`:''}`;
+      // Botão reverter: aprovado → pode reverter ação; rejeitado → pode mudar para aprovado
+      const btnReverter=isAprov?
+        `<button class="btn br xs" onclick="reverterPed('${p.fbId}')" title="Desfaz a aprovação e restaura o estado anterior"><i class="ti ti-arrow-back-up"></i> Reverter</button>`:
+        `<button class="btn bg xs" onclick="aprovPed('${p.fbId}')" title="Aprovar este pedido"><i class="ti ti-check"></i> Aprovar</button>`;
+      return`<tr><td style="font-size:13px;font-weight:600;">${emp?emp.nome:'?'}</td><td style="font-size:12px;">${det}${contexto}${p.motivo?`<br><span style="color:var(--text2);font-size:11px;"><i class="ti ti-message"></i> ${p.motivo}</span>`:''}${alteracoes}</td><td style="white-space:nowrap;">${estadoBdg}</td><td style="text-align:right;white-space:nowrap;">${btnReverter}</td></tr>`;
+    }).join('')+'</tbody></table></div>';
 }
+
 async function aprovPed(fbId){
   const p=pedidos.find(x=>x.fbId===fbId);if(!p)return;
-  await fbUpd('pedidos',fbId,{estado:'aprovado'});
-  const i=pedidos.findIndex(x=>x.fbId===fbId);if(i>=0)pedidos[i].estado='aprovado';
+  const snapshot={};
 
   if(p.tipoPedido==='correcao'&&p.data&&p.hora){
-    // Registo em falta: se já existir um do mesmo tipo nesse dia → substituir; senão → criar novo
     const[y,m,d]=p.data.split('-').map(Number);const[hh,mm]=(p.hora||'00:00').split(':').map(Number);
     const novoTs=new Date(y,m-1,d,hh,mm,0).getTime();
     const duplicado=registos.find(r=>r.empId===p.empId&&r.data===p.data&&r.tipo===p.tipo);
     if(duplicado){
+      snapshot.registoAlteradoId=duplicado.fbId;snapshot.horaAnterior=duplicado.hora;snapshot.acao='substituido';snapshot.tipo=p.tipo;snapshot.hora=p.hora;
       await fbUpd('registos',duplicado.fbId,{hora:p.hora,ts:novoTs});
       const ri=registos.findIndex(r=>r.fbId===duplicado.fbId);
       if(ri>=0){registos[ri].hora=p.hora;registos[ri].ts=novoTs;}
@@ -1351,12 +1425,14 @@ async function aprovPed(fbId){
       const obj={empId:p.empId,data:p.data,hora:p.hora,tipo:p.tipo,ts:novoTs,aprovadoExtra:false};
       const id=await fbAdd('registos',obj);registos.push({fbId:id,...obj});
       registos.sort((a,b)=>a.ts-b.ts);
+      snapshot.registoCriadoId=id;snapshot.acao='criado';snapshot.tipo=p.tipo;snapshot.hora=p.hora;
     }
 
   } else if(p.tipoPedido==='correcaoExistente'&&p.registoId){
-    // Correção de registo existente: atualizar tipo, hora e ts — sem criar duplicado
     const[y,m,d]=p.data.split('-').map(Number);const[hh,mm]=(p.hora||'00:00').split(':').map(Number);
     const novoTs=new Date(y,m-1,d,hh,mm,0).getTime();
+    const regOrig=registos.find(r=>r.fbId===p.registoId);
+    if(regOrig){snapshot.horaAnterior=regOrig.hora;snapshot.tipoAnterior=regOrig.tipo;}
     await fbUpd('registos',p.registoId,{tipo:p.tipo,hora:p.hora,ts:novoTs});
     const ri=registos.findIndex(r=>r.fbId===p.registoId);
     if(ri>=0){registos[ri].tipo=p.tipo;registos[ri].hora=p.hora;registos[ri].ts=novoTs;}
@@ -1364,16 +1440,66 @@ async function aprovPed(fbId){
   } else if(p.tipoPedido==='ausencia'){
     const obj={empId:p.empId,tipo:p.tipo,dataInicio:p.dataInicio||p.data,dataFim:p.dataFim||p.dataInicio||p.data,motivo:p.motivo||'',estado:'aprovado',criadoEm:Date.now(),origem:'pedido'};
     const id=await fbAdd('ausencias',obj);ausencias.push({fbId:id,...obj});
+    snapshot.ausenciaCriadaId=id;
   }
 
+  await fbUpd('pedidos',fbId,{estado:'aprovado',resolvidoEm:Date.now(),snapshotAntes:snapshot});
+  const i=pedidos.findIndex(x=>x.fbId===fbId);if(i>=0){pedidos[i].estado='aprovado';pedidos[i].resolvidoEm=Date.now();pedidos[i].snapshotAntes=snapshot;}
   toast('✓ Pedido aprovado e registo atualizado.');renderAdmPed();atualizarNotifA();liveSync();
 }
+
 async function rejPed(fbId){
-  await fbUpd('pedidos',fbId,{estado:'rejeitado'});
-  const i=pedidos.findIndex(x=>x.fbId===fbId);if(i>=0)pedidos[i].estado='rejeitado';
+  await fbUpd('pedidos',fbId,{estado:'rejeitado',resolvidoEm:Date.now()});
+  const i=pedidos.findIndex(x=>x.fbId===fbId);if(i>=0){pedidos[i].estado='rejeitado';pedidos[i].resolvidoEm=Date.now();}
   toast('Pedido rejeitado.');renderAdmPed();atualizarNotifA();
 }
-window.aprovPed=aprovPed;window.rejPed=rejPed;
+
+async function reverterPed(fbId){
+  const p=pedidos.find(x=>x.fbId===fbId);
+  if(!p||p.estado!=='aprovado')return;
+  if(!confirm('Reverter esta aprovação?\n\nAs alterações feitas nos registos serão desfeitas e o pedido voltará a pendente.'))return;
+
+  const snap=p.snapshotAntes||{};
+
+  try{
+    if(p.tipoPedido==='correcao'){
+      if(snap.acao==='criado'&&snap.registoCriadoId){
+        // Apagar o registo que foi criado
+        await fbDel('registos',snap.registoCriadoId);
+        registos=registos.filter(r=>r.fbId!==snap.registoCriadoId);
+      } else if(snap.acao==='substituido'&&snap.registoAlteradoId&&snap.horaAnterior){
+        // Restaurar a hora anterior do registo substituído
+        const[y,m,d]=(p.data||'').split('-').map(Number);const[hh,mm]=(snap.horaAnterior||'00:00').split(':').map(Number);
+        const tsAntes=new Date(y,m-1,d,hh,mm,0).getTime();
+        await fbUpd('registos',snap.registoAlteradoId,{hora:snap.horaAnterior,ts:tsAntes});
+        const ri=registos.findIndex(r=>r.fbId===snap.registoAlteradoId);
+        if(ri>=0){registos[ri].hora=snap.horaAnterior;registos[ri].ts=tsAntes;}
+      }
+    } else if(p.tipoPedido==='correcaoExistente'&&p.registoId){
+      if(snap.horaAnterior){
+        const[y,m,d]=(p.data||'').split('-').map(Number);const[hh,mm]=(snap.horaAnterior||'00:00').split(':').map(Number);
+        const tsAntes=new Date(y,m-1,d,hh,mm,0).getTime();
+        const tipoAntes=snap.tipoAnterior||p.tipo;
+        await fbUpd('registos',p.registoId,{tipo:tipoAntes,hora:snap.horaAnterior,ts:tsAntes});
+        const ri=registos.findIndex(r=>r.fbId===p.registoId);
+        if(ri>=0){registos[ri].tipo=tipoAntes;registos[ri].hora=snap.horaAnterior;registos[ri].ts=tsAntes;}
+      }
+    } else if(p.tipoPedido==='ausencia'&&snap.ausenciaCriadaId){
+      await fbDel('ausencias',snap.ausenciaCriadaId);
+      ausencias=ausencias.filter(a=>a.fbId!==snap.ausenciaCriadaId);
+    }
+
+    // Voltar o pedido a pendente e limpar snapshot de resolução
+    await fbUpd('pedidos',fbId,{estado:'pendente',resolvidoEm:null,snapshotAntes:null});
+    const i=pedidos.findIndex(x=>x.fbId===fbId);
+    if(i>=0){pedidos[i].estado='pendente';delete pedidos[i].resolvidoEm;delete pedidos[i].snapshotAntes;}
+
+    toast('✓ Aprovação revertida. Pedido voltou a pendente.');renderAdmPed();atualizarNotifA();liveSync();
+  } catch(e){
+    toast('⚠ Erro ao reverter. Tente novamente.',4000);console.error(e);
+  }
+}
+window.aprovPed=aprovPed;window.rejPed=rejPed;window.reverterPed=reverterPed;
 
 // ── Relatório ──
 function dadosRel(empId,mes,ano){
