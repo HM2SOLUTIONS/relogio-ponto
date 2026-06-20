@@ -127,6 +127,8 @@ tfoot td{font-weight:700;border-top:1px solid var(--border2);border-bottom:none;
 /* ── Metrics ── */
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:10px;margin-bottom:16px;}
 .metric{background:var(--bg2);border-radius:var(--r);padding:14px 16px;border:.5px solid var(--border);}
+.metric-link{cursor:pointer;transition:all .15s;}
+.metric-link:hover{border-color:var(--purple);box-shadow:0 2px 8px rgba(60,52,137,.12);transform:translateY(-1px);}
 .ml{font-size:10px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
 .mv{font-size:22px;font-weight:700;}
 
@@ -595,6 +597,31 @@ function pinShake(){
   const el=document.querySelector('.pin-dots');if(!el)return;
   el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');
 }
+
+// ── Enter para submeter ──
+// Em qualquer formulário da app, premir Enter num campo de texto/data/hora
+// aciona o botão principal desse formulário (o primeiro botão dentro do
+// .btn-row mais próximo) — sem precisar de alcançar o rato.
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  const el=e.target;
+  if(!el.matches('input[type=text],input[type=date],input[type=time],input[type=number],input[type=password]'))return;
+  const container=el.closest('.card,.inline-edit');
+  if(!container)return;
+  const btn=container.querySelector('.btn-row button');
+  if(btn){e.preventDefault();btn.click();}
+});
+
+// Permite digitar o PIN com o teclado físico (não só clicando no teclado em ecrã) —
+// importante para administradores a usar a app num computador.
+document.addEventListener('keydown',e=>{
+  const lw=document.getElementById('login-wrap');
+  if(!lw||lw.style.display!=='flex')return;
+  if(document.activeElement&&document.activeElement.tagName==='SELECT')return;
+  if(e.key>='0'&&e.key<='9'){e.preventDefault();lp(e.key);}
+  else if(e.key==='Backspace'){e.preventDefault();lp('X');}
+  else if(e.key==='Escape'){e.preventDefault();lp('C');}
+});
 
 // ── Firebase helpers ──
 async function fbGet(col,ord){const snap=ord?await getDocs(query(collection(db,col),orderBy(ord))):await getDocs(collection(db,col));return snap.docs.map(d=>({fbId:d.id,...d.data()}));}
@@ -1165,8 +1192,8 @@ function renderDash(){
   document.getElementById('dash-metrics').innerHTML=bannerHTML+`
     <div class="metric"><div class="ml">Presentes</div><div class="mv" style="color:var(--green-text);">${presentes}</div></div>
     <div class="metric"><div class="ml">Total colab.</div><div class="mv">${colaboradores.length}</div></div>
-    <div class="metric"><div class="ml">Ausências hoje</div><div class="mv" style="color:var(--amber-text);">${ausHj}</div></div>
-    <div class="metric"><div class="ml">Pedidos pendentes</div><div class="mv" style="color:${pend>0?'var(--red-text)':'var(--text2)'};">${pend}</div></div>`;
+    <div class="metric metric-link" onclick="swA('aus')" title="Ver ausências"><div class="ml">Ausências hoje</div><div class="mv" style="color:var(--amber-text);">${ausHj}</div></div>
+    <div class="metric ${pend>0?'metric-link':''}" ${pend>0?`onclick="swA('ped')" title="Ver pedidos pendentes"`:''}><div class="ml">Pedidos pendentes</div><div class="mv" style="color:${pend>0?'var(--red-text)':'var(--text2)'};">${pend}</div></div>`;
   const cards=colaboradores.map(emp=>{
     const regs=registos.filter(r=>r.empId===emp.id&&r.data===hj);
     const ul=regs.length?regs[regs.length-1]:null;
@@ -1187,7 +1214,7 @@ function renderDash(){
       if(diff>10)alertas.push(`<div class="warn-banner"><i class="ti ti-alert-triangle" style="flex-shrink:0;"></i> <strong>${emp.nome}</strong> entrou às ${ul.hora.slice(0,5)} e ainda não registou saída (há ${diff.toFixed(0)}h).</div>`);
     }
   });
-  if(pend>0)alertas.push(`<div class="info-banner"><i class="ti ti-bell"></i> <strong>${pend} pedido(s) pendente(s)</strong> aguardam aprovação.</div>`);
+  if(pend>0)alertas.push(`<div class="info-banner" style="cursor:pointer;" onclick="swA('ped')"><i class="ti ti-bell"></i> <strong>${pend} pedido(s) pendente(s)</strong> aguardam aprovação — clique para rever.</div>`);
   document.getElementById('dash-alertas').innerHTML=alertas.length?alertas.join(''):'<p style="font-size:13px;color:var(--text2);">Sem alertas.</p>';
 }
 
