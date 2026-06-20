@@ -300,19 +300,32 @@ tfoot td{font-weight:600;border-top:1px solid var(--border2);border-bottom:none;
   <div id="sc-ped" class="sec">
     <div class="card">
       <div class="ct"><i class="ti ti-clock-edit"></i> Pedir correção de registo</div>
-      <div class="info-banner"><i class="ti ti-info-circle"></i> Use quando se esqueceu de registar a saída ou cometeu um erro.</div>
-      <div class="row2">
-        <div class="fg"><label>Data</label><input type="date" id="cor-data"/></div>
-        <div class="fg"><label>Tipo de registo em falta</label>
-          <select id="cor-tipo">
-            <option value="saida">Saída esquecida</option>
-            <option value="entrada">Entrada esquecida</option>
-            <option value="inicio_pausa">Início de pausa esquecido</option>
-            <option value="fim_pausa">Fim de pausa esquecido</option>
-          </select>
+      <div class="info-banner"><i class="ti ti-info-circle"></i> Pode pedir a criação de um registo esquecido ou a correção da hora de um registo já feito. O administrador tem de aprovar.</div>
+      <div class="seg" style="margin-bottom:16px;">
+        <button class="seg-b on" id="cor-seg-criar" onclick="corSeg('criar')">Registo em falta</button>
+        <button class="seg-b" id="cor-seg-editar" onclick="corSeg('editar')">Corrigir hora errada</button>
+      </div>
+      <div id="cor-area-criar">
+        <div class="row2">
+          <div class="fg"><label>Data</label><input type="date" id="cor-data"/></div>
+          <div class="fg"><label>Tipo de registo em falta</label>
+            <select id="cor-tipo">
+              <option value="saida">Saída esquecida</option>
+              <option value="entrada">Entrada esquecida</option>
+              <option value="inicio_pausa">Início de pausa esquecido</option>
+              <option value="fim_pausa">Fim de pausa esquecido</option>
+            </select>
+          </div>
+          <div class="fg"><label>Hora correta</label><input type="time" id="cor-hora" step="60"/></div>
+          <div class="fg"><label>Motivo</label><input type="text" id="cor-mot" placeholder="Ex: Esqueci-me de registar a saída"/></div>
         </div>
-        <div class="fg"><label>Hora correta</label><input type="time" id="cor-hora" step="60"/></div>
-        <div class="fg"><label>Motivo</label><input type="text" id="cor-mot" placeholder="Ex: Esqueci-me de registar a saída"/></div>
+      </div>
+      <div id="cor-area-editar" style="display:none;">
+        <div class="row2">
+          <div class="fg" style="grid-column:1/-1;"><label>Registo a corrigir</label><select id="cor-reg-sel"></select></div>
+          <div class="fg"><label>Hora correta</label><input type="time" id="cor-edit-hora" step="60"/></div>
+          <div class="fg"><label>Motivo</label><input type="text" id="cor-edit-mot" placeholder="Ex: Enganei-me na hora ao bater o ponto"/></div>
+        </div>
       </div>
       <div class="btn-row"><button class="btn bp" onclick="pedirCorr()"><i class="ti ti-send"></i> Enviar pedido</button></div>
     </div>
@@ -455,7 +468,7 @@ const TOLERANCIA_MIN=15; // minutos atraso entrada
 const TOLERANCIA_EXTRA_MIN=30; // minutos além da hora de saída para contar como extra
 
 let colaboradores=[],registos=[],ausencias=[],pedidos=[];
-let adminPIN='1234',adminLogado=false,utilizadorAtual=null,loginModo='colab',lBuf='';
+let adminPIN='1234',adminLogado=false,utilizadorAtual=null,loginModo='colab',lBuf='',corModo='criar';
 
 // ── Sync ───────────────────────────────────────────────────────────────────
 const ss=s=>document.getElementById('sync').className='sync '+s;
@@ -575,7 +588,7 @@ function swC(id,e){
   });
   if(id==='hist')renderHist();
   if(id==='aus'){renderAusColab();renderFeriasSaldo();}
-  if(id==='ped')renderPedColab();
+  if(id==='ped'){renderPedColab();corSeg('criar');}
 }
 function swA(id,e){
   ['dash','reg','aus','ped','rel','col','cfg'].forEach(s=>{
@@ -601,6 +614,10 @@ function dataStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2
 function hoje(){return dataStr(new Date());}
 
 // ── Registo ponto ──────────────────────────────────────────────────────────
+// Otimista: o registo aparece de imediato no ecrã (e fica disponível para os
+// validadores acima, que bloqueiam toques duplicados) e só depois é
+// confirmado em segundo plano no Firestore. Se a gravação falhar, o registo
+// é removido e o colaborador é avisado para tentar novamente.
 async function reg(tipo){
   if(!utilizadorAtual){toast('⚠ Sessão não iniciada.');return;}
   const empId=utilizadorAtual.id;
@@ -612,10 +629,19 @@ async function reg(tipo){
   if(tipo==='inicio_pausa'&&ul&&ul.tipo==='inicio_pausa'){toast('⚠ Pausa já iniciada.');return;}
   const now=new Date();
   const obj={empId,data:hoje(),hora:now.toTimeString().slice(0,8),tipo,ts:now.getTime()};
-  const id=await fbAdd('registos',obj);
-  registos.push({fbId:id,...obj});registos.sort((a,b)=>a.ts-b.ts);
+  const tempId='tmp_'+now.getTime()+'_'+Math.random().toString(36).slice(2,7);
+  const local={fbId:tempId,...obj};
+  registos.push(local);registos.sort((a,b)=>a.ts-b.ts);
   toast('✓ '+TL[tipo]+' registada às '+now.toTimeString().slice(0,8));
   atualizarBadge(empId,hoje());renderHojeLog(empId,hoje());atualizarHojeH();
+  try{
+    const id=await fbAdd('registos',obj);
+    local.fbId=id; // troca o id temporário pelo id real do Firestore
+  }catch(e){
+    registos=registos.filter(r=>r.fbId!==tempId);
+    atualizarBadge(empId,hoje());renderHojeLog(empId,hoje());atualizarHojeH();
+    toast('⚠ Falha a gravar. Registo anulado, tente novamente.',4000);
+  }
 }
 window.reg=reg;
 
@@ -824,17 +850,63 @@ function renderFeriasSaldo(){
 }
 
 // ── Pedidos colaborador ────────────────────────────────────────────────────
+function corSeg(modo){
+  corModo=modo;
+  document.getElementById('cor-seg-criar').classList.toggle('on',modo==='criar');
+  document.getElementById('cor-seg-editar').classList.toggle('on',modo==='editar');
+  document.getElementById('cor-area-criar').style.display=modo==='criar'?'block':'none';
+  document.getElementById('cor-area-editar').style.display=modo==='editar'?'block':'none';
+  if(modo==='editar')popularCorRegSel();
+}
+window.corSeg=corSeg;
+
+function popularCorRegSel(){
+  if(!utilizadorAtual)return;
+  const sel=document.getElementById('cor-reg-sel');if(!sel)return;
+  const meus=registos.filter(r=>r.empId===utilizadorAtual.id).sort((a,b)=>b.ts-a.ts).slice(0,40);
+  if(!meus.length){sel.innerHTML='<option value="">Sem registos recentes</option>';return;}
+  sel.innerHTML=meus.map(r=>`<option value="${r.fbId}">${r.data.split('-').reverse().join('/')} ${r.hora.slice(0,5)} — ${TL[r.tipo]}</option>`).join('');
+}
+
+function detalhePedido(p){
+  if(p.tipoPedido==='correcao'){
+    const dataFmt=(p.data||'').split('-').reverse().join('/');
+    if(p.acao==='editar')return `Corrigir ${TL[p.tipo]||p.tipo} de ${dataFmt}: ${(p.horaAnterior||'').slice(0,5)} → ${(p.hora||'').slice(0,5)}`;
+    return `Criar ${TL[p.tipo]||p.tipo} em falta — ${dataFmt} às ${(p.hora||'').slice(0,5)}`;
+  }
+  return `Ausência: ${AUSL[p.tipo]||p.tipo}${p.dataInicio?' — '+(p.dataInicio).split('-').reverse().join('/'):''}`;
+}
+
 async function pedirCorr(){
   if(!utilizadorAtual)return;
-  const data=document.getElementById('cor-data').value;
-  const tipo=document.getElementById('cor-tipo').value;
-  const hora=document.getElementById('cor-hora').value;
-  const mot=document.getElementById('cor-mot').value.trim();
-  if(!data||!hora){toast('⚠ Preencha data e hora.');return;}
-  const obj={empId:utilizadorAtual.id,tipoPedido:'correcao',tipo,data,hora:hora+':00',motivo:mot,estado:'pendente',criadoEm:Date.now()};
-  const id=await fbAdd('pedidos',obj);
-  pedidos.push({fbId:id,...obj});
+  let obj;
+  if(corModo==='editar'){
+    const regFbId=document.getElementById('cor-reg-sel').value;
+    const hora=document.getElementById('cor-edit-hora').value;
+    const mot=document.getElementById('cor-edit-mot').value.trim();
+    if(!regFbId){toast('⚠ Selecione o registo a corrigir.');return;}
+    if(!hora){toast('⚠ Indique a hora correta.');return;}
+    const original=registos.find(r=>r.fbId===regFbId);
+    if(!original){toast('⚠ Registo não encontrado.');return;}
+    obj={empId:utilizadorAtual.id,tipoPedido:'correcao',acao:'editar',regFbId,tipo:original.tipo,data:original.data,horaAnterior:original.hora,hora:hora+':00',motivo:mot,estado:'pendente',criadoEm:Date.now()};
+  }else{
+    const data=document.getElementById('cor-data').value;
+    const tipo=document.getElementById('cor-tipo').value;
+    const hora=document.getElementById('cor-hora').value;
+    const mot=document.getElementById('cor-mot').value.trim();
+    if(!data||!hora){toast('⚠ Preencha data e hora.');return;}
+    obj={empId:utilizadorAtual.id,tipoPedido:'correcao',acao:'criar',tipo,data,hora:hora+':00',motivo:mot,estado:'pendente',criadoEm:Date.now()};
+  }
+  const tempId='tmp_'+Date.now();
+  pedidos.push({fbId:tempId,...obj});
   toast('✓ Pedido enviado.');renderPedColab();atualizarNotifAdm();
+  try{
+    const id=await fbAdd('pedidos',obj);
+    const i=pedidos.findIndex(p=>p.fbId===tempId);if(i>=0)pedidos[i].fbId=id;
+  }catch(e){
+    pedidos=pedidos.filter(p=>p.fbId!==tempId);renderPedColab();
+    toast('⚠ Falha ao enviar o pedido. Tente novamente.',4000);
+  }
 }
 window.pedirCorr=pedirCorr;
 
@@ -844,7 +916,7 @@ function renderPedColab(){
   const c=document.getElementById('ped-list-colab');
   if(!list.length){c.innerHTML='<p style="font-size:13px;color:var(--text2);">Sem pedidos.</p>';return;}
   c.innerHTML='<div style="overflow-x:auto;"><table><thead><tr><th>Tipo</th><th>Detalhe</th><th>Estado</th></tr></thead><tbody>'+
-    list.map(p=>`<tr><td>${p.tipoPedido==='correcao'?'Correção registo':'Ausência'}</td><td style="font-size:12px;">${p.tipoPedido==='correcao'?(p.data||'').split('-').reverse().join('/')+' '+TL[p.tipo]+' às '+(p.hora||'').slice(0,5):AUSL[p.tipo]||p.tipo} ${p.motivo?'— '+p.motivo:''}</td><td><span class="bdg ${p.estado==='aprovado'?'bdg-g':p.estado==='rejeitado'?'bdg-r':'bdg-y'}">${p.estado}</span></td></tr>`).join('')+'</tbody></table></div>';
+    list.map(p=>`<tr><td>${p.tipoPedido==='correcao'?'Correção registo':'Ausência'}</td><td style="font-size:12px;">${detalhePedido(p)}${p.motivo?' — '+p.motivo:''}</td><td><span class="bdg ${p.estado==='aprovado'?'bdg-g':p.estado==='rejeitado'?'bdg-r':'bdg-y'}">${p.estado}</span></td></tr>`).join('')+'</tbody></table></div>';
 }
 
 function atualizarNotifColab(){
@@ -948,14 +1020,30 @@ async function saveReg(fbId){
   const tipo=document.getElementById('re-t-'+fbId).value;
   if(!data||!hora){toast('⚠ Preencha todos os campos.');return;}
   const[y,m,d]=data.split('-').map(Number);const[hh,mm]=hora.split(':').map(Number);
-  await fbUpd('registos',fbId,{empId,data,hora,tipo,ts:new Date(y,m-1,d,hh,mm,0).getTime()});
-  const i=registos.findIndex(r=>r.fbId===fbId);if(i>=0)registos[i]={...registos[i],empId,data,hora,tipo};
+  const ts=new Date(y,m-1,d,hh,mm,0).getTime();
+  const i=registos.findIndex(r=>r.fbId===fbId);
+  const anterior=i>=0?{...registos[i]}:null;
+  if(i>=0)registos[i]={...registos[i],empId,data,hora,tipo,ts};
   toast('✓ Registo atualizado!');renderAdmReg();
+  try{
+    await fbUpd('registos',fbId,{empId,data,hora,tipo,ts});
+  }catch(e){
+    if(anterior&&i>=0)registos[i]=anterior;renderAdmReg();
+    toast('⚠ Falha ao gravar a correção. Tente novamente.',4000);
+  }
 }
 async function delReg(fbId){
   if(!confirm('Eliminar este registo?'))return;
-  await fbDel('registos',fbId);registos=registos.filter(r=>r.fbId!==fbId);
+  const removido=registos.find(r=>r.fbId===fbId);
+  registos=registos.filter(r=>r.fbId!==fbId);
   toast('Registo eliminado.');renderAdmReg();
+  try{
+    await fbDel('registos',fbId);
+  }catch(e){
+    if(removido){registos.push(removido);registos.sort((a,b)=>a.ts-b.ts);}
+    renderAdmReg();
+    toast('⚠ Falha ao eliminar. Registo restaurado.',4000);
+  }
 }
 function abrirNR(){
   const mes=parseInt(document.getElementById('adm-mes').value);
@@ -983,8 +1071,16 @@ async function criarNR(){
   if(!data||!hora){toast('⚠ Preencha todos os campos.');return;}
   const[y,m,d]=data.split('-').map(Number);const[hh,mm]=hora.split(':').map(Number);
   const obj={empId,data,hora,tipo,ts:new Date(y,m-1,d,hh,mm,0).getTime()};
-  const id=await fbAdd('registos',obj);registos.push({fbId:id,...obj});registos.sort((a,b)=>a.ts-b.ts);
+  const tempId='tmp_'+Date.now();
+  registos.push({fbId:tempId,...obj});registos.sort((a,b)=>a.ts-b.ts);
   toast('✓ Registo criado!');renderAdmReg();
+  try{
+    const id=await fbAdd('registos',obj);
+    const i=registos.findIndex(r=>r.fbId===tempId);if(i>=0)registos[i].fbId=id;
+  }catch(e){
+    registos=registos.filter(r=>r.fbId!==tempId);renderAdmReg();
+    toast('⚠ Falha ao criar o registo. Tente novamente.',4000);
+  }
 }
 window.editReg=editReg;window.saveReg=saveReg;window.delReg=delReg;window.abrirNR=abrirNR;window.criarNR=criarNR;
 
@@ -1031,8 +1127,7 @@ function renderAdmPed(){
   const pendentes=pedidos.filter(p=>p.estado==='pendente').sort((a,b)=>b.criadoEm-a.criadoEm);
   const historico=pedidos.filter(p=>p.estado!=='pendente').sort((a,b)=>b.criadoEm-a.criadoEm);
   const pedRow=p=>{const emp=colaboradores.find(c=>c.id===p.empId);
-    const detalhe=p.tipoPedido==='correcao'?`Correção: ${TL[p.tipo]} em ${(p.data||'').split('-').reverse().join('/')} às ${(p.hora||'').slice(0,5)}`:`Ausência: ${AUSL[p.tipo]||p.tipo} ${p.dataInicio?(p.dataInicio).split('-').reverse().join('/'):''}`;
-    return`<tr><td>${emp?emp.nome:'?'}</td><td style="font-size:12px;">${detalhe}${p.motivo?' — '+p.motivo:''}</td>`;
+    return`<tr><td>${emp?emp.nome:'?'}</td><td style="font-size:12px;">${detalhePedido(p)}${p.motivo?' — '+p.motivo:''}</td>`;
   };
   const c=document.getElementById('adm-ped-list');
   if(!pendentes.length){c.innerHTML='<p style="font-size:13px;color:var(--text2);">Sem pedidos pendentes.</p>';}
@@ -1045,26 +1140,62 @@ function renderAdmPed(){
 }
 
 async function aprovPed(fbId){
-  const p=pedidos.find(x=>x.fbId===fbId);if(!p)return;
-  await fbUpd('pedidos',fbId,{estado:'aprovado'});
-  const i=pedidos.findIndex(x=>x.fbId===fbId);if(i>=0)pedidos[i].estado='aprovado';
-  // Se for correção, criar o registo automaticamente
-  if(p.tipoPedido==='correcao'&&p.data&&p.hora&&p.tipo){
+  const i=pedidos.findIndex(x=>x.fbId===fbId);if(i<0)return;
+  const p=pedidos[i];
+  if(p.tipoPedido==='correcao'&&p.acao==='editar'&&p.regFbId&&!registos.find(r=>r.fbId===p.regFbId)){
+    toast('⚠ O registo original já não existe. Reveja manualmente.',4000);return;
+  }
+  const estadoAnterior=p.estado;
+  let regIdx=-1,regAnterior=null,novoRegLocal=null,ausLocal=null;
+  pedidos[i]={...p,estado:'aprovado'};
+
+  if(p.tipoPedido==='correcao'&&p.acao==='editar'&&p.regFbId){
+    regIdx=registos.findIndex(r=>r.fbId===p.regFbId);
+    regAnterior={...registos[regIdx]};
     const[y,m,d]=p.data.split('-').map(Number);const[hh,mm]=(p.hora||'00:00').split(':').map(Number);
-    const obj={empId:p.empId,data:p.data,hora:p.hora,tipo:p.tipo,ts:new Date(y,m-1,d,hh,mm,0).getTime()};
-    const id=await fbAdd('registos',obj);registos.push({fbId:id,...obj});registos.sort((a,b)=>a.ts-b.ts);
+    registos[regIdx]={...registos[regIdx],hora:p.hora,ts:new Date(y,m-1,d,hh,mm,0).getTime()};
+  }else if(p.tipoPedido==='correcao'&&p.data&&p.hora&&p.tipo){
+    const[y,m,d]=p.data.split('-').map(Number);const[hh,mm]=(p.hora||'00:00').split(':').map(Number);
+    novoRegLocal={fbId:'tmp_'+Date.now(),empId:p.empId,data:p.data,hora:p.hora,tipo:p.tipo,ts:new Date(y,m-1,d,hh,mm,0).getTime()};
+    registos.push(novoRegLocal);registos.sort((a,b)=>a.ts-b.ts);
+  }else if(!p.tipoPedido||p.tipoPedido!=='correcao'){
+    ausLocal={fbId:'tmp_'+Date.now(),empId:p.empId,tipo:p.tipo,dataInicio:p.dataInicio||p.data,dataFim:p.dataFim||p.dataInicio||p.data,motivo:p.motivo||'',estado:'aprovado',criadoEm:Date.now(),origem:'pedido'};
+    ausencias.push(ausLocal);
   }
-  // Se for ausência, criar na coleção ausencias
-  if(!p.tipoPedido||p.tipoPedido!=='correcao'){
-    const obj={empId:p.empId,tipo:p.tipo,dataInicio:p.dataInicio||p.data,dataFim:p.dataFim||p.dataInicio||p.data,motivo:p.motivo||'',estado:'aprovado',criadoEm:Date.now(),origem:'pedido'};
-    const id=await fbAdd('ausencias',obj);ausencias.push({fbId:id,...obj});
-  }
+
   toast('✓ Pedido aprovado.');renderAdmPed();atualizarNotifAdm();
+
+  try{
+    await fbUpd('pedidos',fbId,{estado:'aprovado'});
+    if(regIdx>=0){
+      await fbUpd('registos',p.regFbId,{hora:registos[regIdx].hora,ts:registos[regIdx].ts});
+    }else if(novoRegLocal){
+      const id=await fbAdd('registos',{empId:novoRegLocal.empId,data:novoRegLocal.data,hora:novoRegLocal.hora,tipo:novoRegLocal.tipo,ts:novoRegLocal.ts});
+      const ix=registos.findIndex(r=>r.fbId===novoRegLocal.fbId);if(ix>=0)registos[ix].fbId=id;
+    }else if(ausLocal){
+      const id=await fbAdd('ausencias',{empId:ausLocal.empId,tipo:ausLocal.tipo,dataInicio:ausLocal.dataInicio,dataFim:ausLocal.dataFim,motivo:ausLocal.motivo,estado:'aprovado',criadoEm:ausLocal.criadoEm,origem:'pedido'});
+      const ix=ausencias.findIndex(a=>a.fbId===ausLocal.fbId);if(ix>=0)ausencias[ix].fbId=id;
+    }
+  }catch(e){
+    pedidos[i]={...p,estado:estadoAnterior};
+    if(regIdx>=0&&regAnterior)registos[regIdx]=regAnterior;
+    if(novoRegLocal)registos=registos.filter(r=>r.fbId!==novoRegLocal.fbId);
+    if(ausLocal)ausencias=ausencias.filter(a=>a.fbId!==ausLocal.fbId);
+    renderAdmPed();atualizarNotifAdm();
+    toast('⚠ Falha ao aprovar o pedido. Tente novamente.',4000);
+  }
 }
 async function rejPed(fbId){
-  await fbUpd('pedidos',fbId,{estado:'rejeitado'});
-  const i=pedidos.findIndex(x=>x.fbId===fbId);if(i>=0)pedidos[i].estado='rejeitado';
+  const i=pedidos.findIndex(x=>x.fbId===fbId);if(i<0)return;
+  const estadoAnterior=pedidos[i].estado;
+  pedidos[i]={...pedidos[i],estado:'rejeitado'};
   toast('Pedido rejeitado.');renderAdmPed();atualizarNotifAdm();
+  try{
+    await fbUpd('pedidos',fbId,{estado:'rejeitado'});
+  }catch(e){
+    pedidos[i]={...pedidos[i],estado:estadoAnterior};renderAdmPed();atualizarNotifAdm();
+    toast('⚠ Falha ao rejeitar. Tente novamente.',4000);
+  }
 }
 window.aprovPed=aprovPed;window.rejPed=rejPed;
 
