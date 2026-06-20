@@ -1306,9 +1306,23 @@ window.delAus=delAus;
 function renderAdmPed(){
   const pend=pedidos.filter(p=>p.estado==='pendente').sort((a,b)=>b.criadoEm-a.criadoEm);
   const hist=pedidos.filter(p=>p.estado!=='pendente').sort((a,b)=>b.criadoEm-a.criadoEm);
-  const row=p=>{const emp=colaboradores.find(c=>c.id===p.empId);
-    const det=p.tipoPedido==='correcao'||p.tipoPedido==='correcaoExistente'?`Correção: ${TL[p.tipo]||p.tipo} em ${(p.data||'').split('-').reverse().join('/')} às ${(p.hora||'').slice(0,5)}`:`Ausência: ${AUSL[p.tipo]||p.tipo} de ${p.dataInicio?(p.dataInicio).split('-').reverse().join('/'):'?'}`;
-    return`<tr><td>${emp?emp.nome:'?'}</td><td style="font-size:12px;">${det}${p.motivo?' — '+p.motivo:''}</td>`;
+  const row=p=>{
+    const emp=colaboradores.find(c=>c.id===p.empId);
+    let det='',contexto='';
+    if(p.tipoPedido==='correcao'){
+      // Mostrar se já existe registo do mesmo tipo (risco de duplicado → será substituído)
+      const jaExiste=registos.find(r=>r.empId===p.empId&&r.data===p.data&&r.tipo===p.tipo);
+      det=`Registo em falta: <strong>${TL[p.tipo]||p.tipo}</strong> em ${(p.data||'').split('-').reverse().join('/')} às <strong>${(p.hora||'').slice(0,5)}</strong>`;
+      if(jaExiste)contexto=`<span class="bdg bdg-y" style="font-size:10px;margin-left:6px;"><i class="ti ti-replace"></i> Substitui registo existente das ${jaExiste.hora.slice(0,5)}</span>`;
+      else contexto=`<span class="bdg bdg-b" style="font-size:10px;margin-left:6px;"><i class="ti ti-plus"></i> Cria novo registo</span>`;
+    } else if(p.tipoPedido==='correcaoExistente'){
+      const orig=registos.find(r=>r.fbId===p.registoId);
+      det=`Correção de registo: <strong>${TL[p.tipo]||p.tipo}</strong> em ${(p.data||'').split('-').reverse().join('/')} → nova hora <strong>${(p.hora||'').slice(0,5)}</strong>`;
+      if(orig)contexto=`<span class="bdg bdg-y" style="font-size:10px;margin-left:6px;"><i class="ti ti-replace"></i> Atualiza registo das ${orig.hora.slice(0,5)}</span>`;
+    } else {
+      det=`Ausência: ${AUSL[p.tipo]||p.tipo} de ${p.dataInicio?(p.dataInicio).split('-').reverse().join('/'):'?'}`;
+    }
+    return`<tr><td style="font-size:13px;font-weight:600;">${emp?emp.nome:'?'}</td><td style="font-size:12px;">${det}${contexto}${p.motivo?`<br><span style="color:var(--text2);font-size:11px;"><i class="ti ti-message"></i> ${p.motivo}</span>`:''}`;
   };
   const c=document.getElementById('adm-ped-pend');
   c.innerHTML=!pend.length?'<p style="font-size:13px;color:var(--text2);">Sem pedidos pendentes.</p>':
@@ -1323,19 +1337,36 @@ async function aprovPed(fbId){
   const p=pedidos.find(x=>x.fbId===fbId);if(!p)return;
   await fbUpd('pedidos',fbId,{estado:'aprovado'});
   const i=pedidos.findIndex(x=>x.fbId===fbId);if(i>=0)pedidos[i].estado='aprovado';
+
   if(p.tipoPedido==='correcao'&&p.data&&p.hora){
+    // Registo em falta: se já existir um do mesmo tipo nesse dia → substituir; senão → criar novo
     const[y,m,d]=p.data.split('-').map(Number);const[hh,mm]=(p.hora||'00:00').split(':').map(Number);
-    const obj={empId:p.empId,data:p.data,hora:p.hora,tipo:p.tipo,ts:new Date(y,m-1,d,hh,mm,0).getTime(),aprovadoExtra:false};
-    const id=await fbAdd('registos',obj);registos.push({fbId:id,...obj});registos.sort((a,b)=>a.ts-b.ts);
+    const novoTs=new Date(y,m-1,d,hh,mm,0).getTime();
+    const duplicado=registos.find(r=>r.empId===p.empId&&r.data===p.data&&r.tipo===p.tipo);
+    if(duplicado){
+      await fbUpd('registos',duplicado.fbId,{hora:p.hora,ts:novoTs});
+      const ri=registos.findIndex(r=>r.fbId===duplicado.fbId);
+      if(ri>=0){registos[ri].hora=p.hora;registos[ri].ts=novoTs;}
+    } else {
+      const obj={empId:p.empId,data:p.data,hora:p.hora,tipo:p.tipo,ts:novoTs,aprovadoExtra:false};
+      const id=await fbAdd('registos',obj);registos.push({fbId:id,...obj});
+      registos.sort((a,b)=>a.ts-b.ts);
+    }
+
   } else if(p.tipoPedido==='correcaoExistente'&&p.registoId){
+    // Correção de registo existente: atualizar tipo, hora e ts — sem criar duplicado
     const[y,m,d]=p.data.split('-').map(Number);const[hh,mm]=(p.hora||'00:00').split(':').map(Number);
-    await fbUpd('registos',p.registoId,{tipo:p.tipo,hora:p.hora,ts:new Date(y,m-1,d,hh,mm,0).getTime()});
-    const ri=registos.findIndex(r=>r.fbId===p.registoId);if(ri>=0){registos[ri].tipo=p.tipo;registos[ri].hora=p.hora;}
+    const novoTs=new Date(y,m-1,d,hh,mm,0).getTime();
+    await fbUpd('registos',p.registoId,{tipo:p.tipo,hora:p.hora,ts:novoTs});
+    const ri=registos.findIndex(r=>r.fbId===p.registoId);
+    if(ri>=0){registos[ri].tipo=p.tipo;registos[ri].hora=p.hora;registos[ri].ts=novoTs;}
+
   } else if(p.tipoPedido==='ausencia'){
     const obj={empId:p.empId,tipo:p.tipo,dataInicio:p.dataInicio||p.data,dataFim:p.dataFim||p.dataInicio||p.data,motivo:p.motivo||'',estado:'aprovado',criadoEm:Date.now(),origem:'pedido'};
     const id=await fbAdd('ausencias',obj);ausencias.push({fbId:id,...obj});
   }
-  toast('✓ Pedido aprovado.');renderAdmPed();atualizarNotifA();
+
+  toast('✓ Pedido aprovado e registo atualizado.');renderAdmPed();atualizarNotifA();liveSync();
 }
 async function rejPed(fbId){
   await fbUpd('pedidos',fbId,{estado:'rejeitado'});
