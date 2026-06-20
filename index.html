@@ -11,7 +11,7 @@
 :root{
   --bg:#fff;--bg2:#f5f5f4;--bg3:#fafaf9;
   --text:#1c1917;--text2:#78716c;--text3:#a8a29e;
-  --border:rgba(0,0,0,.12);--border2:rgba(0,0,0,.22);
+  --border:rgba(0,0,0,.1);--border2:rgba(0,0,0,.2);
   --purple:#3C3489;--purple-light:#EEEDFE;--purple-text:#26215C;
   --green-bg:#f0fdf4;--green-text:#166534;--green-border:#bbf7d0;
   --red-bg:#fef2f2;--red-text:#991b1b;--red-border:#fecaca;
@@ -19,12 +19,13 @@
   --blue-bg:#eff6ff;--blue-text:#1e40af;--blue-border:#bfdbfe;
   --amber-light:#FAEEDA;--amber:#EF9F27;--amber-text:#854F0B;
   --pink-bg:#fdf2f8;--pink-text:#9d174d;--pink-border:#fbcfe8;
-  --r:8px;--rl:12px;
+  --teal-bg:#f0fdfa;--teal-text:#0f766e;--teal-border:#99f6e4;
+  --r:8px;--rl:14px;
 }
 @media(prefers-color-scheme:dark){:root{
   --bg:#1c1917;--bg2:#292524;--bg3:#1c1917;
   --text:#fafaf9;--text2:#a8a29e;--text3:#78716c;
-  --border:rgba(255,255,255,.10);--border2:rgba(255,255,255,.20);
+  --border:rgba(255,255,255,.09);--border2:rgba(255,255,255,.18);
   --purple-light:#26215C;--purple-text:#EEEDFE;
   --green-bg:#052e16;--green-text:#86efac;--green-border:#166534;
   --red-bg:#450a0a;--red-text:#fca5a5;--red-border:#991b1b;
@@ -32,43 +33,62 @@
   --blue-bg:#1e3a5f;--blue-text:#93c5fd;--blue-border:#1e40af;
   --amber-light:#451a03;--amber-text:#fcd34d;
   --pink-bg:#4a0d2e;--pink-text:#f9a8d4;--pink-border:#9d174d;
+  --teal-bg:#022c22;--teal-text:#5eead4;--teal-border:#0f766e;
 }}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg3);color:var(--text);min-height:100vh;}
-.hdr{background:var(--bg);border-bottom:.5px solid var(--border);padding:13px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+
+/* ── Header ── */
+.hdr{background:var(--bg);border-bottom:.5px solid var(--border);padding:13px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 1px 8px rgba(0,0,0,.04);}
 .hdr-l{display:flex;align-items:center;gap:10px;}
-.hdr-icon{color:var(--purple);font-size:24px;}
-.hdr-title{font-size:17px;font-weight:600;}
-.hdr-sub{font-size:12px;color:var(--text2);}
+.hdr-icon{color:var(--purple);font-size:26px;}
+.hdr-title{font-size:17px;font-weight:700;letter-spacing:-.2px;}
+.hdr-sub{font-size:11px;color:var(--text2);margin-top:1px;}
 .badge-hdr{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:99px;font-size:12px;font-weight:500;}
 .badge-admin{background:var(--amber-light);color:var(--amber-text);border:.5px solid var(--amber);}
 .badge-user{background:var(--purple-light);color:var(--purple-text);border:.5px solid var(--purple);}
-.logout-btn{background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;text-decoration:underline;margin-left:8px;}
-.sync{width:8px;height:8px;border-radius:50%;background:#ccc;display:inline-block;margin-left:8px;transition:background .3s;}
+.logout-btn{background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;text-decoration:underline;margin-left:8px;padding:4px;}
+.sync{width:8px;height:8px;border-radius:50%;background:#ccc;display:inline-block;margin-left:6px;}
 .sync.ok{background:#22c55e;}.sync.busy{background:var(--amber);}.sync.err{background:var(--red-text);}
-.container{max-width:780px;margin:0 auto;padding:20px 16px;}
-.tabs{display:flex;gap:4px;background:var(--bg);border:.5px solid var(--border);border-radius:var(--rl);padding:4px;margin-bottom:20px;overflow-x:auto;}
-.tab{flex:1;min-width:fit-content;padding:9px 13px;font-size:13px;cursor:pointer;border:none;background:none;color:var(--text2);border-radius:var(--r);display:flex;align-items:center;gap:5px;white-space:nowrap;}
-.tab.on{background:var(--purple);color:#fff;font-weight:500;}
-.tab.adm-tab:not(.on){color:var(--amber-text);}
+
+/* ── Layout ── */
+.container{max-width:820px;margin:0 auto;padding:20px 16px;}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:3px;background:var(--bg);border:.5px solid var(--border);border-radius:var(--rl);padding:4px;margin-bottom:20px;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex:1;min-width:fit-content;padding:8px 13px;font-size:13px;cursor:pointer;border:none;background:none;color:var(--text2);border-radius:var(--r);display:flex;align-items:center;gap:5px;white-space:nowrap;transition:all .15s;}
+.tab.on{background:var(--purple);color:#fff;font-weight:600;box-shadow:0 2px 8px rgba(60,52,137,.3);}
+.tab:not(.on):hover{background:var(--bg2);}
 .sec{display:none;}.sec.on{display:block;}
-.card{background:var(--bg);border:.5px solid var(--border);border-radius:var(--rl);padding:20px;margin-bottom:16px;}
-.ct{font-size:15px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-.clock{text-align:center;padding:24px 0 14px;}
-.clock-t{font-size:52px;font-weight:300;letter-spacing:3px;font-variant-numeric:tabular-nums;}
-.clock-d{font-size:14px;color:var(--text2);margin-top:4px;}
-label{font-size:13px;color:var(--text2);}
+
+/* ── Cards ── */
+.card{background:var(--bg);border:.5px solid var(--border);border-radius:var(--rl);padding:20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.03);}
+.ct{font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;letter-spacing:-.2px;}
+.ct-sm{font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px;color:var(--text2);}
+
+/* ── Clock ── */
+.clock{text-align:center;padding:28px 0 18px;}
+.clock-t{font-size:56px;font-weight:200;letter-spacing:4px;font-variant-numeric:tabular-nums;background:linear-gradient(135deg,var(--purple),#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.clock-d{font-size:14px;color:var(--text2);margin-top:6px;}
+
+/* ── Forms ── */
+label{font-size:12px;color:var(--text2);font-weight:500;letter-spacing:.2px;text-transform:uppercase;}
 select,input[type=text],input[type=number],input[type=date],input[type=time],input[type=password],textarea{
   width:100%;padding:9px 12px;border:.5px solid var(--border2);border-radius:var(--r);
-  background:var(--bg);color:var(--text);font-size:14px;outline:none;margin-top:4px;font-family:inherit;
+  background:var(--bg);color:var(--text);font-size:14px;outline:none;margin-top:5px;font-family:inherit;transition:border-color .15s;
 }
-textarea{resize:vertical;min-height:72px;}
-select:focus,input:focus,textarea:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(60,52,137,.12);}
+textarea{resize:vertical;min-height:68px;}
+select:focus,input:focus,textarea:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(60,52,137,.1);}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
 .fg{margin-bottom:12px;}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:opacity .15s;}
-.btn:active{opacity:.8;}
-.bp{background:var(--purple);color:#fff;}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;white-space:nowrap;}
+.btn:active{transform:scale(.97);}
+.bp{background:var(--purple);color:#fff;box-shadow:0 2px 8px rgba(60,52,137,.25);}
+.bp:hover{background:#2d2666;}
 .bg{background:var(--green-bg);color:var(--green-text);border:1px solid var(--green-border);}
 .br{background:var(--red-bg);color:var(--red-text);border:1px solid var(--red-border);}
 .by{background:var(--yellow-bg);color:var(--yellow-text);border:1px solid var(--yellow-border);}
@@ -76,9 +96,13 @@ select:focus,input:focus,textarea:focus{border-color:var(--purple);box-shadow:0 
 .ba{background:var(--amber-light);color:var(--amber-text);border:1px solid var(--amber);}
 .bb{background:var(--blue-bg);color:var(--blue-text);border:.5px solid var(--blue-border);}
 .bpk{background:var(--pink-bg);color:var(--pink-text);border:.5px solid var(--pink-border);}
+.bt{background:var(--teal-bg);color:var(--teal-text);border:.5px solid var(--teal-border);}
 .sm{padding:5px 10px;font-size:12px;border-radius:6px;}
-.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
-.bdg{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:500;}
+.xs{padding:3px 7px;font-size:11px;border-radius:5px;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+
+/* ── Badges ── */
+.bdg{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;}
 .bdg-g{background:var(--green-bg);color:var(--green-text);}
 .bdg-r{background:var(--red-bg);color:var(--red-text);}
 .bdg-y{background:var(--yellow-bg);color:var(--yellow-text);}
@@ -87,61 +111,122 @@ select:focus,input:focus,textarea:focus{border-color:var(--purple);box-shadow:0 
 .bdg-b{background:var(--blue-bg);color:var(--blue-text);}
 .bdg-p{background:var(--purple-light);color:var(--purple-text);}
 .bdg-pk{background:var(--pink-bg);color:var(--pink-text);}
+.bdg-t{background:var(--teal-bg);color:var(--teal-text);}
+
+/* ── Tables ── */
 table{width:100%;border-collapse:collapse;font-size:13px;}
-th{text-align:left;padding:8px 10px;font-weight:500;color:var(--text2);border-bottom:.5px solid var(--border);font-size:12px;}
+th{text-align:left;padding:8px 10px;font-weight:600;color:var(--text2);border-bottom:.5px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.4px;}
 td{padding:9px 10px;border-bottom:.5px solid var(--border);color:var(--text);vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:var(--bg2);}
-tfoot td{font-weight:600;border-top:1px solid var(--border2);border-bottom:none;}
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px;}
-.metric{background:var(--bg2);border-radius:var(--r);padding:14px 16px;}
-.ml{font-size:11px;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;}
-.mv{font-size:22px;font-weight:600;}
-.seg{display:flex;border:.5px solid var(--border2);border-radius:var(--r);overflow:hidden;margin-bottom:16px;flex-wrap:wrap;}
-.seg-b{flex:1;min-width:fit-content;padding:9px 12px;font-size:12px;cursor:pointer;border:none;background:transparent;color:var(--text2);white-space:nowrap;}
-.seg-b.on{background:var(--purple);color:#fff;font-weight:500;}
-.ei{font-size:12px;padding:5px 8px;border:.5px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--text);width:100%;}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c1917;color:#fafaf9;padding:11px 24px;border-radius:var(--rl);font-size:13px;z-index:1000;display:none;box-shadow:0 4px 20px rgba(0,0,0,.3);white-space:nowrap;}
-/* Login */
-.login-wrap{position:fixed;inset:0;background:var(--bg3);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;}
-.login-box{background:var(--bg);border:.5px solid var(--border);border-radius:var(--rl);padding:32px 24px;width:100%;max-width:360px;text-align:center;}
-.login-logo{font-size:48px;color:var(--purple);margin-bottom:10px;}
-.login-title{font-size:20px;font-weight:700;margin-bottom:4px;}
-.login-sub{font-size:13px;color:var(--text2);margin-bottom:20px;}
-.login-seg{display:flex;border:.5px solid var(--border2);border-radius:var(--r);overflow:hidden;margin-bottom:20px;}
-.login-seg-b{flex:1;padding:10px;font-size:13px;cursor:pointer;border:none;background:transparent;color:var(--text2);}
-.login-seg-b.on{background:var(--purple);color:#fff;font-weight:500;}
-/* PIN */
-.pin-dots{display:flex;gap:12px;justify-content:center;margin-bottom:18px;}
-.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border2);background:transparent;transition:background .15s;}
-.pin-dot.on{background:var(--purple);border-color:var(--purple);}
-.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
-.pin-btn{padding:16px;font-size:20px;cursor:pointer;border-radius:var(--r);background:var(--bg2);border:.5px solid var(--border);color:var(--text);}
-.pin-btn:active{transform:scale(.94);}
-.pin-err{color:var(--red-text);font-size:12px;min-height:18px;margin-bottom:6px;}
-/* Overlay */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center;padding:16px;}
-.modal{background:var(--bg);border-radius:var(--rl);padding:24px;width:100%;max-width:420px;border:.5px solid var(--border);}
-.modal-title{font-size:16px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-/* Dashboard */
-.presence-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
-.pcard{background:var(--bg2);border-radius:var(--r);padding:12px;display:flex;align-items:center;gap:10px;}
-.avatar{width:36px;height:36px;border-radius:50%;background:var(--purple-light);color:var(--purple-text);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;}
-.pcard-info{min-width:0;}
-.pcard-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+tfoot td{font-weight:700;border-top:1px solid var(--border2);border-bottom:none;background:var(--bg2);}
+.tpt th{background:var(--purple);color:#fff;padding:9px 10px;}
+
+/* ── Metrics ── */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:10px;margin-bottom:16px;}
+.metric{background:var(--bg2);border-radius:var(--r);padding:14px 16px;border:.5px solid var(--border);}
+.ml{font-size:10px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
+.mv{font-size:22px;font-weight:700;}
+
+/* ── Avatar ── */
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--purple-light),var(--purple));color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+
+/* ── Presence cards ── */
+.presence-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;}
+.pcard{background:var(--bg2);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:10px;border:.5px solid var(--border);transition:all .15s;}
+.pcard:hover{border-color:var(--purple);box-shadow:0 2px 8px rgba(60,52,137,.1);}
+.pcard-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .pcard-status{font-size:11px;margin-top:2px;}
-/* Notif dot */
-.notif{display:inline-flex;align-items:center;justify-content:center;background:var(--red-text);color:#fff;border-radius:99px;font-size:10px;font-weight:700;min-width:16px;height:16px;padding:0 4px;margin-left:4px;}
+
+/* ── Notif ── */
+.notif{display:inline-flex;align-items:center;justify-content:center;background:var(--red-text);color:#fff;border-radius:99px;font-size:9px;font-weight:800;min-width:16px;height:16px;padding:0 4px;margin-left:4px;}
+
+/* ── Banners ── */
+.info-banner{background:var(--blue-bg);border:.5px solid var(--blue-border);border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--blue-text);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.warn-banner{background:var(--amber-light);border:.5px solid var(--amber);border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--amber-text);margin-bottom:12px;display:flex;align-items:flex-start;gap:8px;}
+.ok-banner{background:var(--green-bg);border:.5px solid var(--green-border);border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--green-text);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+
+/* ── Filter row ── */
+.filter-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px;}
+.filter-row .fg{margin-bottom:0;min-width:120px;}
+
+/* ── Inline edit ── */
+.ei{font-size:12px;padding:4px 8px;border:.5px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--text);width:100%;}
+
+/* ── Loading / Login ── */
 .loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:16px;}
 .spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:sp .8s linear infinite;}
 @keyframes sp{to{transform:rotate(360deg);}}
-.info-banner{background:var(--blue-bg);border:.5px solid var(--blue-border);border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--blue-text);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-.warn-banner{background:var(--amber-light);border:.5px solid var(--amber);border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--amber-text);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-.filter-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px;}
-.filter-row .fg{margin-bottom:0;min-width:130px;}
-.pt{background:var(--purple);color:#fff;} .pt th{padding:8px 10px;}
-.pt tr:nth-child(even) td{background:var(--bg2);}
-@media(max-width:480px){.row2{grid-template-columns:1fr;}.clock-t{font-size:38px;}.filter-row{flex-direction:column;align-items:stretch;}}
+.login-wrap{position:fixed;inset:0;background:var(--bg3);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;}
+.login-box{background:var(--bg);border:.5px solid var(--border);border-radius:var(--rl);padding:32px 24px;width:100%;max-width:360px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.1);}
+.login-logo{font-size:52px;color:var(--purple);margin-bottom:10px;}
+.login-title{font-size:22px;font-weight:800;margin-bottom:4px;letter-spacing:-.3px;}
+.login-sub{font-size:13px;color:var(--text2);margin-bottom:22px;}
+.login-seg{display:flex;border:.5px solid var(--border2);border-radius:var(--r);overflow:hidden;margin-bottom:20px;}
+.login-seg-b{flex:1;padding:10px;font-size:13px;cursor:pointer;border:none;background:transparent;color:var(--text2);font-weight:500;}
+.login-seg-b.on{background:var(--purple);color:#fff;font-weight:600;}
+.pin-dots{display:flex;gap:14px;justify-content:center;margin-bottom:18px;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border2);background:transparent;transition:all .15s;}
+.pin-dot.on{background:var(--purple);border-color:var(--purple);transform:scale(1.1);}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.pin-btn{padding:16px;font-size:20px;font-weight:300;cursor:pointer;border-radius:var(--r);background:var(--bg2);border:.5px solid var(--border);color:var(--text);transition:all .1s;}
+.pin-btn:active{transform:scale(.93);background:var(--purple-light);}
+.pin-err{color:var(--red-text);font-size:12px;min-height:18px;margin-bottom:6px;}
+
+/* ── Calendar ── */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.cal-nav-title{font-size:16px;font-weight:700;}
+.cal-nav-btn{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--r);padding:7px 12px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:4px;}
+.cal-nav-btn:hover{background:var(--purple-light);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-dow{text-align:center;font-size:10px;font-weight:700;color:var(--text2);padding:4px 0 8px;text-transform:uppercase;letter-spacing:.5px;}
+.cal-day{aspect-ratio:1;border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-weight:500;position:relative;border:.5px solid transparent;transition:all .12s;min-height:36px;}
+.cal-day:hover{border-color:var(--purple);transform:scale(1.05);}
+.cal-day.empty{cursor:default;}
+.cal-day.today{border-color:var(--purple)!important;font-weight:800;}
+.cal-day.worked{background:var(--green-bg);color:var(--green-text);}
+.cal-day.ferias{background:var(--blue-bg);color:var(--blue-text);}
+.cal-day.falta_just{background:var(--yellow-bg);color:var(--yellow-text);}
+.cal-day.falta_injust{background:var(--red-bg);color:var(--red-text);}
+.cal-day.baixa{background:var(--pink-bg);color:var(--pink-text);}
+.cal-day.meio_dia{background:var(--teal-bg);color:var(--teal-text);}
+.cal-day.feriado{background:var(--purple-light);color:var(--purple-text);}
+.cal-day.weekend{color:var(--text3);}
+.cal-day.other-month{opacity:.3;}
+.cal-dot{width:5px;height:5px;border-radius:50%;background:currentColor;position:absolute;bottom:4px;}
+.cal-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;padding-top:12px;border-top:.5px solid var(--border);}
+.cal-leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);}
+.cal-leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+
+/* ── Day detail popup ── */
+.day-detail{background:var(--bg);border:.5px solid var(--border);border-radius:var(--rl);padding:16px;margin-top:12px;box-shadow:0 4px 16px rgba(0,0,0,.08);animation:fadeIn .15s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+.day-detail-title{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+.reg-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);background:var(--bg2);margin-bottom:6px;cursor:pointer;border:.5px solid var(--border);transition:all .1s;}
+.reg-item:hover{border-color:var(--purple);background:var(--purple-light);}
+.reg-item-time{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;min-width:52px;}
+.reg-item-type{font-size:12px;color:var(--text2);}
+.reg-item-edit{display:none;font-size:11px;color:var(--purple);}
+.reg-item:hover .reg-item-edit{display:block;}
+
+/* ── Seg ── */
+.seg{display:flex;border:.5px solid var(--border2);border-radius:var(--r);overflow:hidden;margin-bottom:16px;}
+.seg-b{flex:1;padding:9px 10px;font-size:12px;cursor:pointer;border:none;background:transparent;color:var(--text2);font-weight:500;white-space:nowrap;}
+.seg-b.on{background:var(--purple);color:#fff;font-weight:600;}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c1917;color:#fafaf9;padding:11px 24px;border-radius:var(--rl);font-size:13px;z-index:1000;display:none;box-shadow:0 4px 20px rgba(0,0,0,.3);white-space:nowrap;animation:fadeIn .2s ease;}
+
+/* ── Inline edit form ── */
+.inline-edit{background:var(--blue-bg);border:.5px solid var(--blue-border);border-radius:var(--r);padding:12px 14px;margin-top:8px;}
+
+@media(max-width:520px){
+  .row2,.row3{grid-template-columns:1fr;}
+  .clock-t{font-size:40px;}
+  .filter-row{flex-direction:column;align-items:stretch;}
+  .cal-day{font-size:11px;}
+  .btn{padding:9px 13px;font-size:12px;}
+}
 </style>
 </head>
 <body>
@@ -155,16 +240,16 @@ tfoot td{font-weight:600;border-top:1px solid var(--border2);border-bottom:none;
     <div class="login-title">Relógio de Ponto</div>
     <div class="login-sub">Selecione o tipo de acesso</div>
     <div class="login-seg">
-      <button class="login-seg-b on" id="lsb-colab" onclick="loginMode('colab')"><i class="ti ti-user"></i> Colaborador</button>
-      <button class="login-seg-b" id="lsb-admin" onclick="loginMode('admin')"><i class="ti ti-shield"></i> Administrador</button>
+      <button class="login-seg-b on" id="lsb-c" onclick="loginMode('colab')"><i class="ti ti-user"></i> Colaborador</button>
+      <button class="login-seg-b" id="lsb-a" onclick="loginMode('admin')"><i class="ti ti-shield"></i> Administrador</button>
     </div>
-    <div id="login-colab-area">
+    <div id="la-colab">
       <div class="fg" style="text-align:left;margin-bottom:14px;"><label>Colaborador</label><select id="login-emp"></select></div>
     </div>
-    <div id="login-admin-area" style="display:none;">
+    <div id="la-admin" style="display:none;">
       <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Introduza o PIN de administrador</p>
     </div>
-    <div class="pin-dots" id="login-dots">
+    <div class="pin-dots">
       <div class="pin-dot" id="ld0"></div><div class="pin-dot" id="ld1"></div>
       <div class="pin-dot" id="ld2"></div><div class="pin-dot" id="ld3"></div>
     </div>
@@ -186,7 +271,7 @@ tfoot td{font-weight:600;border-top:1px solid var(--border2);border-bottom:none;
     <i class="ti ti-clock hdr-icon"></i>
     <div>
       <div class="hdr-title">Relógio de Ponto <span class="sync" id="sync"></span></div>
-      <div class="hdr-sub" id="hdr-sub">HM2 Solutions</div>
+      <div class="hdr-sub">HM2 Solutions</div>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px;">
@@ -197,88 +282,99 @@ tfoot td{font-weight:600;border-top:1px solid var(--border2);border-bottom:none;
 
 <div class="container">
   <!-- TABS COLABORADOR -->
-  <div class="tabs" id="tabs-colab" style="display:none;">
-    <button class="tab on" id="tc-ponto" onclick="swC('ponto',event)"><i class="ti ti-fingerprint"></i> Ponto</button>
-    <button class="tab" id="tc-hist" onclick="swC('hist',event)"><i class="ti ti-list"></i> Histórico</button>
-    <button class="tab" id="tc-rel" onclick="swC('rel',event)"><i class="ti ti-file-analytics"></i> Relatório</button>
-    <button class="tab" id="tc-aus" onclick="swC('aus',event)"><i class="ti ti-calendar-off"></i> Ausências</button>
-    <button class="tab" id="tc-ped" onclick="swC('ped',event)"><i class="ti ti-send"></i> Pedidos <span class="notif" id="notif-ped" style="display:none;"></span></button>
+  <div class="tabs" id="tabs-c" style="display:none;">
+    <button class="tab on" id="tc-ponto" onclick="swC('ponto')"><i class="ti ti-fingerprint"></i> Ponto</button>
+    <button class="tab" id="tc-cal" onclick="swC('cal')"><i class="ti ti-calendar"></i> Calendário</button>
+    <button class="tab" id="tc-aus" onclick="swC('aus')"><i class="ti ti-calendar-off"></i> Ausências</button>
+    <button class="tab" id="tc-ped" onclick="swC('ped')"><i class="ti ti-send"></i> Pedidos<span class="notif" id="notif-c" style="display:none;"></span></button>
   </div>
   <!-- TABS ADMIN -->
-  <div class="tabs" id="tabs-admin" style="display:none;">
-    <button class="tab on" id="ta-dash" onclick="swA('dash',event)"><i class="ti ti-layout-dashboard"></i> Dashboard</button>
-    <button class="tab" id="ta-reg" onclick="swA('reg',event)"><i class="ti ti-list"></i> Registos</button>
-    <button class="tab" id="ta-aus" onclick="swA('aus',event)"><i class="ti ti-calendar-off"></i> Ausências</button>
-    <button class="tab" id="ta-ped" onclick="swA('ped',event)"><i class="ti ti-bell"></i> Pedidos <span class="notif" id="notif-adm" style="display:none;"></span></button>
-    <button class="tab" id="ta-rel" onclick="swA('rel',event)"><i class="ti ti-file-analytics"></i> Relatório</button>
-    <button class="tab" id="ta-col" onclick="swA('col',event)"><i class="ti ti-users"></i> Colaboradores</button>
-    <button class="tab" id="ta-cfg" onclick="swA('cfg',event)"><i class="ti ti-settings"></i> Config</button>
+  <div class="tabs" id="tabs-a" style="display:none;">
+    <button class="tab on" id="ta-dash" onclick="swA('dash')"><i class="ti ti-layout-dashboard"></i> Dashboard</button>
+    <button class="tab" id="ta-reg" onclick="swA('reg')"><i class="ti ti-list"></i> Registos</button>
+    <button class="tab" id="ta-aus" onclick="swA('aus')"><i class="ti ti-calendar-off"></i> Ausências</button>
+    <button class="tab" id="ta-ped" onclick="swA('ped')"><i class="ti ti-bell"></i> Pedidos<span class="notif" id="notif-a" style="display:none;"></span></button>
+    <button class="tab" id="ta-rel" onclick="swA('rel')"><i class="ti ti-file-analytics"></i> Relatório</button>
+    <button class="tab" id="ta-col" onclick="swA('col')"><i class="ti ti-users"></i> Colaboradores</button>
+    <button class="tab" id="ta-cfg" onclick="swA('cfg')"><i class="ti ti-settings"></i> Config</button>
   </div>
 
-  <!-- SECÇÕES COLABORADOR -->
+  <!-- ══ COLABORADOR SECTIONS ══ -->
+
+  <!-- PONTO -->
   <div id="sc-ponto" class="sec on">
-    <div class="card"><div class="clock"><div class="clock-t" id="clock-t">--:--:--</div><div class="clock-d" id="clock-d"></div></div></div>
     <div class="card">
-      <div class="ct"><i class="ti ti-user-check"></i> Registar ponto</div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        <span style="font-size:13px;color:var(--text2);">Colaborador:</span>
-        <strong id="ponto-nome" style="font-size:14px;"></strong>
+      <div class="clock">
+        <div class="clock-t" id="clock-t">--:--:--</div>
+        <div class="clock-d" id="clock-d"></div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-        <span style="font-size:13px;color:var(--text2);">Estado:</span>
-        <span class="bdg bdg-gy" id="badge-estado"><i class="ti ti-circle"></i> Sem registo hoje</span>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div>
+          <div style="font-size:18px;font-weight:700;" id="ponto-nome"></div>
+          <div style="font-size:12px;color:var(--text2);" id="ponto-turno"></div>
+        </div>
+        <span class="bdg bdg-gy" id="badge-estado"><i class="ti ti-circle"></i> Sem registo</span>
       </div>
-      <div id="horas-hoje" style="font-size:13px;color:var(--text2);margin-top:6px;"></div>
-      <div class="btn-row">
+      <div id="horas-hoje" style="font-size:13px;color:var(--text2);margin-bottom:14px;"></div>
+      <div class="btn-row" style="margin-top:0;">
         <button class="btn bg" onclick="reg('entrada')"><i class="ti ti-login"></i> Entrada</button>
-        <button class="btn by" onclick="reg('inicio_pausa')"><i class="ti ti-coffee"></i> Início pausa</button>
-        <button class="btn bgy" onclick="reg('fim_pausa')"><i class="ti ti-player-play"></i> Fim pausa</button>
+        <button class="btn by" onclick="reg('inicio_pausa')"><i class="ti ti-coffee"></i> Pausa</button>
+        <button class="btn bgy" onclick="reg('fim_pausa')"><i class="ti ti-player-play"></i> Retomar</button>
         <button class="btn br" onclick="reg('saida')"><i class="ti ti-logout"></i> Saída</button>
       </div>
     </div>
     <div class="card">
-      <div class="ct"><i class="ti ti-clock-hour-4"></i> Registos de hoje</div>
-      <div id="hoje-log"><p style="font-size:13px;color:var(--text2);">Nenhum registo ainda.</p></div>
+      <div class="ct-sm"><i class="ti ti-clock-hour-4"></i> Registos de hoje</div>
+      <div id="hoje-log"></div>
     </div>
   </div>
 
-  <div id="sc-hist" class="sec">
+  <!-- CALENDÁRIO -->
+  <div id="sc-cal" class="sec">
     <div class="card">
-      <div class="ct"><i class="ti ti-filter"></i> Filtrar</div>
-      <div class="filter-row">
-        <div class="fg"><label>Mês</label><select id="hist-mes" onchange="renderHist()"></select></div>
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calNav(-1)"><i class="ti ti-chevron-left"></i></button>
+        <div class="cal-nav-title" id="cal-title"></div>
+        <button class="cal-nav-btn" onclick="calNav(1)"><i class="ti ti-chevron-right"></i></button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-legend">
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--green-bg);border:1px solid var(--green-border);"></div> Trabalhado</div>
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--blue-bg);border:1px solid var(--blue-border);"></div> Férias</div>
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--yellow-bg);border:1px solid var(--yellow-border);"></div> Falta justificada</div>
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--red-bg);border:1px solid var(--red-border);"></div> Falta injustificada</div>
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--pink-bg);border:1px solid var(--pink-border);"></div> Baixa</div>
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--teal-bg);border:1px solid var(--teal-border);"></div> Meio dia</div>
+        <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--purple-light);border:1px solid var(--purple);"></div> Feriado</div>
       </div>
     </div>
-    <div class="card"><div id="hist-content"><p style="font-size:13px;color:var(--text2);">Selecione um mês.</p></div></div>
-  </div>
-
-  <div id="sc-rel" class="sec">
+    <div id="day-detail-wrap"></div>
     <div class="card">
-      <div class="ct"><i class="ti ti-file-analytics"></i> Relatório mensal</div>
-      <div class="filter-row">
-        <div class="fg"><label>Mês</label><select id="rel-mes"></select></div>
-        <button class="btn bp" onclick="gerarRel()" style="margin-top:20px;"><i class="ti ti-refresh"></i> Gerar</button>
-        <button class="btn bg" onclick="expCSV()" style="margin-top:20px;"><i class="ti ti-download"></i> CSV</button>
-        <button class="btn br" onclick="expPDF()" style="margin-top:20px;"><i class="ti ti-file-type-pdf"></i> PDF</button>
-      </div>
+      <div class="ct-sm"><i class="ti ti-chart-bar"></i> Resumo do mês</div>
+      <div id="cal-resumo"></div>
     </div>
-    <div id="rel-out"></div>
   </div>
 
+  <!-- AUSÊNCIAS -->
   <div id="sc-aus" class="sec">
     <div class="card">
-      <div class="ct"><i class="ti ti-calendar-off"></i> Pedir ausência</div>
+      <div class="ct"><i class="ti ti-umbrella"></i> Saldo de férias <span id="ferias-ano" style="font-size:12px;font-weight:400;color:var(--text2);margin-left:4px;"></span></div>
+      <div id="ferias-saldo"></div>
+    </div>
+    <div class="card">
+      <div class="ct"><i class="ti ti-calendar-plus"></i> Pedir ausência</div>
       <div class="info-banner"><i class="ti ti-info-circle"></i> O pedido será enviado ao administrador para aprovação.</div>
       <div class="row2">
-        <div class="fg"><label>Tipo</label>
+        <div class="fg"><label>Tipo de ausência</label>
           <select id="aus-tipo">
-            <option value="ferias">Férias</option>
-            <option value="falta_just">Falta justificada</option>
-            <option value="falta_injust">Falta injustificada</option>
-            <option value="baixa">Baixa médica</option>
-            <option value="meio_dia_manha">Meio dia — manhã</option>
-            <option value="meio_dia_tarde">Meio dia — tarde</option>
-            <option value="compensacao">Compensação de horas</option>
+            <option value="ferias">🏖 Férias</option>
+            <option value="falta_just">📋 Falta justificada</option>
+            <option value="falta_injust">❌ Falta injustificada</option>
+            <option value="baixa">🏥 Baixa médica</option>
+            <option value="meio_dia_manha">🌅 Meio dia — manhã</option>
+            <option value="meio_dia_tarde">🌆 Meio dia — tarde</option>
           </select>
         </div>
         <div class="fg"><label>Data início</label><input type="date" id="aus-di"/></div>
@@ -288,123 +384,93 @@ tfoot td{font-weight:600;border-top:1px solid var(--border2);border-bottom:none;
       <div class="btn-row"><button class="btn bp" onclick="pedirAus()"><i class="ti ti-send"></i> Enviar pedido</button></div>
     </div>
     <div class="card">
-      <div class="ct"><i class="ti ti-calendar"></i> As minhas ausências</div>
-      <div id="aus-list-colab"><p style="font-size:13px;color:var(--text2);">Sem ausências registadas.</p></div>
-    </div>
-    <div class="card">
-      <div class="ct"><i class="ti ti-umbrella"></i> Saldo de férias</div>
-      <div id="ferias-saldo"></div>
+      <div class="ct-sm"><i class="ti ti-history"></i> As minhas ausências</div>
+      <div id="aus-list-c"></div>
     </div>
   </div>
 
+  <!-- PEDIDOS -->
   <div id="sc-ped" class="sec">
     <div class="card">
-      <div class="ct"><i class="ti ti-clock-edit"></i> Pedir correção de registo</div>
-      <div class="info-banner"><i class="ti ti-info-circle"></i> Pode pedir a criação de um registo esquecido ou a correção da hora de um registo já feito. O administrador tem de aprovar.</div>
-      <div class="seg" style="margin-bottom:16px;">
-        <button class="seg-b on" id="cor-seg-criar" onclick="corSeg('criar')">Registo em falta</button>
-        <button class="seg-b" id="cor-seg-editar" onclick="corSeg('editar')">Corrigir hora errada</button>
-      </div>
-      <div id="cor-area-criar">
-        <div class="row2">
-          <div class="fg"><label>Data</label><input type="date" id="cor-data"/></div>
-          <div class="fg"><label>Tipo de registo em falta</label>
-            <select id="cor-tipo">
-              <option value="saida">Saída esquecida</option>
-              <option value="entrada">Entrada esquecida</option>
-              <option value="inicio_pausa">Início de pausa esquecido</option>
-              <option value="fim_pausa">Fim de pausa esquecido</option>
-            </select>
-          </div>
-          <div class="fg"><label>Hora correta</label><input type="time" id="cor-hora" step="60"/></div>
-          <div class="fg"><label>Motivo</label><input type="text" id="cor-mot" placeholder="Ex: Esqueci-me de registar a saída"/></div>
-        </div>
-      </div>
-      <div id="cor-area-editar" style="display:none;">
-        <div class="row2">
-          <div class="fg" style="grid-column:1/-1;"><label>Registo a corrigir</label><select id="cor-reg-sel"></select></div>
-          <div class="fg"><label>Hora correta</label><input type="time" id="cor-edit-hora" step="60"/></div>
-          <div class="fg"><label>Motivo</label><input type="text" id="cor-edit-mot" placeholder="Ex: Enganei-me na hora ao bater o ponto"/></div>
-        </div>
-      </div>
-      <div class="btn-row"><button class="btn bp" onclick="pedirCorr()"><i class="ti ti-send"></i> Enviar pedido</button></div>
-    </div>
-    <div class="card">
-      <div class="ct"><i class="ti ti-history"></i> Os meus pedidos</div>
-      <div id="ped-list-colab"><p style="font-size:13px;color:var(--text2);">Sem pedidos.</p></div>
+      <div class="ct"><i class="ti ti-send"></i> Os meus pedidos</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Consulte os seus pedidos de correção ou ausência. Para cancelar um pedido pendente clique em <strong>Cancelar</strong>.</p>
+      <div id="ped-list-c"></div>
     </div>
   </div>
 
-  <!-- SECÇÕES ADMIN -->
-  <div id="sa-dash" class="sec">
+  <!-- ══ ADMIN SECTIONS ══ -->
+
+  <!-- DASHBOARD -->
+  <div id="sa-dash" class="sec on" style="display:none;">
+    <div class="metrics" id="dash-metrics"></div>
     <div class="card">
-      <div class="ct"><i class="ti ti-layout-dashboard"></i> Presença hoje</div>
+      <div class="ct"><i class="ti ti-users"></i> Presença hoje — <span id="dash-data" style="font-weight:400;font-size:14px;color:var(--text2);"></span></div>
       <div id="dash-presence"></div>
     </div>
     <div class="card">
       <div class="ct"><i class="ti ti-alert-triangle" style="color:var(--amber);"></i> Alertas</div>
       <div id="dash-alertas"></div>
     </div>
-    <div class="metrics" id="dash-metrics" style="margin-top:0;"></div>
   </div>
 
-  <div id="sa-reg" class="sec">
+  <!-- REGISTOS ADMIN -->
+  <div id="sa-reg" class="sec" style="display:none;">
     <div class="card">
       <div class="filter-row" style="margin-bottom:0;">
         <div class="fg"><label>Mês</label><select id="adm-mes" onchange="renderAdmReg()"></select></div>
         <div class="fg"><label>Colaborador</label><select id="adm-emp" onchange="renderAdmReg()"></select></div>
-        <button class="btn bp" onclick="abrirNovoReg()" style="margin-top:20px;"><i class="ti ti-plus"></i> Novo</button>
+        <button class="btn bp sm" onclick="abrirNR()" style="margin-top:20px;"><i class="ti ti-plus"></i> Novo registo</button>
       </div>
     </div>
     <div id="adm-reg-out"></div>
   </div>
 
-  <div id="sa-aus" class="sec">
+  <!-- AUSÊNCIAS ADMIN -->
+  <div id="sa-aus" class="sec" style="display:none;">
     <div class="card">
-      <div class="ct"><i class="ti ti-calendar-plus"></i> Marcar ausência (admin)</div>
-      <div class="row2">
-        <div class="fg"><label>Colaborador</label><select id="adm-aus-emp"></select></div>
+      <div class="ct"><i class="ti ti-calendar-plus"></i> Marcar ausência</div>
+      <div class="row3">
+        <div class="fg"><label>Colaborador</label><select id="aa-emp"></select></div>
         <div class="fg"><label>Tipo</label>
-          <select id="adm-aus-tipo">
+          <select id="aa-tipo">
             <option value="ferias">Férias</option>
             <option value="falta_just">Falta justificada</option>
             <option value="falta_injust">Falta injustificada</option>
             <option value="baixa">Baixa médica</option>
             <option value="meio_dia_manha">Meio dia — manhã</option>
             <option value="meio_dia_tarde">Meio dia — tarde</option>
-            <option value="compensacao">Compensação de horas</option>
           </select>
         </div>
-        <div class="fg"><label>Data início</label><input type="date" id="adm-aus-di"/></div>
-        <div class="fg"><label>Data fim</label><input type="date" id="adm-aus-df"/></div>
-        <div class="fg"><label>Nota</label><input type="text" id="adm-aus-mot" placeholder="Opcional"/></div>
+        <div class="fg"><label>Data início</label><input type="date" id="aa-di"/></div>
+        <div class="fg"><label>Data fim</label><input type="date" id="aa-df"/></div>
+        <div class="fg"><label>Nota</label><input type="text" id="aa-mot" placeholder="Opcional"/></div>
       </div>
-      <div class="btn-row"><button class="btn bp" onclick="admMarcarAus()"><i class="ti ti-check"></i> Marcar ausência</button></div>
+      <div class="btn-row"><button class="btn bp" onclick="admAus()"><i class="ti ti-check"></i> Marcar ausência</button></div>
     </div>
     <div class="card">
-      <div class="ct"><i class="ti ti-calendar-off"></i> Todas as ausências</div>
       <div class="filter-row">
-        <div class="fg"><label>Colaborador</label><select id="adm-aus-fil-emp" onchange="renderAdmAus()"></select></div>
-        <div class="fg"><label>Mês</label><select id="adm-aus-fil-mes" onchange="renderAdmAus()"></select></div>
+        <div class="fg"><label>Colaborador</label><select id="aa-fil-e" onchange="renderAdmAus()"></select></div>
+        <div class="fg"><label>Mês</label><select id="aa-fil-m" onchange="renderAdmAus()"></select></div>
       </div>
       <div id="adm-aus-list"></div>
     </div>
   </div>
 
-  <div id="sa-ped" class="sec">
+  <!-- PEDIDOS ADMIN -->
+  <div id="sa-ped" class="sec" style="display:none;">
     <div class="card">
       <div class="ct"><i class="ti ti-bell"></i> Pedidos pendentes</div>
-      <div id="adm-ped-list"><p style="font-size:13px;color:var(--text2);">Sem pedidos pendentes.</p></div>
+      <div id="adm-ped-pend"></div>
     </div>
     <div class="card">
-      <div class="ct"><i class="ti ti-history"></i> Histórico de pedidos</div>
-      <div id="adm-ped-hist"><p style="font-size:13px;color:var(--text2);">Sem histórico.</p></div>
+      <div class="ct-sm"><i class="ti ti-history"></i> Histórico</div>
+      <div id="adm-ped-hist"></div>
     </div>
   </div>
 
-  <div id="sa-rel" class="sec">
+  <!-- RELATÓRIO ADMIN -->
+  <div id="sa-rel" class="sec" style="display:none;">
     <div class="card">
-      <div class="ct"><i class="ti ti-file-analytics"></i> Relatório geral</div>
       <div class="filter-row">
         <div class="fg"><label>Mês</label><select id="adm-rel-mes"></select></div>
         <button class="btn bp" onclick="gerarRelAdm()" style="margin-top:20px;"><i class="ti ti-refresh"></i> Gerar</button>
@@ -416,24 +482,51 @@ tfoot td{font-weight:600;border-top:1px solid var(--border2);border-bottom:none;
     <div id="adm-rel-out"></div>
   </div>
 
-  <div id="sa-col" class="sec">
-    <div id="adm-col-out"></div>
-  </div>
+  <!-- COLABORADORES ADMIN -->
+  <div id="sa-col" class="sec" style="display:none;"><div id="adm-col-out"></div></div>
 
-  <div id="sa-cfg" class="sec">
+  <!-- CONFIG -->
+  <div id="sa-cfg" class="sec" style="display:none;">
     <div class="card">
-      <div class="ct"><i class="ti ti-key"></i> Alterar PIN de administrador</div>
+      <div class="ct"><i class="ti ti-clock-cog"></i> Turnos</div>
+      <div id="turnos-list"></div>
+      <div style="margin-top:16px;padding-top:16px;border-top:.5px solid var(--border);">
+        <div class="ct-sm"><i class="ti ti-plus"></i> Novo turno</div>
+        <div class="row3">
+          <div class="fg"><label>Nome do turno</label><input type="text" id="tn-nome" placeholder="Ex: Turno manhã"/></div>
+          <div class="fg"><label>Hora entrada</label><input type="time" id="tn-in" value="09:00"/></div>
+          <div class="fg"><label>Hora saída</label><input type="time" id="tn-out" value="18:00"/></div>
+          <div class="fg"><label>Início pausa</label><input type="time" id="tn-pi" value="13:00"/></div>
+          <div class="fg"><label>Duração pausa (min)</label><input type="number" id="tn-pd" value="60" min="0" max="120"/></div>
+          <div class="fg"><label>Horas diárias</label><input type="number" id="tn-h" value="8" min="1" max="12"/></div>
+        </div>
+        <div class="fg"><label>Dias da semana</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;" id="tn-dias">
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" value="1" checked style="width:auto;margin:0;"> Seg</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" value="2" checked style="width:auto;margin:0;"> Ter</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" value="3" checked style="width:auto;margin:0;"> Qua</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" value="4" checked style="width:auto;margin:0;"> Qui</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" value="5" checked style="width:auto;margin:0;"> Sex</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" value="6" style="width:auto;margin:0;"> Sáb</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;cursor:pointer;"><input type="checkbox" value="0" style="width:auto;margin:0;"> Dom</label>
+          </div>
+        </div>
+        <div class="btn-row"><button class="btn bp" onclick="addTurno()"><i class="ti ti-plus"></i> Criar turno</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct"><i class="ti ti-key"></i> PIN de administrador</div>
       <div class="row2">
         <div class="fg"><label>PIN atual</label><input type="password" id="pin-cur" maxlength="4" placeholder="••••"/></div>
         <div class="fg"><label>Novo PIN</label><input type="password" id="pin-new" maxlength="4" placeholder="••••"/></div>
         <div class="fg"><label>Confirmar</label><input type="password" id="pin-cnf" maxlength="4" placeholder="••••"/></div>
       </div>
       <div class="btn-row"><button class="btn ba" onclick="mudarPIN()"><i class="ti ti-check"></i> Alterar PIN</button></div>
-      <p id="pin-msg" style="font-size:12px;margin-top:10px;min-height:18px;"></p>
+      <p id="pin-msg" style="font-size:12px;margin-top:10px;min-height:16px;"></p>
     </div>
     <div class="card">
       <div class="ct" style="color:var(--red-text);"><i class="ti ti-alert-triangle"></i> Zona de perigo</div>
-      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Elimina permanentemente todos os registos de ponto.</p>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Elimina permanentemente todos os registos de ponto. Os colaboradores mantêm-se.</p>
       <button class="btn br" onclick="limparTodos()"><i class="ti ti-trash"></i> Limpar todos os registos</button>
     </div>
   </div>
@@ -443,84 +536,89 @@ tfoot td{font-weight:600;border-top:1px solid var(--border2);border-bottom:none;
 
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import{getFirestore,collection,doc,getDocs,addDoc,updateDoc,deleteDoc,setDoc,query,orderBy,where}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import{getFirestore,collection,doc,getDocs,addDoc,updateDoc,deleteDoc,setDoc,query,orderBy}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const FC={
-  apiKey:"AIzaSyDjtYdpWMEJ5VFeNG_hZRuMjP6j7vWSpXA",
-  authDomain:"relogio-ponto-c19bd.firebaseapp.com",
-  projectId:"relogio-ponto-c19bd",
-  storageBucket:"relogio-ponto-c19bd.firebasestorage.app",
-  messagingSenderId:"1022115976000",
-  appId:"1:1022115976000:web:024218130ceff681e820a5"
-};
-const app=initializeApp(FC);
-const db=getFirestore(app);
+const FC={apiKey:"AIzaSyDjtYdpWMEJ5VFeNG_hZRuMjP6j7vWSpXA",authDomain:"relogio-ponto-c19bd.firebaseapp.com",projectId:"relogio-ponto-c19bd",storageBucket:"relogio-ponto-c19bd.firebasestorage.app",messagingSenderId:"1022115976000",appId:"1:1022115976000:web:024218130ceff681e820a5"};
+const app=initializeApp(FC);const db=getFirestore(app);
 
+// ── Constantes ──
 const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const DIAS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const DIAS_FULL=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+const DIAS_SHORT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 const TL={entrada:'Entrada',saida:'Saída',inicio_pausa:'Início pausa',fim_pausa:'Fim pausa'};
 const TC={entrada:'bdg-g',saida:'bdg-r',inicio_pausa:'bdg-y',fim_pausa:'bdg-gy'};
 const TI={entrada:'ti-login',saida:'ti-logout',inicio_pausa:'ti-coffee',fim_pausa:'ti-player-play'};
-const AUSL={ferias:'Férias',falta_just:'Falta justificada',falta_injust:'Falta injustificada',baixa:'Baixa médica',meio_dia_manha:'Meio dia (manhã)',meio_dia_tarde:'Meio dia (tarde)',compensacao:'Compensação'};
-const AUSC={ferias:'bdg-b',falta_just:'bdg-y',falta_injust:'bdg-r',baixa:'bdg-pk',meio_dia_manha:'bdg-a',meio_dia_tarde:'bdg-a',compensacao:'bdg-g'};
-const DIAS_FERIAS=22;
-const TOLERANCIA_MIN=15; // minutos atraso entrada
-const TOLERANCIA_EXTRA_MIN=30; // minutos além da hora de saída para contar como extra
+const AUSL={ferias:'Férias',falta_just:'Falta justificada',falta_injust:'Falta injustificada',baixa:'Baixa médica',meio_dia_manha:'Meio dia (manhã)',meio_dia_tarde:'Meio dia (tarde)'};
+const AUSC={ferias:'bdg-b',falta_just:'bdg-y',falta_injust:'bdg-r',baixa:'bdg-pk',meio_dia_manha:'bdg-t',meio_dia_tarde:'bdg-t'};
+const DIAS_FERIAS_DEFAULT=22;
 
-let colaboradores=[],registos=[],ausencias=[],pedidos=[];
-let adminPIN='1234',adminLogado=false,utilizadorAtual=null,loginModo='colab',lBuf='',corModo='criar';
+// Feriados nacionais 2026 (Portugal)
+const FERIADOS_2026=new Set(['2026-01-01','2026-04-03','2026-04-05','2026-04-06','2026-04-25','2026-05-01','2026-06-10','2026-06-11','2026-08-15','2026-10-05','2026-11-01','2026-12-01','2026-12-08','2026-12-25']);
+function isFeriado(ds){return FERIADOS_2026.has(ds);}
+function nomeFeriado(ds){const m={'2026-01-01':'Ano Novo','2026-04-03':'Sexta-feira Santa','2026-04-05':'Páscoa','2026-04-06':'Segunda de Páscoa','2026-04-25':'25 de Abril','2026-05-01':'Dia do Trabalhador','2026-06-10':'Dia de Portugal','2026-06-11':'Corpo de Deus','2026-08-15':'Assunção','2026-10-05':'República','2026-11-01':'Todos os Santos','2026-12-01':'Restauração','2026-12-08':'Imaculada Conceição','2026-12-25':'Natal'};return m[ds]||'';}
 
-// ── Sync ───────────────────────────────────────────────────────────────────
+// ── Estado ──
+let colaboradores=[],registos=[],ausencias=[],pedidos=[],turnos=[];
+let adminPIN='1234',utilizadorAtual=null,loginModo='colab',lBuf='';
+let calMes=new Date().getMonth(),calAno=new Date().getFullYear();
+let calDiaAtivo=null;
+
+// ── Sync ──
 const ss=s=>document.getElementById('sync').className='sync '+s;
 
-// ── Toast ──────────────────────────────────────────────────────────────────
-function toast(msg,d=2800){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',d);}
+// ── Toast ──
+function toast(msg,d=2800){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',d);}
 
-// ── Firebase ───────────────────────────────────────────────────────────────
-async function fbGet(col,ord){
-  const snap=ord?await getDocs(query(collection(db,col),orderBy(ord))):await getDocs(collection(db,col));
-  return snap.docs.map(d=>({fbId:d.id,...d.data()}));
-}
+// ── Firebase helpers ──
+async function fbGet(col,ord){const snap=ord?await getDocs(query(collection(db,col),orderBy(ord))):await getDocs(collection(db,col));return snap.docs.map(d=>({fbId:d.id,...d.data()}));}
 async function fbAdd(col,obj){ss('busy');try{const r=await addDoc(collection(db,col),obj);ss('ok');return r.id;}catch(e){ss('err');throw e;}}
 async function fbUpd(col,id,data){ss('busy');try{await updateDoc(doc(db,col,id),data);ss('ok');}catch(e){ss('err');throw e;}}
 async function fbDel(col,id){ss('busy');try{await deleteDoc(doc(db,col,id));ss('ok');}catch(e){ss('err');throw e;}}
 
+// ── Init ──
 async function init(){
   try{
     ss('busy');
-    const [cfg,cols,regs,aus,peds]=await Promise.all([
-      fbGet('config'),fbGet('colaboradores'),fbGet('registos','ts'),fbGet('ausencias','dataInicio'),fbGet('pedidos','criadoEm')
-    ]);
+    const[cfg,cols,regs,aus,peds,trns]=await Promise.all([fbGet('config'),fbGet('colaboradores'),fbGet('registos','ts'),fbGet('ausencias','dataInicio'),fbGet('pedidos','criadoEm'),fbGet('turnos','nome')]);
     cfg.forEach(d=>{if(d.fbId==='admin')adminPIN=d.pin||'1234';});
-    colaboradores=cols;registos=regs;ausencias=aus;pedidos=peds;
+    colaboradores=cols;registos=regs;ausencias=aus;pedidos=peds;turnos=trns;
+    if(!turnos.length){
+      const defaultTurnos=[
+        {nome:'Normal',entrada:'09:00',saida:'18:00',pausaInicio:'13:00',pausaDur:60,horas:8,dias:[1,2,3,4,5]},
+        {nome:'Manhã',entrada:'06:00',saida:'14:00',pausaInicio:'10:00',pausaDur:30,horas:8,dias:[1,2,3,4,5]},
+        {nome:'Tarde',entrada:'14:00',saida:'22:00',pausaInicio:'18:00',pausaDur:30,horas:8,dias:[1,2,3,4,5]},
+      ];
+      for(const t of defaultTurnos){const id=await fbAdd('turnos',t);turnos.push({fbId:id,...t});}
+    }
     if(!colaboradores.length){
-      const ex=[{id:1,nome:'Ana Silva',dept:'RH',horas:8,turno:'normal',pin:'0000',ferias:DIAS_FERIAS},
-                {id:2,nome:'Bruno Costa',dept:'Tecnologia',horas:8,turno:'normal',pin:'0000',ferias:DIAS_FERIAS},
-                {id:3,nome:'Carla Mendes',dept:'Financeiro',horas:8,turno:'tarde',pin:'0000',ferias:DIAS_FERIAS}];
+      const ex=[{id:1,nome:'Ana Silva',dept:'RH',turnoId:turnos[0]?.fbId||'',ferias:22,pin:'0000'},{id:2,nome:'Bruno Costa',dept:'Tecnologia',turnoId:turnos[0]?.fbId||'',ferias:22,pin:'0000'}];
       for(const e of ex){const id=await fbAdd('colaboradores',e);colaboradores.push({fbId:id,...e});}
     }
     ss('ok');
-  }catch(e){ss('err');toast('⚠ Erro a ligar ao Firebase.',4000);}
+  }catch(e){ss('err');toast('⚠ Erro ao ligar. Verifique a ligação.',4000);}
   document.getElementById('loading').style.display='none';
-  initMesSelects();
-  tickClock();setInterval(tickClock,1000);
-  setInterval(atualizarHojeH,60000);
+  tickClock();setInterval(tickClock,1000);setInterval(atualizarHojeH,30000);
   mostrarLogin();
 }
 
-// ── Login ──────────────────────────────────────────────────────────────────
+// ── Helpers de data ──
+function dStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function hoje(){return dStr(new Date());}
+function getTurno(emp){return turnos.find(t=>t.fbId===emp?.turnoId)||turnos[0]||{nome:'Normal',entrada:'09:00',saida:'18:00',horas:8,dias:[1,2,3,4,5]};}
+
+// ── Login ──
 function mostrarLogin(){
-  const sel=document.getElementById('login-emp');
-  sel.innerHTML=colaboradores.map(c=>`<option value="${c.fbId}">${c.nome}</option>`).join('');
+  const s=document.getElementById('login-emp');
+  s.innerHTML=colaboradores.map(c=>`<option value="${c.fbId}">${c.nome}</option>`).join('');
   lBuf='';updLD();document.getElementById('login-err').textContent='';
   document.getElementById('login-wrap').style.display='flex';
 }
 function loginMode(m){
   loginModo=m;lBuf='';updLD();document.getElementById('login-err').textContent='';
-  document.getElementById('lsb-colab').classList.toggle('on',m==='colab');
-  document.getElementById('lsb-admin').classList.toggle('on',m==='admin');
-  document.getElementById('login-colab-area').style.display=m==='colab'?'block':'none';
-  document.getElementById('login-admin-area').style.display=m==='admin'?'block':'none';
+  document.getElementById('lsb-c').classList.toggle('on',m==='colab');
+  document.getElementById('lsb-a').classList.toggle('on',m==='admin');
+  document.getElementById('la-colab').style.display=m==='colab'?'block':'none';
+  document.getElementById('la-admin').style.display=m==='admin'?'block':'none';
 }
 function updLD(){for(let i=0;i<4;i++)document.getElementById('ld'+i).classList.toggle('on',i<lBuf.length);}
 function lp(v){
@@ -532,68 +630,71 @@ function lp(v){
 }
 function validLogin(){
   if(loginModo==='admin'){
-    if(lBuf===adminPIN){entrarAdmin();}
+    if(lBuf===adminPIN)entrarAdmin();
     else{document.getElementById('login-err').textContent='PIN incorreto.';lBuf='';updLD();}
   } else {
     const fbId=document.getElementById('login-emp').value;
     const emp=colaboradores.find(c=>c.fbId===fbId);
-    if(!emp){document.getElementById('login-err').textContent='Colaborador não encontrado.';lBuf='';updLD();return;}
-    if(lBuf===(emp.pin||'0000')){entrarColab(emp);}
-    else{document.getElementById('login-err').textContent='PIN incorreto.';lBuf='';updLD();}
+    if(!emp||lBuf!==(emp.pin||'0000')){document.getElementById('login-err').textContent='PIN incorreto.';lBuf='';updLD();return;}
+    entrarColab(emp);
   }
 }
 function entrarColab(emp){
-  utilizadorAtual=emp;adminLogado=false;
+  utilizadorAtual=emp;
   document.getElementById('login-wrap').style.display='none';
-  document.getElementById('tabs-colab').style.display='flex';
-  document.getElementById('tabs-admin').style.display='none';
-  const hb=document.getElementById('hdr-badge');
-  hb.style.display='inline-flex';hb.className='badge-hdr badge-user';hb.innerHTML=`<i class="ti ti-user"></i> ${emp.nome}`;
+  document.getElementById('tabs-c').style.display='flex';
+  document.getElementById('tabs-a').style.display='none';
+  const hb=document.getElementById('hdr-badge');hb.style.display='inline-flex';hb.className='badge-hdr badge-user';hb.innerHTML=`<i class="ti ti-user"></i> ${emp.nome}`;
   document.getElementById('hdr-logout').style.display='inline';
+  const turno=getTurno(emp);
   document.getElementById('ponto-nome').textContent=emp.nome;
-  const now=new Date();
-  const d=dataStr(now);
-  atualizarBadge(emp.id,d);renderHojeLog(emp.id,d);atualizarHojeH();
-  renderAusColab();renderPedColab();atualizarNotifColab();
+  document.getElementById('ponto-turno').textContent=`Turno: ${turno.nome} · ${turno.entrada}–${turno.saida}`;
+  initMesSelects();
+  atualizarBadge(emp.id,hoje());renderHojeLog(emp.id,hoje());atualizarHojeH();
+  renderAusColab();renderPedColab();atualizarNotifC();
+  calMes=new Date().getMonth();calAno=new Date().getFullYear();
   swC('ponto');
 }
 function entrarAdmin(){
-  adminLogado=true;utilizadorAtual=null;
+  utilizadorAtual=null;
   document.getElementById('login-wrap').style.display='none';
-  document.getElementById('tabs-admin').style.display='flex';
-  document.getElementById('tabs-colab').style.display='none';
-  const hb=document.getElementById('hdr-badge');
-  hb.style.display='inline-flex';hb.className='badge-hdr badge-admin';hb.innerHTML=`<i class="ti ti-shield-check"></i> Administrador`;
+  document.getElementById('tabs-a').style.display='flex';
+  document.getElementById('tabs-c').style.display='none';
+  const hb=document.getElementById('hdr-badge');hb.style.display='inline-flex';hb.className='badge-hdr badge-admin';hb.innerHTML=`<i class="ti ti-shield-check"></i> Administrador`;
   document.getElementById('hdr-logout').style.display='inline';
-  initAdmSels();
-  swA('dash');
-  atualizarNotifAdm();
+  initAdmSels();swA('dash');atualizarNotifA();
 }
 function doLogout(){
-  utilizadorAtual=null;adminLogado=false;
-  document.getElementById('tabs-colab').style.display='none';
-  document.getElementById('tabs-admin').style.display='none';
+  utilizadorAtual=null;
+  document.getElementById('tabs-c').style.display='none';
+  document.getElementById('tabs-a').style.display='none';
   document.getElementById('hdr-badge').style.display='none';
   document.getElementById('hdr-logout').style.display='none';
-  swC('ponto');swA('dash');
+  ['c','a'].forEach(x=>{
+    ['ponto','cal','aus','ped','dash','reg','aus2','ped2','rel','col','cfg'].forEach(s=>{
+      const el=document.getElementById(`s${x==='c'?'c':'a'}-${s}`);if(el){el.classList.remove('on');el.style.display='none';}
+    });
+  });
   mostrarLogin();loginMode('colab');
 }
 window.loginMode=loginMode;window.lp=lp;window.doLogout=doLogout;
 
-// ── Tabs ───────────────────────────────────────────────────────────────────
-function swC(id,e){
-  ['ponto','hist','rel','aus','ped'].forEach(s=>{
-    document.getElementById('sc-'+s).classList.toggle('on',s===id);
-    document.getElementById('tc-'+s).classList.toggle('on',s===id);
+// ── Tabs ──
+function swC(id){
+  ['ponto','cal','aus','ped'].forEach(s=>{
+    const sec=document.getElementById('sc-'+s);const tab=document.getElementById('tc-'+s);
+    if(sec)sec.classList.toggle('on',s===id);
+    if(tab)tab.classList.toggle('on',s===id);
   });
-  if(id==='hist')renderHist();
+  if(id==='cal')renderCal();
   if(id==='aus'){renderAusColab();renderFeriasSaldo();}
-  if(id==='ped'){renderPedColab();corSeg('criar');}
+  if(id==='ped')renderPedColab();
 }
-function swA(id,e){
+function swA(id){
   ['dash','reg','aus','ped','rel','col','cfg'].forEach(s=>{
-    document.getElementById('sa-'+s).classList.toggle('on',s===id);
-    document.getElementById('ta-'+s).classList.toggle('on',s===id);
+    const sec=document.getElementById('sa-'+s);const tab=document.getElementById('ta-'+s);
+    if(sec){sec.classList.toggle('on',s===id);sec.style.display=s===id?'block':'none';}
+    if(tab)tab.classList.toggle('on',s===id);
   });
   if(id==='dash')renderDash();
   if(id==='reg')renderAdmReg();
@@ -601,25 +702,20 @@ function swA(id,e){
   if(id==='ped')renderAdmPed();
   if(id==='rel')gerarRelAdm();
   if(id==='col')renderAdmCol();
+  if(id==='cfg')renderTurnos();
 }
 window.swC=swC;window.swA=swA;
 
-// ── Clock ──────────────────────────────────────────────────────────────────
+// ── Clock ──
 function tickClock(){
   const n=new Date();const p=v=>String(v).padStart(2,'0');
   document.getElementById('clock-t').textContent=p(n.getHours())+':'+p(n.getMinutes())+':'+p(n.getSeconds());
-  document.getElementById('clock-d').textContent=DIAS[n.getDay()]+', '+n.getDate()+' de '+MESES[n.getMonth()]+' de '+n.getFullYear();
+  document.getElementById('clock-d').textContent=DIAS_FULL[n.getDay()]+', '+n.getDate()+' de '+MESES[n.getMonth()]+' de '+n.getFullYear();
 }
-function dataStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function hoje(){return dataStr(new Date());}
 
-// ── Registo ponto ──────────────────────────────────────────────────────────
-// Otimista: o registo aparece de imediato no ecrã (e fica disponível para os
-// validadores acima, que bloqueiam toques duplicados) e só depois é
-// confirmado em segundo plano no Firestore. Se a gravação falhar, o registo
-// é removido e o colaborador é avisado para tentar novamente.
+// ── Registo ponto ──
 async function reg(tipo){
-  if(!utilizadorAtual){toast('⚠ Sessão não iniciada.');return;}
+  if(!utilizadorAtual)return;
   const empId=utilizadorAtual.id;
   const hojeRegs=registos.filter(r=>r.empId===empId&&r.data===hoje());
   const ul=hojeRegs.length?hojeRegs[hojeRegs.length-1]:null;
@@ -628,20 +724,11 @@ async function reg(tipo){
   if(tipo==='fim_pausa'&&ul&&ul.tipo!=='inicio_pausa'){toast('⚠ Não tem pausa em curso.');return;}
   if(tipo==='inicio_pausa'&&ul&&ul.tipo==='inicio_pausa'){toast('⚠ Pausa já iniciada.');return;}
   const now=new Date();
-  const obj={empId,data:hoje(),hora:now.toTimeString().slice(0,8),tipo,ts:now.getTime()};
-  const tempId='tmp_'+now.getTime()+'_'+Math.random().toString(36).slice(2,7);
-  const local={fbId:tempId,...obj};
-  registos.push(local);registos.sort((a,b)=>a.ts-b.ts);
-  toast('✓ '+TL[tipo]+' registada às '+now.toTimeString().slice(0,8));
+  const obj={empId,data:hoje(),hora:now.toTimeString().slice(0,8),tipo,ts:now.getTime(),aprovadoExtra:false};
+  const id=await fbAdd('registos',obj);
+  registos.push({fbId:id,...obj});registos.sort((a,b)=>a.ts-b.ts);
+  toast('✓ '+TL[tipo]+' registada às '+now.toTimeString().slice(0,5));
   atualizarBadge(empId,hoje());renderHojeLog(empId,hoje());atualizarHojeH();
-  try{
-    const id=await fbAdd('registos',obj);
-    local.fbId=id; // troca o id temporário pelo id real do Firestore
-  }catch(e){
-    registos=registos.filter(r=>r.fbId!==tempId);
-    atualizarBadge(empId,hoje());renderHojeLog(empId,hoje());atualizarHojeH();
-    toast('⚠ Falha a gravar. Registo anulado, tente novamente.',4000);
-  }
 }
 window.reg=reg;
 
@@ -649,8 +736,8 @@ function atualizarBadge(empId,d){
   const regs=registos.filter(r=>r.empId===empId&&r.data===d);
   const ul=regs.length?regs[regs.length-1]:null;
   const b=document.getElementById('badge-estado');if(!b)return;
-  if(!ul){b.className='bdg bdg-gy';b.innerHTML='<i class="ti ti-circle"></i> Sem registo hoje';return;}
   const m={entrada:['bdg-g','ti-login','Em serviço'],saida:['bdg-r','ti-logout','Saiu'],inicio_pausa:['bdg-y','ti-coffee','Em pausa'],fim_pausa:['bdg-g','ti-player-play','Em serviço']};
+  if(!ul){b.className='bdg bdg-gy';b.innerHTML='<i class="ti ti-circle"></i> Sem registo';return;}
   const[c,i,l]=m[ul.tipo]||m.entrada;b.className='bdg '+c;b.innerHTML=`<i class="ti ${i}"></i> ${l}`;
 }
 function renderHojeLog(empId,d){
@@ -658,30 +745,30 @@ function renderHojeLog(empId,d){
   const regs=registos.filter(r=>r.empId===empId&&r.data===d);
   if(!regs.length){c.innerHTML='<p style="font-size:13px;color:var(--text2);">Nenhum registo ainda.</p>';return;}
   c.innerHTML='<table><thead><tr><th>Hora</th><th>Tipo</th></tr></thead><tbody>'+
-    regs.map(r=>`<tr><td style="font-weight:600;font-variant-numeric:tabular-nums;">${r.hora}</td><td><span class="bdg ${TC[r.tipo]}"><i class="ti ${TI[r.tipo]}"></i> ${TL[r.tipo]}</span></td></tr>`).join('')+'</tbody></table>';
+    regs.map(r=>`<tr><td style="font-weight:700;font-variant-numeric:tabular-nums;">${r.hora.slice(0,5)}</td><td><span class="bdg ${TC[r.tipo]}"><i class="ti ${TI[r.tipo]}"></i> ${TL[r.tipo]}</span></td></tr>`).join('')+'</tbody></table>';
 }
 function atualizarHojeH(){
   const el=document.getElementById('horas-hoje');if(!el||!utilizadorAtual)return;
   const regs=registos.filter(r=>r.empId===utilizadorAtual.id&&r.data===hoje());
-  const h=calcH(regs);
-  if(h>0)el.textContent=`Horas hoje: ${h.toFixed(2)}h`;else el.textContent='';
+  const turno=getTurno(utilizadorAtual);
+  const h=calcH(regs,turno,false);
+  el.innerHTML=h>0?`<span style="font-size:13px;color:var(--text2);">Horas hoje: <strong>${h.toFixed(2)}h</strong></span>`:'';
 }
 
-// ── Cálculo horas ──────────────────────────────────────────────────────────
-function calcH(regs,horasSaida=null){
+// ── Cálculo de horas ──
+// Se aprovadoExtra=false, hora extra só conta se registo tiver aprovadoExtra=true no DB
+function calcH(regs,turno,contarExtra=false){
   let total=0,pausa=0,eTs=null,pTs=null;
   const sorted=[...regs].sort((a,b)=>a.ts-b.ts);
   sorted.forEach(r=>{
     if(r.tipo==='entrada')eTs=r.ts;
     if(r.tipo==='saida'&&eTs){
       let saidaTs=r.ts;
-      // Se houver hora de saída esperada e colaborou mais de TOLERANCIA_EXTRA_MIN além disso, contar só até hora_saida+tolerancia
-      if(horasSaida){
-        const d=new Date(r.ts);const base=new Date(r.ts);
-        const[hh,mm]=horasSaida.split(':').map(Number);
+      if(!contarExtra&&!r.aprovadoExtra&&turno?.saida){
+        // Cortar na hora de saída do turno (horas além disso não contam a menos que aprovadas)
+        const base=new Date(r.ts);const[hh,mm]=(turno.saida||'18:00').split(':').map(Number);
         base.setHours(hh,mm,0,0);
-        const diff=(d-base)/60000;
-        if(diff>TOLERANCIA_EXTRA_MIN)saidaTs=base.getTime()+TOLERANCIA_EXTRA_MIN*60000;
+        if(r.ts>base.getTime())saidaTs=base.getTime();
       }
       total+=Math.max(0,saidaTs-eTs);eTs=null;
     }
@@ -690,125 +777,181 @@ function calcH(regs,horasSaida=null){
   });
   return Math.max(0,total-pausa)/3600000;
 }
-function turnoSaida(turno){return turno==='manha'?'14:00':turno==='tarde'?'22:00':'18:00';}
-
-// ── Histórico ──────────────────────────────────────────────────────────────
-function initMesSelects(){
-  const cur=new Date().getMonth();
-  ['hist-mes','rel-mes','adm-rel-mes','adm-mes'].forEach(id=>{
-    const s=document.getElementById(id);if(!s)return;
-    s.innerHTML=MESES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
-    s.value=cur;
-  });
-}
-function renderHist(){
-  if(!utilizadorAtual)return;
-  const mes=parseInt(document.getElementById('hist-mes').value);
-  const pref=new Date().getFullYear()+'-'+String(mes+1).padStart(2,'0');
-  const dias={};
-  registos.filter(r=>r.empId===utilizadorAtual.id&&r.data.startsWith(pref)).forEach(r=>{if(!dias[r.data])dias[r.data]=[];dias[r.data].push(r);});
-  const aus=ausencias.filter(a=>a.empId===utilizadorAtual.id&&(a.dataInicio||'').startsWith(pref)&&a.estado==='aprovado');
-  const c=document.getElementById('hist-content');
-  if(!Object.keys(dias).length&&!aus.length){c.innerHTML='<p style="font-size:13px;color:var(--text2);">Sem registos para este mês.</p>';return;}
-  let rows='',totalH=0;
-  Object.keys(dias).sort().forEach(data=>{
-    const regs=dias[data];const h=calcH(regs,turnoSaida(utilizadorAtual.turno));totalH+=h;
-    const d=new Date(data+'T12:00:00');
-    rows+=`<tr><td>${data.split('-').reverse().join('/')}</td><td>${DIAS[d.getDay()]}</td><td style="font-size:12px;">${regs.map(r=>`${r.hora.slice(0,5)} <span style="color:var(--text2);">${TL[r.tipo]}</span>`).join(' · ')}</td><td style="text-align:right;">${h.toFixed(2)}h</td></tr>`;
-  });
-  aus.forEach(a=>{
-    rows+=`<tr style="background:var(--blue-bg)"><td>${(a.dataInicio||'').split('-').reverse().join('/')}</td><td colspan="2"><span class="bdg ${AUSC[a.tipo]||'bdg-b'}">${AUSL[a.tipo]||a.tipo}</span>${a.motivo?' — '+a.motivo:''}</td><td style="text-align:right;font-size:11px;color:var(--text2);">ausência</td></tr>`;
-  });
-  c.innerHTML=`<p style="font-size:14px;font-weight:600;margin-bottom:12px;">${utilizadorAtual.nome} — ${MESES[mes]}</p>
-    <div style="overflow-x:auto;"><table><thead><tr><th>Data</th><th>Dia</th><th>Registos</th><th style="text-align:right;">Horas</th></tr></thead><tbody>${rows}</tbody>
-    <tfoot><tr><td colspan="3">Total</td><td style="text-align:right;">${totalH.toFixed(2)}h</td></tr></tfoot></table></div>`;
-}
-window.renderHist=renderHist;
-
-// ── Relatório colaborador ──────────────────────────────────────────────────
-function dadosRel(empId,mes,emp){
-  const pref=new Date().getFullYear()+'-'+String(mes+1).padStart(2,'0');
-  const dias={};
-  registos.filter(r=>r.empId===empId&&r.data.startsWith(pref)).forEach(r=>{if(!dias[r.data])dias[r.data]=[];dias[r.data].push(r);});
-  let h=0;Object.values(dias).forEach(rs=>h+=calcH(rs,emp?turnoSaida(emp.turno):null));
-  const du=duMes(mes),he=du*(emp?emp.horas:8);
-  return{dias,h,du,he,ex:Math.max(0,h-he),fa:Math.max(0,he-h)};
-}
-function duMes(mes){
-  let c=0;const d=new Date(new Date().getFullYear(),mes,1);
-  while(d.getMonth()===mes){if(d.getDay()!==0&&d.getDay()!==6)c++;d.setDate(d.getDate()+1);}
+function duMes(mes,ano){
+  const a=ano||new Date().getFullYear();
+  let c=0;const d=new Date(a,mes,1);
+  while(d.getMonth()===mes){
+    const ds=dStr(d);
+    if(d.getDay()!==0&&d.getDay()!==6&&!isFeriado(ds))c++;
+    d.setDate(d.getDate()+1);
+  }
   return c;
 }
-function gerarRel(){
+
+// ── Calendário ──
+function renderCal(){
   if(!utilizadorAtual)return;
-  const mes=parseInt(document.getElementById('rel-mes').value);
-  const emp=utilizadorAtual;
-  const{dias,h,du,he,ex,fa}=dadosRel(emp.id,mes,emp);
-  let rows='';
-  Object.keys(dias).sort().forEach(data=>{
-    const regs=dias[data];const hd=calcH(regs,turnoSaida(emp.turno));
-    const d=new Date(data+'T12:00:00');
-    rows+=`<tr><td>${data.split('-').reverse().join('/')}</td><td>${DIAS[d.getDay()]}</td><td style="font-size:12px;">${regs.map(r=>r.hora.slice(0,5)+' '+TL[r.tipo]).join(', ')}</td><td style="text-align:right;">${hd.toFixed(2)}h</td></tr>`;
-  });
-  // Ausências do mês
-  const ausM=ausencias.filter(a=>a.empId===emp.id&&(a.dataInicio||'').startsWith(new Date().getFullYear()+'-'+String(mes+1).padStart(2,'0'))&&a.estado==='aprovado');
-  let ausRows=ausM.map(a=>`<tr><td>${(a.dataInicio||'').split('-').reverse().join('/')}</td><td colspan="2"><span class="bdg ${AUSC[a.tipo]||'bdg-b'}">${AUSL[a.tipo]||a.tipo}</span></td><td style="text-align:right;">—</td></tr>`).join('');
-  document.getElementById('rel-out').innerHTML=`<div class="card">
-    <p style="font-size:15px;font-weight:600;margin-bottom:4px;">${emp.nome} — ${MESES[mes]} ${new Date().getFullYear()}</p>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">${du} dias úteis · ${he}h esperadas · Tolerância saída: +${TOLERANCIA_EXTRA_MIN}min</p>
-    <div class="metrics">
-      <div class="metric"><div class="ml">Trabalhadas</div><div class="mv">${h.toFixed(1)}h</div></div>
-      <div class="metric"><div class="ml">Dias</div><div class="mv">${Object.keys(dias).length}</div></div>
-      <div class="metric"><div class="ml">Extra</div><div class="mv" style="color:var(--green-text);">+${ex.toFixed(1)}h</div></div>
-      <div class="metric"><div class="ml">Em falta</div><div class="mv" style="color:var(--red-text);">-${fa.toFixed(1)}h</div></div>
+  const ano=calAno,mes=calMes;
+  document.getElementById('cal-title').textContent=MESES[mes]+' '+ano;
+  const grid=document.getElementById('cal-grid');
+  // Cabeçalho dias
+  let html=DIAS_SHORT.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  const primeiro=new Date(ano,mes,1).getDay(); // 0=dom
+  const dias=new Date(ano,mes+1,0).getDate();
+  // Dias do mês anterior
+  for(let i=0;i<primeiro;i++)html+=`<div class="cal-day empty other-month"></div>`;
+  const empId=utilizadorAtual.id;
+  const hj=hoje();
+  for(let d=1;d<=dias;d++){
+    const ds=`${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dObj=new Date(ano,mes,d);
+    const dow=dObj.getDay();
+    const isWeekend=dow===0||dow===6;
+    const isFer=isFeriado(ds);
+    const isToday=ds===hj;
+    const regsD=registos.filter(r=>r.empId===empId&&r.data===ds);
+    const ausD=ausencias.filter(a=>a.empId===empId&&ds>=(a.dataInicio||'')&&ds<=(a.dataFim||a.dataInicio||'')&&a.estado==='aprovado');
+    let cls='cal-day';
+    let title='';
+    if(isFer){cls+=' feriado';title=nomeFeriado(ds);}
+    else if(isWeekend)cls+=' weekend';
+    else if(ausD.length){cls+=' '+ausD[0].tipo.replace('_manha','').replace('_tarde','');title=AUSL[ausD[0].tipo]||ausD[0].tipo;}
+    else if(regsD.length)cls+=' worked';
+    if(isToday)cls+=' today';
+    const hasDot=regsD.length>0;
+    html+=`<div class="${cls}" title="${title}" onclick="abrirDia('${ds}')">${d}${hasDot?'<div class="cal-dot"></div>':''}</div>`;
+  }
+  grid.innerHTML=html;
+  renderCalResumo(mes,ano);
+}
+function calNav(dir){
+  calMes+=dir;
+  if(calMes>11){calMes=0;calAno++;}
+  if(calMes<0){calMes=11;calAno--;}
+  calDiaAtivo=null;
+  document.getElementById('day-detail-wrap').innerHTML='';
+  renderCal();
+}
+window.calNav=calNav;
+
+function abrirDia(ds){
+  if(calDiaAtivo===ds){calDiaAtivo=null;document.getElementById('day-detail-wrap').innerHTML='';return;}
+  calDiaAtivo=ds;
+  const empId=utilizadorAtual.id;
+  const regs=registos.filter(r=>r.empId===empId&&r.data===ds).sort((a,b)=>a.ts-b.ts);
+  const aus=ausencias.filter(a=>a.empId===empId&&ds>=(a.dataInicio||'')&&ds<=(a.dataFim||a.dataInicio||'')&&a.estado==='aprovado');
+  const dObj=new Date(ds+'T12:00:00');
+  const isFer=isFeriado(ds);
+  const ferNome=nomeFeriado(ds);
+  let html=`<div class="day-detail">
+    <div class="day-detail-title">
+      <span>${DIAS_FULL[dObj.getDay()]}, ${ds.split('-').reverse().join('/')}${isFer?' 🎉 '+ferNome:''}</span>
+      <button class="btn bp xs" onclick="pedirCorrDia('${ds}')"><i class="ti ti-plus"></i> Pedir correção</button>
+    </div>`;
+  if(aus.length)html+=aus.map(a=>`<div style="background:var(--blue-bg);border:.5px solid var(--blue-border);border-radius:var(--r);padding:10px 12px;margin-bottom:6px;font-size:13px;color:var(--blue-text);"><i class="ti ti-calendar-off"></i> ${AUSL[a.tipo]||a.tipo}${a.motivo?' — '+a.motivo:''}</div>`).join('');
+  if(regs.length){
+    const h=calcH(regs,getTurno(utilizadorAtual),false);
+    html+=`<div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Horas: <strong>${h.toFixed(2)}h</strong></div>`;
+    html+=regs.map(r=>`<div class="reg-item" onclick="editarRegDia('${r.fbId}','${ds}')">
+      <div><div class="reg-item-time">${r.hora.slice(0,5)}</div><div class="reg-item-type">${TL[r.tipo]}</div></div>
+      <div style="flex:1;"></div>
+      <span class="bdg ${TC[r.tipo]}" style="font-size:10px;"><i class="ti ${TI[r.tipo]}"></i> ${TL[r.tipo]}</span>
+      <span class="reg-item-edit"><i class="ti ti-pencil"></i> editar</span>
+    </div>`).join('');
+  } else if(!aus.length&&!isFer){
+    html+='<p style="font-size:13px;color:var(--text2);">Sem registos neste dia.</p>';
+  }
+  html+=`<div id="corr-form-${ds}"></div></div>`;
+  document.getElementById('day-detail-wrap').innerHTML=html;
+}
+window.abrirDia=abrirDia;
+
+function pedirCorrDia(ds){
+  const formId=`corr-form-${ds}`;
+  const el=document.getElementById(formId);if(!el)return;
+  if(el.innerHTML){el.innerHTML='';return;}
+  const tO=['saida','entrada','inicio_pausa','fim_pausa'].map(t=>`<option value="${t}">${TL[t]}</option>`).join('');
+  el.innerHTML=`<div class="inline-edit" style="margin-top:10px;">
+    <div class="ct-sm" style="margin-bottom:10px;"><i class="ti ti-clock-edit"></i> Pedir correção para este dia</div>
+    <div class="row2">
+      <div class="fg"><label>Tipo de registo</label><select id="pcf-tipo">${tO}</select></div>
+      <div class="fg"><label>Hora correta</label><input type="time" id="pcf-hora" step="60"/></div>
+      <div class="fg" style="grid-column:span 2;"><label>Motivo</label><input type="text" id="pcf-mot" placeholder="Ex: Esqueci-me de registar a saída"/></div>
     </div>
-    <div style="overflow-x:auto;"><table class="pt"><thead><tr><th>Data</th><th>Dia</th><th>Registos</th><th style="text-align:right;">Horas</th></tr></thead><tbody>${rows}${ausRows}</tbody></table></div>
+    <div class="btn-row">
+      <button class="btn bp sm" onclick="enviarCorrDia('${ds}')"><i class="ti ti-send"></i> Enviar pedido</button>
+      <button class="btn bgy sm" onclick="document.getElementById('${formId}').innerHTML=''">Cancelar</button>
+    </div>
   </div>`;
 }
-window.gerarRel=gerarRel;
+window.pedirCorrDia=pedirCorrDia;
 
-function expCSV(){
-  if(!utilizadorAtual)return;
-  const mes=parseInt(document.getElementById('rel-mes').value);
-  const emp=utilizadorAtual;
-  const{dias}=dadosRel(emp.id,mes,emp);
-  let csv='Data,Dia,Hora,Tipo\n';
-  Object.keys(dias).sort().forEach(data=>{
-    const d=new Date(data+'T12:00:00');
-    dias[data].forEach(r=>{csv+=`"${data.split('-').reverse().join('/')}","${DIAS[d.getDay()]}","${r.hora}","${TL[r.tipo]}"\n`;});
-  });
-  dlCSV(csv,`ponto_${emp.nome.replace(/ /g,'_')}_${MESES[mes]}.csv`);toast('✓ CSV exportado!');
+async function enviarCorrDia(ds){
+  const tipo=document.getElementById('pcf-tipo').value;
+  const hora=document.getElementById('pcf-hora').value;
+  const mot=document.getElementById('pcf-mot').value.trim();
+  if(!hora){toast('⚠ Indique a hora.');return;}
+  const obj={empId:utilizadorAtual.id,tipoPedido:'correcao',tipo,data:ds,hora:hora+':00',motivo:mot,estado:'pendente',criadoEm:Date.now()};
+  const id=await fbAdd('pedidos',obj);pedidos.push({fbId:id,...obj});
+  toast('✓ Pedido enviado ao administrador.');atualizarNotifA();
+  abrirDia(ds);// refresh
 }
-window.expCSV=expCSV;
+window.enviarCorrDia=enviarCorrDia;
 
-function expPDF(){
-  if(!utilizadorAtual)return;
-  const mes=parseInt(document.getElementById('rel-mes').value);
-  const emp=utilizadorAtual;
-  const{dias,h,du,he,ex,fa}=dadosRel(emp.id,mes,emp);
-  const{jsPDF}=window.jspdf;const pdf=new jsPDF();
-  pdf.setFontSize(16);pdf.setFont(undefined,'bold');pdf.text('Relatório de Ponto',14,18);
-  pdf.setFontSize(10);pdf.setFont(undefined,'normal');
-  pdf.text(`Colaborador: ${emp.nome}  |  Departamento: ${emp.dept||'—'}`,14,27);
-  pdf.text(`Mês: ${MESES[mes]} ${new Date().getFullYear()}  |  Dias úteis: ${du}  |  Horas esperadas: ${he}h`,14,34);
-  pdf.text(`Horas trabalhadas: ${h.toFixed(2)}h  |  Extra: +${ex.toFixed(2)}h  |  Em falta: -${fa.toFixed(2)}h  |  Tolerância extra: +${TOLERANCIA_EXTRA_MIN}min`,14,41);
-  const rows=[];
-  Object.keys(dias).sort().forEach(data=>{
-    const d=new Date(data+'T12:00:00');const hd=calcH(dias[data],turnoSaida(emp.turno));
-    rows.push([data.split('-').reverse().join('/'),DIAS[d.getDay()],dias[data].map(r=>r.hora.slice(0,5)+' '+TL[r.tipo]).join('\n'),hd.toFixed(2)+'h']);
-  });
-  pdf.autoTable({startY:48,head:[['Data','Dia','Registos','Horas']],body:rows,styles:{fontSize:9},headStyles:{fillColor:[60,52,137]},columnStyles:{2:{cellWidth:90}}});
-  const aus=ausencias.filter(a=>a.empId===emp.id&&(a.dataInicio||'').startsWith(new Date().getFullYear()+'-'+String(mes+1).padStart(2,'0'))&&a.estado==='aprovado');
-  if(aus.length){
-    const y=pdf.lastAutoTable.finalY+6;
-    pdf.setFontSize(11);pdf.setFont(undefined,'bold');pdf.text('Ausências do mês',14,y);
-    pdf.autoTable({startY:y+4,head:[['Data','Tipo','Motivo']],body:aus.map(a=>[(a.dataInicio||'').split('-').reverse().join('/'),AUSL[a.tipo]||a.tipo,a.motivo||'—']),styles:{fontSize:9},headStyles:{fillColor:[60,52,137]}});
-  }
-  pdf.save(`ponto_${emp.nome.replace(/ /g,'_')}_${MESES[mes]}.pdf`);toast('✓ PDF exportado!');
+function editarRegDia(fbId,ds){
+  const r=registos.find(x=>x.fbId===fbId);if(!r)return;
+  const formId=`corr-form-${ds}`;const el=document.getElementById(formId);if(!el)return;
+  const tO=['entrada','saida','inicio_pausa','fim_pausa'].map(t=>`<option value="${t}" ${t===r.tipo?'selected':''}>${TL[t]}</option>`).join('');
+  el.innerHTML=`<div class="inline-edit" style="margin-top:10px;">
+    <div class="ct-sm" style="margin-bottom:10px;"><i class="ti ti-pencil"></i> Pedir correção deste registo</div>
+    <div class="row2">
+      <div class="fg"><label>Tipo</label><select id="erf-tipo">${tO}</select></div>
+      <div class="fg"><label>Nova hora</label><input type="time" id="erf-hora" value="${r.hora.slice(0,5)}" step="60"/></div>
+      <div class="fg" style="grid-column:span 2;"><label>Motivo</label><input type="text" id="erf-mot" placeholder="Ex: Hora errada, foi às 18:05"/></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn bp sm" onclick="enviarEditReg('${fbId}','${ds}')"><i class="ti ti-send"></i> Enviar pedido</button>
+      <button class="btn bgy sm" onclick="document.getElementById('${formId}').innerHTML=''">Cancelar</button>
+    </div>
+  </div>`;
 }
-window.expPDF=expPDF;
+window.editarRegDia=editarRegDia;
 
-// ── Ausências colaborador ──────────────────────────────────────────────────
+async function enviarEditReg(fbId,ds){
+  const tipo=document.getElementById('erf-tipo').value;
+  const hora=document.getElementById('erf-hora').value;
+  const mot=document.getElementById('erf-mot').value.trim();
+  if(!hora){toast('⚠ Indique a hora.');return;}
+  const obj={empId:utilizadorAtual.id,tipoPedido:'correcaoExistente',registoId:fbId,tipo,data:ds,hora:hora+':00',motivo:mot,estado:'pendente',criadoEm:Date.now()};
+  const id=await fbAdd('pedidos',obj);pedidos.push({fbId:id,...obj});
+  toast('✓ Pedido enviado ao administrador.');atualizarNotifA();
+  document.getElementById(`corr-form-${ds}`).innerHTML='';
+}
+window.enviarEditReg=enviarEditReg;
+
+function renderCalResumo(mes,ano){
+  if(!utilizadorAtual)return;
+  const empId=utilizadorAtual.id;
+  const pref=`${ano}-${String(mes+1).padStart(2,'0')}`;
+  const dias={};
+  registos.filter(r=>r.empId===empId&&r.data.startsWith(pref)).forEach(r=>{if(!dias[r.data])dias[r.data]=[];dias[r.data].push(r);});
+  const turno=getTurno(utilizadorAtual);
+  let h=0;Object.values(dias).forEach(rs=>h+=calcH(rs,turno,false));
+  const du=duMes(mes,ano),he=du*(turno.horas||8);
+  const ausM=ausencias.filter(a=>a.empId===empId&&(a.dataInicio||'').startsWith(pref)&&a.estado==='aprovado');
+  const ferD=ausM.filter(a=>a.tipo==='ferias').length;
+  const faltaD=ausM.filter(a=>a.tipo.startsWith('falta')).length;
+  document.getElementById('cal-resumo').innerHTML=`<div class="metrics" style="margin-bottom:0;">
+    <div class="metric"><div class="ml">Dias úteis</div><div class="mv">${du}</div></div>
+    <div class="metric"><div class="ml">Presente</div><div class="mv" style="color:var(--green-text);">${Object.keys(dias).length}</div></div>
+    <div class="metric"><div class="ml">Horas</div><div class="mv">${h.toFixed(1)}h</div></div>
+    <div class="metric"><div class="ml">Férias</div><div class="mv" style="color:var(--blue-text);">${ferD}d</div></div>
+    <div class="metric"><div class="ml">Faltas</div><div class="mv" style="color:var(--red-text);">${faltaD}d</div></div>
+    <div class="metric"><div class="ml">Saldo</div><div class="mv" style="color:${h>=he?'var(--green-text)':'var(--red-text)'};">${(h-he).toFixed(1)}h</div></div>
+  </div>`;
+}
+
+// ── Ausências colaborador ──
 async function pedirAus(){
   if(!utilizadorAtual)return;
   const tipo=document.getElementById('aus-tipo').value;
@@ -816,251 +959,179 @@ async function pedirAus(){
   const df=document.getElementById('aus-df').value||di;
   const mot=document.getElementById('aus-mot').value.trim();
   if(!di){toast('⚠ Selecione a data.');return;}
-  const obj={empId:utilizadorAtual.id,tipo,dataInicio:di,dataFim:df,motivo:mot,estado:'pendente',criadoEm:Date.now(),origem:'colaborador'};
-  const id=await fbAdd('pedidos',obj);
-  pedidos.push({fbId:id,...obj});
-  toast('✓ Pedido enviado ao administrador.');
-  renderPedColab();atualizarNotifAdm();
+  const obj={empId:utilizadorAtual.id,tipo,dataInicio:di,dataFim:df,motivo:mot,estado:'pendente',criadoEm:Date.now(),tipoPedido:'ausencia'};
+  const id=await fbAdd('pedidos',obj);pedidos.push({fbId:id,...obj});
+  toast('✓ Pedido enviado ao administrador.');renderPedColab();atualizarNotifA();
 }
 window.pedirAus=pedirAus;
 
 function renderAusColab(){
   if(!utilizadorAtual)return;
   const list=ausencias.filter(a=>a.empId===utilizadorAtual.id).sort((a,b)=>(b.dataInicio||'').localeCompare(a.dataInicio||''));
-  const c=document.getElementById('aus-list-colab');
+  const c=document.getElementById('aus-list-c');
   if(!list.length){c.innerHTML='<p style="font-size:13px;color:var(--text2);">Sem ausências registadas.</p>';return;}
-  c.innerHTML='<div style="overflow-x:auto;"><table><thead><tr><th>Tipo</th><th>Data início</th><th>Data fim</th><th>Estado</th></tr></thead><tbody>'+
-    list.map(a=>`<tr><td>${AUSL[a.tipo]||a.tipo}</td><td>${(a.dataInicio||'').split('-').reverse().join('/')}</td><td>${(a.dataFim||a.dataInicio||'').split('-').reverse().join('/')}</td><td><span class="bdg ${a.estado==='aprovado'?'bdg-g':a.estado==='rejeitado'?'bdg-r':'bdg-y'}">${a.estado}</span></td></tr>`).join('')+'</tbody></table></div>';
+  c.innerHTML='<div style="overflow-x:auto;"><table><thead><tr><th>Tipo</th><th>Início</th><th>Fim</th><th>Estado</th></tr></thead><tbody>'+
+    list.map(a=>`<tr><td><span class="bdg ${AUSC[a.tipo]||'bdg-b'}">${AUSL[a.tipo]||a.tipo}</span></td><td>${(a.dataInicio||'').split('-').reverse().join('/')}</td><td>${(a.dataFim||a.dataInicio||'').split('-').reverse().join('/')}</td><td><span class="bdg ${a.estado==='aprovado'?'bdg-g':a.estado==='rejeitado'?'bdg-r':'bdg-y'}">${a.estado}</span></td></tr>`).join('')+'</tbody></table></div>';
 }
 
 function renderFeriasSaldo(){
   if(!utilizadorAtual)return;
   const ano=new Date().getFullYear();
+  document.getElementById('ferias-ano').textContent=ano;
   const gozadas=ausencias.filter(a=>a.empId===utilizadorAtual.id&&a.tipo==='ferias'&&a.estado==='aprovado'&&(a.dataInicio||'').startsWith(ano)).reduce((s,a)=>{
-    const di=new Date(a.dataInicio+'T12:00:00'),df=new Date((a.dataFim||a.dataInicio)+'T12:00:00');
-    let c=0,d=new Date(di);while(d<=df){if(d.getDay()!==0&&d.getDay()!==6)c++;d.setDate(d.getDate()+1);}return s+c;
+    let c=0,d=new Date(a.dataInicio+'T12:00:00'),df=new Date((a.dataFim||a.dataInicio)+'T12:00:00');
+    while(d<=df){if(d.getDay()!==0&&d.getDay()!==6&&!isFeriado(dStr(d)))c++;d.setDate(d.getDate()+1);}
+    return s+c;
   },0);
-  const total=utilizadorAtual.ferias||DIAS_FERIAS;
-  const saldo=total-gozadas;
-  document.getElementById('ferias-saldo').innerHTML=`<div class="metrics">
+  const total=utilizadorAtual.ferias||DIAS_FERIAS_DEFAULT;const saldo=total-gozadas;
+  document.getElementById('ferias-saldo').innerHTML=`<div class="metrics" style="margin-bottom:0;">
     <div class="metric"><div class="ml">Total anual</div><div class="mv">${total} dias</div></div>
-    <div class="metric"><div class="ml">Gozados</div><div class="mv" style="color:var(--amber-text);">${gozadas} dias</div></div>
-    <div class="metric"><div class="ml">Disponíveis</div><div class="mv" style="color:${saldo>=0?'var(--green-text)':'var(--red-text)'};">${saldo} dias</div></div>
+    <div class="metric"><div class="ml">Gozados</div><div class="mv" style="color:var(--amber-text);">${gozadas}</div></div>
+    <div class="metric"><div class="ml">Disponíveis</div><div class="mv" style="color:${saldo>=0?'var(--green-text)':'var(--red-text)'};">${saldo}</div></div>
   </div>`;
 }
 
-// ── Pedidos colaborador ────────────────────────────────────────────────────
-function corSeg(modo){
-  corModo=modo;
-  document.getElementById('cor-seg-criar').classList.toggle('on',modo==='criar');
-  document.getElementById('cor-seg-editar').classList.toggle('on',modo==='editar');
-  document.getElementById('cor-area-criar').style.display=modo==='criar'?'block':'none';
-  document.getElementById('cor-area-editar').style.display=modo==='editar'?'block':'none';
-  if(modo==='editar')popularCorRegSel();
-}
-window.corSeg=corSeg;
-
-function popularCorRegSel(){
-  if(!utilizadorAtual)return;
-  const sel=document.getElementById('cor-reg-sel');if(!sel)return;
-  const meus=registos.filter(r=>r.empId===utilizadorAtual.id).sort((a,b)=>b.ts-a.ts).slice(0,40);
-  if(!meus.length){sel.innerHTML='<option value="">Sem registos recentes</option>';return;}
-  sel.innerHTML=meus.map(r=>`<option value="${r.fbId}">${r.data.split('-').reverse().join('/')} ${r.hora.slice(0,5)} — ${TL[r.tipo]}</option>`).join('');
-}
-
-function detalhePedido(p){
-  if(p.tipoPedido==='correcao'){
-    const dataFmt=(p.data||'').split('-').reverse().join('/');
-    if(p.acao==='editar')return `Corrigir ${TL[p.tipo]||p.tipo} de ${dataFmt}: ${(p.horaAnterior||'').slice(0,5)} → ${(p.hora||'').slice(0,5)}`;
-    return `Criar ${TL[p.tipo]||p.tipo} em falta — ${dataFmt} às ${(p.hora||'').slice(0,5)}`;
-  }
-  return `Ausência: ${AUSL[p.tipo]||p.tipo}${p.dataInicio?' — '+(p.dataInicio).split('-').reverse().join('/'):''}`;
-}
-
-async function pedirCorr(){
-  if(!utilizadorAtual)return;
-  let obj;
-  if(corModo==='editar'){
-    const regFbId=document.getElementById('cor-reg-sel').value;
-    const hora=document.getElementById('cor-edit-hora').value;
-    const mot=document.getElementById('cor-edit-mot').value.trim();
-    if(!regFbId){toast('⚠ Selecione o registo a corrigir.');return;}
-    if(!hora){toast('⚠ Indique a hora correta.');return;}
-    const original=registos.find(r=>r.fbId===regFbId);
-    if(!original){toast('⚠ Registo não encontrado.');return;}
-    obj={empId:utilizadorAtual.id,tipoPedido:'correcao',acao:'editar',regFbId,tipo:original.tipo,data:original.data,horaAnterior:original.hora,hora:hora+':00',motivo:mot,estado:'pendente',criadoEm:Date.now()};
-  }else{
-    const data=document.getElementById('cor-data').value;
-    const tipo=document.getElementById('cor-tipo').value;
-    const hora=document.getElementById('cor-hora').value;
-    const mot=document.getElementById('cor-mot').value.trim();
-    if(!data||!hora){toast('⚠ Preencha data e hora.');return;}
-    obj={empId:utilizadorAtual.id,tipoPedido:'correcao',acao:'criar',tipo,data,hora:hora+':00',motivo:mot,estado:'pendente',criadoEm:Date.now()};
-  }
-  const tempId='tmp_'+Date.now();
-  pedidos.push({fbId:tempId,...obj});
-  toast('✓ Pedido enviado.');renderPedColab();atualizarNotifAdm();
-  try{
-    const id=await fbAdd('pedidos',obj);
-    const i=pedidos.findIndex(p=>p.fbId===tempId);if(i>=0)pedidos[i].fbId=id;
-  }catch(e){
-    pedidos=pedidos.filter(p=>p.fbId!==tempId);renderPedColab();
-    toast('⚠ Falha ao enviar o pedido. Tente novamente.',4000);
-  }
-}
-window.pedirCorr=pedirCorr;
-
+// ── Pedidos colaborador ──
 function renderPedColab(){
   if(!utilizadorAtual)return;
   const list=pedidos.filter(p=>p.empId===utilizadorAtual.id).sort((a,b)=>b.criadoEm-a.criadoEm);
-  const c=document.getElementById('ped-list-colab');
+  const c=document.getElementById('ped-list-c');
   if(!list.length){c.innerHTML='<p style="font-size:13px;color:var(--text2);">Sem pedidos.</p>';return;}
-  c.innerHTML='<div style="overflow-x:auto;"><table><thead><tr><th>Tipo</th><th>Detalhe</th><th>Estado</th></tr></thead><tbody>'+
-    list.map(p=>`<tr><td>${p.tipoPedido==='correcao'?'Correção registo':'Ausência'}</td><td style="font-size:12px;">${detalhePedido(p)}${p.motivo?' — '+p.motivo:''}</td><td><span class="bdg ${p.estado==='aprovado'?'bdg-g':p.estado==='rejeitado'?'bdg-r':'bdg-y'}">${p.estado}</span></td></tr>`).join('')+'</tbody></table></div>';
+  c.innerHTML='<div style="overflow-x:auto;"><table><thead><tr><th>Tipo</th><th>Detalhe</th><th>Estado</th><th></th></tr></thead><tbody>'+
+    list.map(p=>{
+      const detalhe=p.tipoPedido==='correcao'||p.tipoPedido==='correcaoExistente'?`Correção: ${TL[p.tipo]||p.tipo} em ${(p.data||'').split('-').reverse().join('/')} às ${(p.hora||'').slice(0,5)}`:`Ausência: ${AUSL[p.tipo]||p.tipo} ${p.dataInicio?(p.dataInicio).split('-').reverse().join('/'):''}`;
+      const cancelBtn=p.estado==='pendente'?`<button class="btn br xs" onclick="cancelarPed('${p.fbId}')">Cancelar</button>`:'';
+      return`<tr><td><span class="bdg ${p.tipoPedido==='correcao'||p.tipoPedido==='correcaoExistente'?'bdg-p':'bdg-b'}" style="font-size:10px;">${p.tipoPedido==='correcao'||p.tipoPedido==='correcaoExistente'?'Correção':'Ausência'}</span></td><td style="font-size:12px;">${detalhe}${p.motivo?' <span style="color:var(--text2);">— '+p.motivo+'</span>':''}</td><td><span class="bdg ${p.estado==='aprovado'?'bdg-g':p.estado==='rejeitado'?'bdg-r':'bdg-y'}" style="font-size:10px;">${p.estado}</span></td><td>${cancelBtn}</td></tr>`;
+    }).join('')+'</tbody></table></div>';
 }
+async function cancelarPed(fbId){
+  if(!confirm('Cancelar este pedido?'))return;
+  await fbDel('pedidos',fbId);pedidos=pedidos.filter(p=>p.fbId!==fbId);
+  toast('Pedido cancelado.');renderPedColab();atualizarNotifA();
+}
+window.cancelarPed=cancelarPed;
 
-function atualizarNotifColab(){
-  if(!utilizadorAtual)return;
-  const n=pedidos.filter(p=>p.empId===utilizadorAtual.id&&p.estado==='pendente').length;
-  const el=document.getElementById('notif-ped');
-  if(n>0){el.style.display='inline-flex';el.textContent=n;}else el.style.display='none';
+function atualizarNotifC(){
+  const n=pedidos.filter(p=>p.empId===utilizadorAtual?.id&&p.estado==='pendente').length;
+  const el=document.getElementById('notif-c');if(el){el.style.display=n>0?'inline-flex':'none';el.textContent=n;}
 }
-function atualizarNotifAdm(){
+function atualizarNotifA(){
   const n=pedidos.filter(p=>p.estado==='pendente').length;
-  const el=document.getElementById('notif-adm');
-  if(el){if(n>0){el.style.display='inline-flex';el.textContent=n;}else el.style.display='none';}
+  const el=document.getElementById('notif-a');if(el){el.style.display=n>0?'inline-flex':'none';el.textContent=n;}
 }
 
-// ── Dashboard ──────────────────────────────────────────────────────────────
+// ── Dashboard ──
 function renderDash(){
   const hj=hoje();
-  // Presença
+  document.getElementById('dash-data').textContent=DIAS_FULL[new Date().getDay()]+', '+new Date().getDate()+' de '+MESES[new Date().getMonth()];
+  const presentes=colaboradores.filter(e=>{const ul=registos.filter(r=>r.empId===e.id&&r.data===hj);const l=ul.length?ul[ul.length-1]:null;return l&&(l.tipo==='entrada'||l.tipo==='fim_pausa');}).length;
+  const pend=pedidos.filter(p=>p.estado==='pendente').length;
+  const ausHj=ausencias.filter(a=>hj>=(a.dataInicio||'')&&hj<=(a.dataFim||a.dataInicio||'')&&a.estado==='aprovado').length;
+  document.getElementById('dash-metrics').innerHTML=`
+    <div class="metric"><div class="ml">Presentes</div><div class="mv" style="color:var(--green-text);">${presentes}</div></div>
+    <div class="metric"><div class="ml">Total colab.</div><div class="mv">${colaboradores.length}</div></div>
+    <div class="metric"><div class="ml">Ausências hoje</div><div class="mv" style="color:var(--amber-text);">${ausHj}</div></div>
+    <div class="metric"><div class="ml">Pedidos pendentes</div><div class="mv" style="color:${pend>0?'var(--red-text)':'var(--text2)'};">${pend}</div></div>`;
   const cards=colaboradores.map(emp=>{
     const regs=registos.filter(r=>r.empId===emp.id&&r.data===hj);
     const ul=regs.length?regs[regs.length-1]:null;
+    const ausE=ausencias.find(a=>a.empId===emp.id&&hj>=(a.dataInicio||'')&&hj<=(a.dataFim||a.dataInicio||'')&&a.estado==='aprovado');
     const ini=emp.nome.split(' ').map(n=>n[0]).slice(0,2).join('');
-    const[sc,si,sl]=ul?({entrada:['var(--green-text)','ti-login','Em serviço'],saida:['var(--text3)','ti-logout','Saiu'],inicio_pausa:['var(--amber-text)','ti-coffee','Em pausa'],fim_pausa:['var(--green-text)','ti-player-play','Em serviço']}[ul.tipo]||['var(--text2)','ti-circle','—']):['var(--text3)','ti-circle','Ausente'];
-    return `<div class="pcard"><div class="avatar">${ini}</div><div class="pcard-info"><div class="pcard-name">${emp.nome}</div><div class="pcard-status" style="color:${sc};"><i class="ti ${si}"></i> ${sl}</div></div></div>`;
+    let sc='var(--text3)',si='ti-circle',sl='Ausente';
+    if(ausE){sl=AUSL[ausE.tipo]||ausE.tipo;si='ti-calendar-off';sc='var(--blue-text)';}
+    else if(ul){const m={entrada:['var(--green-text)','ti-login','Em serviço'],saida:['var(--text2)','ti-logout','Saiu'],inicio_pausa:['var(--amber-text)','ti-coffee','Em pausa'],fim_pausa:['var(--green-text)','ti-player-play','Em serviço']};[sc,si,sl]=m[ul.tipo]||m.entrada;}
+    return`<div class="pcard"><div class="avatar">${ini}</div><div style="min-width:0;"><div class="pcard-name">${emp.nome}</div><div class="pcard-status" style="color:${sc};"><i class="ti ${si}"></i> ${sl}</div></div></div>`;
   }).join('');
   document.getElementById('dash-presence').innerHTML=`<div class="presence-grid">${cards}</div>`;
-  // Alertas
   const alertas=[];
   colaboradores.forEach(emp=>{
     const regs=registos.filter(r=>r.empId===emp.id&&r.data===hj);
     const ul=regs.length?regs[regs.length-1]:null;
     if(ul&&ul.tipo==='entrada'){
       const diff=(Date.now()-ul.ts)/3600000;
-      if(diff>10)alertas.push(`<div class="warn-banner"><i class="ti ti-alert-triangle"></i> <strong>${emp.nome}</strong> entrou às ${ul.hora.slice(0,5)} e ainda não registou saída (há ${diff.toFixed(0)}h).</div>`);
+      if(diff>10)alertas.push(`<div class="warn-banner"><i class="ti ti-alert-triangle" style="flex-shrink:0;"></i> <strong>${emp.nome}</strong> entrou às ${ul.hora.slice(0,5)} e ainda não registou saída (há ${diff.toFixed(0)}h).</div>`);
     }
   });
-  const pend=pedidos.filter(p=>p.estado==='pendente').length;
-  if(pend>0)alertas.push(`<div class="info-banner"><i class="ti ti-bell"></i> Tem <strong>${pend} pedido(s) pendente(s)</strong> para aprovar.</div>`);
+  if(pend>0)alertas.push(`<div class="info-banner"><i class="ti ti-bell"></i> <strong>${pend} pedido(s) pendente(s)</strong> aguardam aprovação.</div>`);
   document.getElementById('dash-alertas').innerHTML=alertas.length?alertas.join(''):'<p style="font-size:13px;color:var(--text2);">Sem alertas.</p>';
-  // Métricas
-  const presentes=colaboradores.filter(emp=>{const ul=registos.filter(r=>r.empId===emp.id&&r.data===hj);const l=ul.length?ul[ul.length-1]:null;return l&&(l.tipo==='entrada'||l.tipo==='fim_pausa');}).length;
-  document.getElementById('dash-metrics').innerHTML=`
-    <div class="metric"><div class="ml">Presentes agora</div><div class="mv" style="color:var(--green-text);">${presentes}</div></div>
-    <div class="metric"><div class="ml">Total colaboradores</div><div class="mv">${colaboradores.length}</div></div>
-    <div class="metric"><div class="ml">Pedidos pendentes</div><div class="mv" style="color:${pend>0?'var(--red-text)':'var(--text2)'};">${pend}</div></div>
-  `;
 }
 
-// ── Admin: Registos ────────────────────────────────────────────────────────
+// ── Admin: Registos ──
 function initAdmSels(){
   const cur=new Date().getMonth();
-  const empOpts='<option value="todos">Todos</option>'+colaboradores.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
-  ['adm-emp','adm-aus-emp','adm-aus-fil-emp'].forEach(id=>{const s=document.getElementById(id);if(s)s.innerHTML=empOpts;});
-  ['adm-mes','adm-aus-fil-mes','adm-rel-mes'].forEach(id=>{
-    const s=document.getElementById(id);if(!s)return;
-    s.innerHTML=MESES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');s.value=cur;
-  });
-  const empOnlyOpts=colaboradores.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
-  const ae=document.getElementById('adm-aus-emp');if(ae)ae.innerHTML=empOnlyOpts;
+  const empAll='<option value="todos">Todos</option>'+colaboradores.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+  const empOnly=colaboradores.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+  ['adm-emp','aa-fil-e'].forEach(id=>{const s=document.getElementById(id);if(s)s.innerHTML=empAll;});
+  ['aa-emp'].forEach(id=>{const s=document.getElementById(id);if(s)s.innerHTML=empOnly;});
+  ['adm-mes','aa-fil-m','adm-rel-mes'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML=MESES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');s.value=cur;});
 }
 function initAdmAusSels(){
-  const empOpts='<option value="todos">Todos</option>'+colaboradores.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
-  const s=document.getElementById('adm-aus-fil-emp');if(s)s.innerHTML=empOpts;
+  const s1=document.getElementById('aa-fil-e');if(s1)s1.innerHTML='<option value="todos">Todos</option>'+colaboradores.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+  const s2=document.getElementById('aa-fil-m');if(s2){s2.innerHTML=MESES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');s2.value=new Date().getMonth();}
 }
 window.renderAdmReg=renderAdmReg;
 function renderAdmReg(){
   const mes=parseInt(document.getElementById('adm-mes').value);
   const filtEmp=document.getElementById('adm-emp').value;
-  const pref=new Date().getFullYear()+'-'+String(mes+1).padStart(2,'0');
+  const pref=`${new Date().getFullYear()}-${String(mes+1).padStart(2,'0')}`;
   let regs=registos.filter(r=>r.data.startsWith(pref));
   if(filtEmp!=='todos')regs=regs.filter(r=>r.empId===parseInt(filtEmp));
   regs=[...regs].sort((a,b)=>a.ts-b.ts);
   const rows=regs.map(r=>{const emp=colaboradores.find(c=>c.id===r.empId);
-    return `<tr id="row-${r.fbId}"><td>${emp?emp.nome:'?'}</td><td>${(r.data||'').split('-').reverse().join('/')}</td><td style="font-variant-numeric:tabular-nums;">${r.hora}</td><td><span class="bdg ${TC[r.tipo]}" style="font-size:10px;"><i class="ti ${TI[r.tipo]}"></i> ${TL[r.tipo]}</span></td><td style="text-align:right;white-space:nowrap;"><button class="btn bb sm" onclick="editReg('${r.fbId}')"><i class="ti ti-edit"></i></button> <button class="btn br sm" onclick="delReg('${r.fbId}')"><i class="ti ti-trash"></i></button></td></tr>`;
+    const extraBdg=r.aprovadoExtra?'<span class="bdg bdg-g xs" style="font-size:9px;margin-left:4px;"><i class="ti ti-star"></i> Extra aprovado</span>':'';
+    return`<tr id="row-${r.fbId}"><td>${emp?emp.nome:'?'}</td><td>${(r.data||'').split('-').reverse().join('/')}</td><td style="font-variant-numeric:tabular-nums;font-weight:600;">${r.hora.slice(0,5)}</td><td><span class="bdg ${TC[r.tipo]}" style="font-size:10px;"><i class="ti ${TI[r.tipo]}"></i> ${TL[r.tipo]}</span>${extraBdg}</td><td style="text-align:right;white-space:nowrap;">
+      ${r.tipo==='saida'&&!r.aprovadoExtra?`<button class="btn bt xs" onclick="aprovarExtra('${r.fbId}')" title="Aprovar hora extra"><i class="ti ti-star"></i></button> `:''}
+      <button class="btn bb sm" onclick="editReg('${r.fbId}')"><i class="ti ti-edit"></i></button> <button class="btn br sm" onclick="delReg('${r.fbId}')"><i class="ti ti-trash"></i></button></td></tr>`;
   }).join('');
   document.getElementById('adm-reg-out').innerHTML=`<div class="card">
-    <div id="new-reg-area"></div>
-    <button class="btn bp sm" onclick="abrirNR()" style="margin-bottom:12px;"><i class="ti ti-plus"></i> Novo registo manual</button>
-    ${regs.length===0?'<p style="font-size:13px;color:var(--text2);">Sem registos.</p>':
+    <div id="nr-area"></div>
+    <button class="btn bp sm" onclick="abrirNR()" style="margin-bottom:14px;"><i class="ti ti-plus"></i> Novo registo manual</button>
+    <div class="info-banner" style="margin-bottom:14px;"><i class="ti ti-star"></i> Clique em <strong>⭐</strong> numa saída para aprovar horas extra desse dia.</div>
+    ${regs.length===0?'<p style="font-size:13px;color:var(--text2);">Sem registos neste período.</p>':
     `<div style="overflow-x:auto;"><table><thead><tr><th>Colaborador</th><th>Data</th><th>Hora</th><th>Tipo</th><th style="text-align:right;">Ações</th></tr></thead><tbody>${rows}</tbody></table></div>`}
   </div>`;
 }
+async function aprovarExtra(fbId){
+  await fbUpd('registos',fbId,{aprovadoExtra:true});
+  const i=registos.findIndex(r=>r.fbId===fbId);if(i>=0)registos[i].aprovadoExtra=true;
+  toast('✓ Hora extra aprovada!');renderAdmReg();
+}
+window.aprovarExtra=aprovarExtra;
 function editReg(fbId){
   const r=registos.find(x=>x.fbId===fbId);if(!r)return;
   const row=document.getElementById('row-'+fbId);row.style.background='var(--bg2)';
   const eO=colaboradores.map(c=>`<option value="${c.id}" ${c.id===r.empId?'selected':''}>${c.nome}</option>`).join('');
   const tO=['entrada','saida','inicio_pausa','fim_pausa'].map(t=>`<option value="${t}" ${t===r.tipo?'selected':''}>${TL[t]}</option>`).join('');
-  row.innerHTML=`<td><select class="ei" id="re-e-${fbId}">${eO}</select></td>
-    <td><input class="ei" type="date" id="re-d-${fbId}" value="${r.data}"/></td>
-    <td><input class="ei" type="time" id="re-h-${fbId}" value="${r.hora.slice(0,5)}" style="width:90px;"/></td>
-    <td><select class="ei" id="re-t-${fbId}">${tO}</select></td>
-    <td style="text-align:right;white-space:nowrap;">
-      <button class="btn bp sm" onclick="saveReg('${fbId}')"><i class="ti ti-check"></i></button>
-      <button class="btn bgy sm" onclick="renderAdmReg()">✕</button>
-    </td>`;
+  row.innerHTML=`<td><select class="ei" id="re-e-${fbId}">${eO}</select></td><td><input class="ei" type="date" id="re-d-${fbId}" value="${r.data}"/></td><td><input class="ei" type="time" id="re-h-${fbId}" value="${r.hora.slice(0,5)}" style="width:90px;"/></td><td><select class="ei" id="re-t-${fbId}">${tO}</select></td><td style="text-align:right;white-space:nowrap;"><button class="btn bp sm" onclick="saveReg('${fbId}')"><i class="ti ti-check"></i></button> <button class="btn bgy sm" onclick="renderAdmReg()">✕</button></td>`;
 }
 async function saveReg(fbId){
   const empId=parseInt(document.getElementById('re-e-'+fbId).value);
   const data=document.getElementById('re-d-'+fbId).value;
   const hora=document.getElementById('re-h-'+fbId).value+':00';
   const tipo=document.getElementById('re-t-'+fbId).value;
-  if(!data||!hora){toast('⚠ Preencha todos os campos.');return;}
   const[y,m,d]=data.split('-').map(Number);const[hh,mm]=hora.split(':').map(Number);
-  const ts=new Date(y,m-1,d,hh,mm,0).getTime();
-  const i=registos.findIndex(r=>r.fbId===fbId);
-  const anterior=i>=0?{...registos[i]}:null;
-  if(i>=0)registos[i]={...registos[i],empId,data,hora,tipo,ts};
+  await fbUpd('registos',fbId,{empId,data,hora,tipo,ts:new Date(y,m-1,d,hh,mm,0).getTime()});
+  const i=registos.findIndex(r=>r.fbId===fbId);if(i>=0)registos[i]={...registos[i],empId,data,hora,tipo};
   toast('✓ Registo atualizado!');renderAdmReg();
-  try{
-    await fbUpd('registos',fbId,{empId,data,hora,tipo,ts});
-  }catch(e){
-    if(anterior&&i>=0)registos[i]=anterior;renderAdmReg();
-    toast('⚠ Falha ao gravar a correção. Tente novamente.',4000);
-  }
 }
 async function delReg(fbId){
   if(!confirm('Eliminar este registo?'))return;
-  const removido=registos.find(r=>r.fbId===fbId);
-  registos=registos.filter(r=>r.fbId!==fbId);
+  await fbDel('registos',fbId);registos=registos.filter(r=>r.fbId!==fbId);
   toast('Registo eliminado.');renderAdmReg();
-  try{
-    await fbDel('registos',fbId);
-  }catch(e){
-    if(removido){registos.push(removido);registos.sort((a,b)=>a.ts-b.ts);}
-    renderAdmReg();
-    toast('⚠ Falha ao eliminar. Registo restaurado.',4000);
-  }
 }
 function abrirNR(){
   const mes=parseInt(document.getElementById('adm-mes').value);
-  const hj=new Date().getFullYear()+'-'+String(mes+1).padStart(2,'0')+'-'+String(new Date().getDate()).padStart(2,'0');
+  const hj=new Date();const dataD=`${hj.getFullYear()}-${String(mes+1).padStart(2,'0')}-${String(hj.getDate()).padStart(2,'0')}`;
   const eO=colaboradores.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
   const tO=['entrada','saida','inicio_pausa','fim_pausa'].map(t=>`<option value="${t}">${TL[t]}</option>`).join('');
-  document.getElementById('new-reg-area').innerHTML=`<div style="background:var(--blue-bg);border:.5px solid var(--blue-border);border-radius:var(--r);padding:14px;margin-bottom:12px;">
+  document.getElementById('nr-area').innerHTML=`<div class="inline-edit" style="margin-bottom:14px;">
     <div class="row2">
       <div class="fg"><label>Colaborador</label><select id="nr-e">${eO}</select></div>
       <div class="fg"><label>Tipo</label><select id="nr-t">${tO}</select></div>
-      <div class="fg"><label>Data</label><input type="date" id="nr-d" value="${hj}"/></div>
+      <div class="fg"><label>Data</label><input type="date" id="nr-d" value="${dataD}"/></div>
       <div class="fg"><label>Hora</label><input type="time" id="nr-h" value="09:00" step="60"/></div>
     </div>
-    <div class="btn-row">
-      <button class="btn bp" onclick="criarNR()"><i class="ti ti-plus"></i> Criar</button>
-      <button class="btn bgy" onclick="document.getElementById('new-reg-area').innerHTML=''">Cancelar</button>
-    </div>
+    <div class="btn-row"><button class="btn bp sm" onclick="criarNR()"><i class="ti ti-plus"></i> Criar</button><button class="btn bgy sm" onclick="document.getElementById('nr-area').innerHTML=''">Cancelar</button></div>
   </div>`;
 }
 async function criarNR(){
@@ -1068,53 +1139,42 @@ async function criarNR(){
   const tipo=document.getElementById('nr-t').value;
   const data=document.getElementById('nr-d').value;
   const hora=document.getElementById('nr-h').value+':00';
-  if(!data||!hora){toast('⚠ Preencha todos os campos.');return;}
   const[y,m,d]=data.split('-').map(Number);const[hh,mm]=hora.split(':').map(Number);
-  const obj={empId,data,hora,tipo,ts:new Date(y,m-1,d,hh,mm,0).getTime()};
-  const tempId='tmp_'+Date.now();
-  registos.push({fbId:tempId,...obj});registos.sort((a,b)=>a.ts-b.ts);
+  const obj={empId,data,hora,tipo,ts:new Date(y,m-1,d,hh,mm,0).getTime(),aprovadoExtra:false};
+  const id=await fbAdd('registos',obj);registos.push({fbId:id,...obj});registos.sort((a,b)=>a.ts-b.ts);
   toast('✓ Registo criado!');renderAdmReg();
-  try{
-    const id=await fbAdd('registos',obj);
-    const i=registos.findIndex(r=>r.fbId===tempId);if(i>=0)registos[i].fbId=id;
-  }catch(e){
-    registos=registos.filter(r=>r.fbId!==tempId);renderAdmReg();
-    toast('⚠ Falha ao criar o registo. Tente novamente.',4000);
-  }
 }
 window.editReg=editReg;window.saveReg=saveReg;window.delReg=delReg;window.abrirNR=abrirNR;window.criarNR=criarNR;
 
-// ── Admin: Ausências ───────────────────────────────────────────────────────
-async function admMarcarAus(){
-  const empId=parseInt(document.getElementById('adm-aus-emp').value);
-  if(isNaN(empId)){toast('⚠ Selecione um colaborador.');return;}
-  const tipo=document.getElementById('adm-aus-tipo').value;
-  const di=document.getElementById('adm-aus-di').value;
-  const df=document.getElementById('adm-aus-df').value||di;
-  const mot=document.getElementById('adm-aus-mot').value.trim();
-  if(!di){toast('⚠ Selecione a data.');return;}
+// ── Admin: Ausências ──
+async function admAus(){
+  const empIdRaw=document.getElementById('aa-emp').value;
+  const empId=parseInt(empIdRaw);if(isNaN(empId)){toast('⚠ Selecione colaborador.');return;}
+  const tipo=document.getElementById('aa-tipo').value;
+  const di=document.getElementById('aa-di').value;
+  const df=document.getElementById('aa-df').value||di;
+  const mot=document.getElementById('aa-mot').value.trim();
+  if(!di){toast('⚠ Selecione data.');return;}
   const obj={empId,tipo,dataInicio:di,dataFim:df,motivo:mot,estado:'aprovado',criadoEm:Date.now(),origem:'admin'};
   const id=await fbAdd('ausencias',obj);ausencias.push({fbId:id,...obj});
   toast('✓ Ausência registada.');renderAdmAus();
 }
-window.admMarcarAus=admMarcarAus;
-
+window.admAus=admAus;
+window.renderAdmAus=renderAdmAus;
 function renderAdmAus(){
-  const filtEmp=document.getElementById('adm-aus-fil-emp')?document.getElementById('adm-aus-fil-emp').value:'todos';
-  const filtMes=document.getElementById('adm-aus-fil-mes')?parseInt(document.getElementById('adm-aus-fil-mes').value):-1;
+  const filtE=document.getElementById('aa-fil-e')?document.getElementById('aa-fil-e').value:'todos';
+  const filtM=document.getElementById('aa-fil-m')?parseInt(document.getElementById('aa-fil-m').value):-1;
   let list=ausencias;
-  if(filtEmp!=='todos')list=list.filter(a=>a.empId===parseInt(filtEmp));
-  if(filtMes>=0){const pref=new Date().getFullYear()+'-'+String(filtMes+1).padStart(2,'0');list=list.filter(a=>(a.dataInicio||'').startsWith(pref));}
+  if(filtE!=='todos')list=list.filter(a=>a.empId===parseInt(filtE));
+  if(filtM>=0){const pref=`${new Date().getFullYear()}-${String(filtM+1).padStart(2,'0')}`;list=list.filter(a=>(a.dataInicio||'').startsWith(pref));}
   list=[...list].sort((a,b)=>(b.dataInicio||'').localeCompare(a.dataInicio||''));
   const c=document.getElementById('adm-aus-list');
   if(!list.length){c.innerHTML='<p style="font-size:13px;color:var(--text2);">Sem ausências.</p>';return;}
   c.innerHTML='<div style="overflow-x:auto;"><table><thead><tr><th>Colaborador</th><th>Tipo</th><th>Início</th><th>Fim</th><th>Estado</th><th style="text-align:right;">Ações</th></tr></thead><tbody>'+
     list.map(a=>{const emp=colaboradores.find(c=>c.id===a.empId);
-      return `<tr><td>${emp?emp.nome:'?'}</td><td><span class="bdg ${AUSC[a.tipo]||'bdg-b'}" style="font-size:10px;">${AUSL[a.tipo]||a.tipo}</span></td><td>${(a.dataInicio||'').split('-').reverse().join('/')}</td><td>${(a.dataFim||a.dataInicio||'').split('-').reverse().join('/')}</td><td><span class="bdg ${a.estado==='aprovado'?'bdg-g':a.estado==='rejeitado'?'bdg-r':'bdg-y'}" style="font-size:10px;">${a.estado}</span></td><td style="text-align:right;"><button class="btn br sm" onclick="delAus('${a.fbId}')"><i class="ti ti-trash"></i></button></td></tr>`;
+      return`<tr><td>${emp?emp.nome:'?'}</td><td><span class="bdg ${AUSC[a.tipo]||'bdg-b'}" style="font-size:10px;">${AUSL[a.tipo]||a.tipo}</span></td><td>${(a.dataInicio||'').split('-').reverse().join('/')}</td><td>${(a.dataFim||a.dataInicio||'').split('-').reverse().join('/')}</td><td><span class="bdg ${a.estado==='aprovado'?'bdg-g':a.estado==='rejeitado'?'bdg-r':'bdg-y'}" style="font-size:10px;">${a.estado}</span></td><td style="text-align:right;"><button class="btn br sm" onclick="delAus('${a.fbId}')"><i class="ti ti-trash"></i></button></td></tr>`;
     }).join('')+'</tbody></table></div>';
 }
-window.renderAdmAus=renderAdmAus;
-
 async function delAus(fbId){
   if(!confirm('Eliminar esta ausência?'))return;
   await fbDel('ausencias',fbId);ausencias=ausencias.filter(a=>a.fbId!==fbId);
@@ -1122,168 +1182,136 @@ async function delAus(fbId){
 }
 window.delAus=delAus;
 
-// ── Admin: Pedidos ─────────────────────────────────────────────────────────
+// ── Admin: Pedidos ──
 function renderAdmPed(){
-  const pendentes=pedidos.filter(p=>p.estado==='pendente').sort((a,b)=>b.criadoEm-a.criadoEm);
-  const historico=pedidos.filter(p=>p.estado!=='pendente').sort((a,b)=>b.criadoEm-a.criadoEm);
-  const pedRow=p=>{const emp=colaboradores.find(c=>c.id===p.empId);
-    return`<tr><td>${emp?emp.nome:'?'}</td><td style="font-size:12px;">${detalhePedido(p)}${p.motivo?' — '+p.motivo:''}</td>`;
+  const pend=pedidos.filter(p=>p.estado==='pendente').sort((a,b)=>b.criadoEm-a.criadoEm);
+  const hist=pedidos.filter(p=>p.estado!=='pendente').sort((a,b)=>b.criadoEm-a.criadoEm);
+  const row=p=>{const emp=colaboradores.find(c=>c.id===p.empId);
+    const det=p.tipoPedido==='correcao'||p.tipoPedido==='correcaoExistente'?`Correção: ${TL[p.tipo]||p.tipo} em ${(p.data||'').split('-').reverse().join('/')} às ${(p.hora||'').slice(0,5)}`:`Ausência: ${AUSL[p.tipo]||p.tipo} de ${p.dataInicio?(p.dataInicio).split('-').reverse().join('/'):'?'}`;
+    return`<tr><td>${emp?emp.nome:'?'}</td><td style="font-size:12px;">${det}${p.motivo?' — '+p.motivo:''}</td>`;
   };
-  const c=document.getElementById('adm-ped-list');
-  if(!pendentes.length){c.innerHTML='<p style="font-size:13px;color:var(--text2);">Sem pedidos pendentes.</p>';}
-  else{c.innerHTML='<div style="overflow-x:auto;"><table><thead><tr><th>Colaborador</th><th>Pedido</th><th style="text-align:right;">Ações</th></tr></thead><tbody>'+
-    pendentes.map(p=>pedRow(p)+`<td style="text-align:right;white-space:nowrap;"><button class="btn bg sm" onclick="aprovPed('${p.fbId}')"><i class="ti ti-check"></i> Aprovar</button> <button class="btn br sm" onclick="rejPed('${p.fbId}')"><i class="ti ti-x"></i> Rejeitar</button></td></tr>`).join('')+'</tbody></table></div>';}
+  const c=document.getElementById('adm-ped-pend');
+  c.innerHTML=!pend.length?'<p style="font-size:13px;color:var(--text2);">Sem pedidos pendentes.</p>':
+    '<div style="overflow-x:auto;"><table><thead><tr><th>Colaborador</th><th>Pedido</th><th style="text-align:right;">Ações</th></tr></thead><tbody>'+
+    pend.map(p=>row(p)+`<td style="text-align:right;white-space:nowrap;"><button class="btn bg sm" onclick="aprovPed('${p.fbId}')"><i class="ti ti-check"></i> Aprovar</button> <button class="btn br sm" onclick="rejPed('${p.fbId}')"><i class="ti ti-x"></i> Rejeitar</button></td></tr>`).join('')+'</tbody></table></div>';
   const h=document.getElementById('adm-ped-hist');
-  if(!historico.length){h.innerHTML='<p style="font-size:13px;color:var(--text2);">Sem histórico.</p>';}
-  else{h.innerHTML='<div style="overflow-x:auto;"><table><thead><tr><th>Colaborador</th><th>Pedido</th><th>Estado</th></tr></thead><tbody>'+
-    historico.slice(0,30).map(p=>pedRow(p)+`<td><span class="bdg ${p.estado==='aprovado'?'bdg-g':'bdg-r'}" style="font-size:10px;">${p.estado}</span></td></tr>`).join('')+'</tbody></table></div>';}
+  h.innerHTML=!hist.length?'<p style="font-size:13px;color:var(--text2);">Sem histórico.</p>':
+    '<div style="overflow-x:auto;"><table><thead><tr><th>Colaborador</th><th>Pedido</th><th>Estado</th></tr></thead><tbody>'+
+    hist.slice(0,40).map(p=>row(p)+`<td><span class="bdg ${p.estado==='aprovado'?'bdg-g':'bdg-r'}" style="font-size:10px;">${p.estado}</span></td></tr>`).join('')+'</tbody></table></div>';
 }
-
 async function aprovPed(fbId){
-  const i=pedidos.findIndex(x=>x.fbId===fbId);if(i<0)return;
-  const p=pedidos[i];
-  if(p.tipoPedido==='correcao'&&p.acao==='editar'&&p.regFbId&&!registos.find(r=>r.fbId===p.regFbId)){
-    toast('⚠ O registo original já não existe. Reveja manualmente.',4000);return;
-  }
-  const estadoAnterior=p.estado;
-  let regIdx=-1,regAnterior=null,novoRegLocal=null,ausLocal=null;
-  pedidos[i]={...p,estado:'aprovado'};
-
-  if(p.tipoPedido==='correcao'&&p.acao==='editar'&&p.regFbId){
-    regIdx=registos.findIndex(r=>r.fbId===p.regFbId);
-    regAnterior={...registos[regIdx]};
+  const p=pedidos.find(x=>x.fbId===fbId);if(!p)return;
+  await fbUpd('pedidos',fbId,{estado:'aprovado'});
+  const i=pedidos.findIndex(x=>x.fbId===fbId);if(i>=0)pedidos[i].estado='aprovado';
+  if(p.tipoPedido==='correcao'&&p.data&&p.hora){
     const[y,m,d]=p.data.split('-').map(Number);const[hh,mm]=(p.hora||'00:00').split(':').map(Number);
-    registos[regIdx]={...registos[regIdx],hora:p.hora,ts:new Date(y,m-1,d,hh,mm,0).getTime()};
-  }else if(p.tipoPedido==='correcao'&&p.data&&p.hora&&p.tipo){
+    const obj={empId:p.empId,data:p.data,hora:p.hora,tipo:p.tipo,ts:new Date(y,m-1,d,hh,mm,0).getTime(),aprovadoExtra:false};
+    const id=await fbAdd('registos',obj);registos.push({fbId:id,...obj});registos.sort((a,b)=>a.ts-b.ts);
+  } else if(p.tipoPedido==='correcaoExistente'&&p.registoId){
     const[y,m,d]=p.data.split('-').map(Number);const[hh,mm]=(p.hora||'00:00').split(':').map(Number);
-    novoRegLocal={fbId:'tmp_'+Date.now(),empId:p.empId,data:p.data,hora:p.hora,tipo:p.tipo,ts:new Date(y,m-1,d,hh,mm,0).getTime()};
-    registos.push(novoRegLocal);registos.sort((a,b)=>a.ts-b.ts);
-  }else if(!p.tipoPedido||p.tipoPedido!=='correcao'){
-    ausLocal={fbId:'tmp_'+Date.now(),empId:p.empId,tipo:p.tipo,dataInicio:p.dataInicio||p.data,dataFim:p.dataFim||p.dataInicio||p.data,motivo:p.motivo||'',estado:'aprovado',criadoEm:Date.now(),origem:'pedido'};
-    ausencias.push(ausLocal);
+    await fbUpd('registos',p.registoId,{tipo:p.tipo,hora:p.hora,ts:new Date(y,m-1,d,hh,mm,0).getTime()});
+    const ri=registos.findIndex(r=>r.fbId===p.registoId);if(ri>=0){registos[ri].tipo=p.tipo;registos[ri].hora=p.hora;}
+  } else if(p.tipoPedido==='ausencia'){
+    const obj={empId:p.empId,tipo:p.tipo,dataInicio:p.dataInicio||p.data,dataFim:p.dataFim||p.dataInicio||p.data,motivo:p.motivo||'',estado:'aprovado',criadoEm:Date.now(),origem:'pedido'};
+    const id=await fbAdd('ausencias',obj);ausencias.push({fbId:id,...obj});
   }
-
-  toast('✓ Pedido aprovado.');renderAdmPed();atualizarNotifAdm();
-
-  try{
-    await fbUpd('pedidos',fbId,{estado:'aprovado'});
-    if(regIdx>=0){
-      await fbUpd('registos',p.regFbId,{hora:registos[regIdx].hora,ts:registos[regIdx].ts});
-    }else if(novoRegLocal){
-      const id=await fbAdd('registos',{empId:novoRegLocal.empId,data:novoRegLocal.data,hora:novoRegLocal.hora,tipo:novoRegLocal.tipo,ts:novoRegLocal.ts});
-      const ix=registos.findIndex(r=>r.fbId===novoRegLocal.fbId);if(ix>=0)registos[ix].fbId=id;
-    }else if(ausLocal){
-      const id=await fbAdd('ausencias',{empId:ausLocal.empId,tipo:ausLocal.tipo,dataInicio:ausLocal.dataInicio,dataFim:ausLocal.dataFim,motivo:ausLocal.motivo,estado:'aprovado',criadoEm:ausLocal.criadoEm,origem:'pedido'});
-      const ix=ausencias.findIndex(a=>a.fbId===ausLocal.fbId);if(ix>=0)ausencias[ix].fbId=id;
-    }
-  }catch(e){
-    pedidos[i]={...p,estado:estadoAnterior};
-    if(regIdx>=0&&regAnterior)registos[regIdx]=regAnterior;
-    if(novoRegLocal)registos=registos.filter(r=>r.fbId!==novoRegLocal.fbId);
-    if(ausLocal)ausencias=ausencias.filter(a=>a.fbId!==ausLocal.fbId);
-    renderAdmPed();atualizarNotifAdm();
-    toast('⚠ Falha ao aprovar o pedido. Tente novamente.',4000);
-  }
+  toast('✓ Pedido aprovado.');renderAdmPed();atualizarNotifA();
 }
 async function rejPed(fbId){
-  const i=pedidos.findIndex(x=>x.fbId===fbId);if(i<0)return;
-  const estadoAnterior=pedidos[i].estado;
-  pedidos[i]={...pedidos[i],estado:'rejeitado'};
-  toast('Pedido rejeitado.');renderAdmPed();atualizarNotifAdm();
-  try{
-    await fbUpd('pedidos',fbId,{estado:'rejeitado'});
-  }catch(e){
-    pedidos[i]={...pedidos[i],estado:estadoAnterior};renderAdmPed();atualizarNotifAdm();
-    toast('⚠ Falha ao rejeitar. Tente novamente.',4000);
-  }
+  await fbUpd('pedidos',fbId,{estado:'rejeitado'});
+  const i=pedidos.findIndex(x=>x.fbId===fbId);if(i>=0)pedidos[i].estado='rejeitado';
+  toast('Pedido rejeitado.');renderAdmPed();atualizarNotifA();
 }
 window.aprovPed=aprovPed;window.rejPed=rejPed;
 
-// ── Admin: Relatório ───────────────────────────────────────────────────────
+// ── Relatório ──
+function dadosRel(empId,mes,ano){
+  const pref=`${ano}-${String(mes+1).padStart(2,'0')}`;
+  const emp=colaboradores.find(c=>c.id===empId);
+  const turno=getTurno(emp);
+  const dias={};
+  registos.filter(r=>r.empId===empId&&r.data.startsWith(pref)).forEach(r=>{if(!dias[r.data])dias[r.data]=[];dias[r.data].push(r);});
+  let h=0;Object.values(dias).forEach(rs=>h+=calcH(rs,turno,true));// contar extra aprovado
+  const du=duMes(mes,ano),he=du*(turno.horas||8);
+  return{dias,h,du,he,ex:Math.max(0,h-he),fa:Math.max(0,he-h),turno};
+}
 function gerarRelAdm(){
-  const sel=document.getElementById('adm-rel-mes');
-  const mes=sel?parseInt(sel.value):new Date().getMonth();
-  const pref=new Date().getFullYear()+'-'+String(mes+1).padStart(2,'0');
-  const du=duMes(mes);let tG=0,tE=0,tF=0,rows='';
+  const sel=document.getElementById('adm-rel-mes');const mes=sel?parseInt(sel.value):new Date().getMonth();
+  const ano=new Date().getFullYear();const du=duMes(mes,ano);
+  let tG=0,tE=0,tF=0,rows='';
   colaboradores.forEach(emp=>{
-    const{dias,h,he,ex,fa}=dadosRel(emp.id,mes,emp);
+    const{dias,h,he,ex,fa,turno}=dadosRel(emp.id,mes,ano);
     tG+=h;tE+=ex;tF+=fa;
     const ini=emp.nome.split(' ').map(n=>n[0]).slice(0,2).join('');
-    const ausM=ausencias.filter(a=>a.empId===emp.id&&(a.dataInicio||'').startsWith(pref)&&a.estado==='aprovado').length;
-    rows+=`<tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:26px;height:26px;font-size:9px;">${ini}</div>${emp.nome}</div></td><td>${emp.dept}</td><td>${Object.keys(dias).length}</td><td>${h.toFixed(2)}h</td><td style="color:${ex>0?'var(--green-text)':'var(--text2)'};">${ex>0?'+'+ex.toFixed(2)+'h':'—'}</td><td style="color:${fa>0?'var(--red-text)':'var(--text2)'};">${fa>0?'-'+fa.toFixed(2)+'h':'—'}</td><td>${ausM>0?ausM:'—'}</td></tr>`;
+    const ausM=ausencias.filter(a=>a.empId===emp.id&&(a.dataInicio||'').startsWith(`${ano}-${String(mes+1).padStart(2,'0')}`)&&a.estado==='aprovado').length;
+    rows+=`<tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:28px;height:28px;font-size:9px;">${ini}</div>${emp.nome}</div></td><td>${emp.dept||'—'}</td><td>${turno.nome}</td><td>${Object.keys(dias).length}</td><td>${h.toFixed(2)}h</td><td style="color:${ex>0?'var(--green-text)':'var(--text3)'};">${ex>0?'+'+ex.toFixed(2)+'h':'—'}</td><td style="color:${fa>0?'var(--red-text)':'var(--text3)'};">${fa>0?'-'+fa.toFixed(2)+'h':'—'}</td><td>${ausM||'—'}</td></tr>`;
   });
   document.getElementById('adm-rel-out').innerHTML=`<div class="card">
-    <p style="font-size:15px;font-weight:600;margin-bottom:4px;">${MESES[mes]} ${new Date().getFullYear()}</p>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">${du} dias úteis · Tolerância extra: +${TOLERANCIA_EXTRA_MIN}min · Tolerância atraso: ${TOLERANCIA_MIN}min</p>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+      <div><p style="font-size:16px;font-weight:700;">${MESES[mes]} ${ano}</p><p style="font-size:12px;color:var(--text2);">${du} dias úteis (excl. feriados) · Horas extra: apenas aprovadas</p></div>
+    </div>
     <div class="metrics">
       <div class="metric"><div class="ml">Total horas</div><div class="mv">${tG.toFixed(1)}h</div></div>
-      <div class="metric"><div class="ml">Horas extra</div><div class="mv" style="color:var(--green-text);">+${tE.toFixed(1)}h</div></div>
+      <div class="metric"><div class="ml">Extra aprovado</div><div class="mv" style="color:var(--green-text);">+${tE.toFixed(1)}h</div></div>
       <div class="metric"><div class="ml">Em falta</div><div class="mv" style="color:var(--red-text);">-${tF.toFixed(1)}h</div></div>
       <div class="metric"><div class="ml">Colaboradores</div><div class="mv">${colaboradores.length}</div></div>
     </div>
-    <div style="overflow-x:auto;"><table class="pt"><thead><tr><th>Colaborador</th><th>Dept.</th><th>Dias</th><th>Horas</th><th>Extra</th><th>Em falta</th><th>Ausências</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div style="overflow-x:auto;"><table class="tpt"><thead><tr><th>Colaborador</th><th>Dept.</th><th>Turno</th><th>Dias</th><th>Horas</th><th>Extra</th><th>Em falta</th><th>Ausências</th></tr></thead><tbody>${rows}</tbody></table></div>
   </div>`;
 }
 window.gerarRelAdm=gerarRelAdm;
-
 function expCSVAdm(){
-  const mes=parseInt(document.getElementById('adm-rel-mes').value);
-  let csv='Nome,Departamento,Dias,Horas,Extra,Em falta\n';
-  colaboradores.forEach(emp=>{const{dias,h,he,ex,fa}=dadosRel(emp.id,mes,emp);
-    csv+=`"${emp.nome}","${emp.dept}",${Object.keys(dias).length},${h.toFixed(2)},${ex.toFixed(2)},${fa.toFixed(2)}\n`;});
+  const mes=parseInt(document.getElementById('adm-rel-mes').value);const ano=new Date().getFullYear();
+  let csv='Nome,Departamento,Turno,Dias,Horas,Extra,Em falta\n';
+  colaboradores.forEach(emp=>{const{dias,h,he,ex,fa,turno}=dadosRel(emp.id,mes,ano);
+    csv+=`"${emp.nome}","${emp.dept||''}","${turno.nome}",${Object.keys(dias).length},${h.toFixed(2)},${ex.toFixed(2)},${fa.toFixed(2)}\n`;});
   dlCSV(csv,`relatorio_${MESES[mes]}.csv`);toast('✓ CSV exportado!');
 }
 window.expCSVAdm=expCSVAdm;
-
 function expPDFAdm(){
-  const mes=parseInt(document.getElementById('adm-rel-mes').value);
-  const du=duMes(mes);
+  const mes=parseInt(document.getElementById('adm-rel-mes').value);const ano=new Date().getFullYear();const du=duMes(mes,ano);
   const{jsPDF}=window.jspdf;const pdf=new jsPDF();
   pdf.setFontSize(16);pdf.setFont(undefined,'bold');pdf.text('Relatório Geral de Ponto',14,18);
   pdf.setFontSize(10);pdf.setFont(undefined,'normal');
-  pdf.text(`${MESES[mes]} ${new Date().getFullYear()}  |  ${du} dias úteis  |  Tolerância extra: +${TOLERANCIA_EXTRA_MIN}min`,14,27);
+  pdf.text(`${MESES[mes]} ${ano}  |  ${du} dias úteis (excl. feriados)  |  Horas extra: apenas aprovadas`,14,27);
   const rows=[];
-  colaboradores.forEach(emp=>{const{dias,h,he,ex,fa}=dadosRel(emp.id,mes,emp);
-    rows.push([emp.nome,emp.dept,Object.keys(dias).length,h.toFixed(2)+'h','+'+ex.toFixed(2)+'h','-'+fa.toFixed(2)+'h']);});
-  pdf.autoTable({startY:33,head:[['Colaborador','Dept.','Dias','Horas','Extra','Em falta']],body:rows,styles:{fontSize:9},headStyles:{fillColor:[60,52,137]}});
+  colaboradores.forEach(emp=>{const{dias,h,he,ex,fa,turno}=dadosRel(emp.id,mes,ano);
+    rows.push([emp.nome,emp.dept||'—',turno.nome,Object.keys(dias).length,h.toFixed(2)+'h',ex>0?'+'+ex.toFixed(2)+'h':'—',fa>0?'-'+fa.toFixed(2)+'h':'—']);});
+  pdf.autoTable({startY:33,head:[['Colaborador','Dept.','Turno','Dias','Horas','Extra','Em falta']],body:rows,styles:{fontSize:9},headStyles:{fillColor:[60,52,137]}});
   pdf.save(`relatorio_${MESES[mes]}.pdf`);toast('✓ PDF exportado!');
 }
 window.expPDFAdm=expPDFAdm;
-
 function expTodosCSV(){
-  let csv='Nome,Departamento,Data,Hora,Tipo\n';
+  let csv='Nome,Departamento,Data,Hora,Tipo,Extra Aprovado\n';
   registos.sort((a,b)=>a.ts-b.ts).forEach(r=>{const emp=colaboradores.find(c=>c.id===r.empId);
-    if(emp)csv+=`"${emp.nome}","${emp.dept}","${r.data}","${r.hora}","${TL[r.tipo]}"\n`;});
+    if(emp)csv+=`"${emp.nome}","${emp.dept||''}","${r.data}","${r.hora}","${TL[r.tipo]}","${r.aprovadoExtra?'Sim':'Não'}"\n`;});
   dlCSV(csv,'todos_registos.csv');toast('✓ Exportação completa!');
 }
 window.expTodosCSV=expTodosCSV;
+function dlCSV(csv,nome){const b=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=nome;a.click();}
 
-function dlCSV(csv,nome){
-  const b=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
-  const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=nome;a.click();
-}
-
-// ── Admin: Colaboradores ───────────────────────────────────────────────────
+// ── Admin: Colaboradores ──
 function renderAdmCol(){
-  const c=document.getElementById('adm-col-out');
-  c.innerHTML=`<div class="card"><div class="ct"><i class="ti ti-users"></i> Colaboradores</div>
-    <div style="overflow-x:auto;"><table><thead><tr><th>Nome</th><th>Dept.</th><th>Horas</th><th>Turno</th><th>Férias</th><th>PIN</th><th style="text-align:right;">Ações</th></tr></thead>
+  const tOpts=turnos.map(t=>`<option value="${t.fbId}">${t.nome}</option>`).join('');
+  document.getElementById('adm-col-out').innerHTML=`<div class="card">
+    <div class="ct"><i class="ti ti-users"></i> Colaboradores</div>
+    <div style="overflow-x:auto;"><table><thead><tr><th>Nome</th><th>Dept.</th><th>Turno</th><th>Férias</th><th>PIN</th><th style="text-align:right;">Ações</th></tr></thead>
     <tbody>${colaboradores.map(emp=>`<tr id="crow-${emp.fbId}">
-      <td style="font-weight:500;">${emp.nome}</td><td>${emp.dept}</td><td>${emp.horas}h</td><td>${emp.turno}</td><td>${emp.ferias||DIAS_FERIAS}d</td>
-      <td><span style="font-family:monospace;font-size:12px;">••••</span></td>
+      <td style="font-weight:600;">${emp.nome}</td><td>${emp.dept||'—'}</td>
+      <td>${turnos.find(t=>t.fbId===emp.turnoId)?.nome||'—'}</td>
+      <td>${emp.ferias||22}d</td><td><span style="font-family:monospace;font-size:12px;color:var(--text3);">••••</span></td>
       <td style="text-align:right;white-space:nowrap;">
         <button class="btn bb sm" onclick="editCol('${emp.fbId}')"><i class="ti ti-edit"></i></button>
         <button class="btn br sm" onclick="delCol('${emp.fbId}')" style="margin-left:4px;"><i class="ti ti-trash"></i></button>
       </td></tr>`).join('')}</tbody></table></div>
-    <div style="margin-top:20px;">
-      <div class="ct"><i class="ti ti-user-plus"></i> Adicionar colaborador</div>
-      <div class="row2">
-        <div class="fg"><label>Nome</label><input type="text" id="nn" placeholder="Ex: João Silva"/></div>
-        <div class="fg"><label>Departamento</label><input type="text" id="nd" placeholder="Ex: Produção"/></div>
-        <div class="fg"><label>Horas diárias</label><input type="number" id="nh" value="8" min="1" max="12"/></div>
-        <div class="fg"><label>Turno</label><select id="nt"><option value="normal">Normal (9h–18h)</option><option value="manha">Manhã (6h–14h)</option><option value="tarde">Tarde (14h–22h)</option></select></div>
-        <div class="fg"><label>Dias férias/ano</label><input type="number" id="nf" value="${DIAS_FERIAS}" min="22" max="30"/></div>
-        <div class="fg"><label>PIN (4 dígitos)</label><input type="password" id="np" maxlength="4" placeholder="••••"/></div>
+    <div style="margin-top:20px;padding-top:20px;border-top:.5px solid var(--border);">
+      <div class="ct-sm" style="margin-bottom:12px;"><i class="ti ti-user-plus"></i> Adicionar colaborador</div>
+      <div class="row3">
+        <div class="fg"><label>Nome</label><input type="text" id="nc-n" placeholder="Ex: João Silva"/></div>
+        <div class="fg"><label>Departamento</label><input type="text" id="nc-d" placeholder="Ex: Produção"/></div>
+        <div class="fg"><label>Turno</label><select id="nc-t">${tOpts}</select></div>
+        <div class="fg"><label>Dias férias/ano</label><input type="number" id="nc-f" value="22" min="22" max="30"/></div>
+        <div class="fg"><label>PIN (4 dígitos)</label><input type="password" id="nc-p" maxlength="4" placeholder="••••"/></div>
       </div>
       <div class="btn-row"><button class="btn bp" onclick="addCol()"><i class="ti ti-plus"></i> Adicionar</button></div>
     </div>
@@ -1292,40 +1320,40 @@ function renderAdmCol(){
 function editCol(fbId){
   const emp=colaboradores.find(c=>c.fbId===fbId);if(!emp)return;
   const row=document.getElementById('crow-'+fbId);row.style.background='var(--bg2)';
-  row.innerHTML=`<td><input class="ei" id="en-${fbId}" value="${emp.nome}"/></td>
-    <td><input class="ei" id="ed-${fbId}" value="${emp.dept}"/></td>
-    <td><input class="ei" type="number" id="eh-${fbId}" value="${emp.horas}" min="1" max="12" style="width:55px;"/></td>
-    <td><select class="ei" id="et-${fbId}"><option value="normal" ${emp.turno==='normal'?'selected':''}>Normal</option><option value="manha" ${emp.turno==='manha'?'selected':''}>Manhã</option><option value="tarde" ${emp.turno==='tarde'?'selected':''}>Tarde</option></select></td>
-    <td><input class="ei" type="number" id="ef-${fbId}" value="${emp.ferias||DIAS_FERIAS}" min="22" max="30" style="width:55px;"/></td>
-    <td><input class="ei" type="password" id="ep-${fbId}" placeholder="Novo PIN" maxlength="4" style="width:75px;"/></td>
+  const tO=turnos.map(t=>`<option value="${t.fbId}" ${t.fbId===emp.turnoId?'selected':''}>${t.nome}</option>`).join('');
+  row.innerHTML=`<td><input class="ei" id="ec-n-${fbId}" value="${emp.nome}"/></td>
+    <td><input class="ei" id="ec-d-${fbId}" value="${emp.dept||''}"/></td>
+    <td><select class="ei" id="ec-t-${fbId}">${tO}</select></td>
+    <td><input class="ei" type="number" id="ec-f-${fbId}" value="${emp.ferias||22}" min="22" max="30" style="width:60px;"/></td>
+    <td><input class="ei" type="password" id="ec-p-${fbId}" placeholder="Novo PIN" maxlength="4" style="width:75px;"/></td>
     <td style="text-align:right;white-space:nowrap;">
       <button class="btn bp sm" onclick="saveCol('${fbId}')"><i class="ti ti-check"></i></button>
       <button class="btn bgy sm" onclick="renderAdmCol()">✕</button>
     </td>`;
 }
 async function saveCol(fbId){
-  const nome=document.getElementById('en-'+fbId).value.trim();if(!nome){toast('⚠ Nome vazio.');return;}
-  const novoPIN=document.getElementById('ep-'+fbId).value;
+  const nome=document.getElementById('ec-n-'+fbId).value.trim();if(!nome){toast('⚠ Nome vazio.');return;}
+  const novoPIN=document.getElementById('ec-p-'+fbId).value;
   const emp=colaboradores.find(c=>c.fbId===fbId);
-  const dados={nome,dept:document.getElementById('ed-'+fbId).value.trim()||'Geral',horas:parseInt(document.getElementById('eh-'+fbId).value)||8,turno:document.getElementById('et-'+fbId).value,ferias:parseInt(document.getElementById('ef-'+fbId).value)||DIAS_FERIAS,pin:novoPIN&&/^\d{4}$/.test(novoPIN)?novoPIN:(emp?emp.pin||'0000':'0000')};
+  const dados={nome,dept:document.getElementById('ec-d-'+fbId).value.trim()||'Geral',turnoId:document.getElementById('ec-t-'+fbId).value,ferias:parseInt(document.getElementById('ec-f-'+fbId).value)||22,pin:novoPIN&&/^\d{4}$/.test(novoPIN)?novoPIN:(emp?.pin||'0000')};
   await fbUpd('colaboradores',fbId,dados);
   const i=colaboradores.findIndex(c=>c.fbId===fbId);if(i>=0)colaboradores[i]={...colaboradores[i],...dados};
   toast('✓ Colaborador atualizado!');renderAdmCol();
 }
 async function addCol(){
-  const nome=document.getElementById('nn').value.trim();
-  const pin=document.getElementById('np').value;
+  const nome=document.getElementById('nc-n').value.trim();
+  const pin=document.getElementById('nc-p').value;
   if(!nome){toast('⚠ Insira o nome.');return;}
-  if(!pin||!/^\d{4}$/.test(pin)){toast('⚠ O PIN deve ter 4 dígitos numéricos.');return;}
+  if(!pin||!/^\d{4}$/.test(pin)){toast('⚠ PIN deve ter 4 dígitos.');return;}
   const maxId=colaboradores.reduce((m,c)=>Math.max(m,c.id||0),0);
-  const obj={id:maxId+1,nome,dept:document.getElementById('nd').value.trim()||'Geral',horas:parseInt(document.getElementById('nh').value)||8,turno:document.getElementById('nt').value,ferias:parseInt(document.getElementById('nf').value)||DIAS_FERIAS,pin};
+  const obj={id:maxId+1,nome,dept:document.getElementById('nc-d').value.trim()||'Geral',turnoId:document.getElementById('nc-t').value,ferias:parseInt(document.getElementById('nc-f').value)||22,pin};
   const id=await fbAdd('colaboradores',obj);colaboradores.push({fbId:id,...obj});
   toast('✓ Colaborador adicionado!');renderAdmCol();initAdmSels();
 }
 async function delCol(fbId){
   const emp=colaboradores.find(c=>c.fbId===fbId);if(!emp)return;
   const n=registos.filter(r=>r.empId===emp.id).length;
-  if(!confirm(n>0?`Este colaborador tem ${n} registos. Eliminar tudo?`:'Eliminar este colaborador?'))return;
+  if(!confirm(n>0?`${emp.nome} tem ${n} registos. Eliminar tudo?`:'Eliminar este colaborador?'))return;
   for(const r of registos.filter(r=>r.empId===emp.id))await fbDel('registos',r.fbId);
   registos=registos.filter(r=>r.empId!==emp.id);
   await fbDel('colaboradores',fbId);colaboradores=colaboradores.filter(c=>c.fbId!==fbId);
@@ -1333,11 +1361,59 @@ async function delCol(fbId){
 }
 window.editCol=editCol;window.saveCol=saveCol;window.addCol=addCol;window.delCol=delCol;
 
-// ── Config ─────────────────────────────────────────────────────────────────
+// ── Turnos ──
+function renderTurnos(){
+  const DIAS_N=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  document.getElementById('turnos-list').innerHTML=turnos.length?
+    '<div style="overflow-x:auto;"><table><thead><tr><th>Nome</th><th>Entrada</th><th>Saída</th><th>Pausa</th><th>Horas</th><th>Dias</th><th style="text-align:right;">Ações</th></tr></thead><tbody>'+
+    turnos.map(t=>`<tr id="trow-${t.fbId}"><td style="font-weight:600;">${t.nome}</td><td>${t.entrada}</td><td>${t.saida}</td><td>${t.pausaInicio||'—'} (${t.pausaDur||0}min)</td><td>${t.horas}h</td><td style="font-size:11px;">${(t.dias||[]).map(d=>DIAS_N[d]).join(', ')}</td><td style="text-align:right;white-space:nowrap;"><button class="btn bb sm" onclick="editTurno('${t.fbId}')"><i class="ti ti-edit"></i></button> <button class="btn br sm" onclick="delTurno('${t.fbId}')" style="margin-left:4px;"><i class="ti ti-trash"></i></button></td></tr>`).join('')+
+    '</tbody></table></div>':
+    '<p style="font-size:13px;color:var(--text2);">Sem turnos criados.</p>';
+}
+function editTurno(fbId){
+  const t=turnos.find(x=>x.fbId===fbId);if(!t)return;
+  const row=document.getElementById('trow-'+fbId);row.style.background='var(--bg2)';
+  const DIAS_N=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const diasChk=DIAS_N.map((dn,i)=>`<label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer;"><input type="checkbox" value="${i}" ${(t.dias||[]).includes(i)?'checked':''} style="width:auto;margin:0;" class="etd-${fbId}"> ${dn}</label>`).join('');
+  row.innerHTML=`<td><input class="ei" id="et-n-${fbId}" value="${t.nome}"/></td>
+    <td><input class="ei" type="time" id="et-i-${fbId}" value="${t.entrada}" style="width:90px;"/></td>
+    <td><input class="ei" type="time" id="et-o-${fbId}" value="${t.saida}" style="width:90px;"/></td>
+    <td style="white-space:nowrap;"><input class="ei" type="time" id="et-pi-${fbId}" value="${t.pausaInicio||''}" style="width:85px;"/> <input class="ei" type="number" id="et-pd-${fbId}" value="${t.pausaDur||0}" style="width:55px;"/> min</td>
+    <td><input class="ei" type="number" id="et-h-${fbId}" value="${t.horas}" min="1" max="12" style="width:55px;"/></td>
+    <td><div style="display:flex;flex-wrap:wrap;gap:4px;">${diasChk}</div></td>
+    <td style="text-align:right;white-space:nowrap;">
+      <button class="btn bp sm" onclick="saveTurno('${fbId}')"><i class="ti ti-check"></i></button>
+      <button class="btn bgy sm" onclick="renderTurnos()">✕</button>
+    </td>`;
+}
+async function saveTurno(fbId){
+  const nome=document.getElementById('et-n-'+fbId).value.trim();if(!nome){toast('⚠ Nome vazio.');return;}
+  const dias=[...document.querySelectorAll(`.etd-${fbId}:checked`)].map(x=>parseInt(x.value));
+  const dados={nome,entrada:document.getElementById('et-i-'+fbId).value,saida:document.getElementById('et-o-'+fbId).value,pausaInicio:document.getElementById('et-pi-'+fbId).value,pausaDur:parseInt(document.getElementById('et-pd-'+fbId).value)||0,horas:parseInt(document.getElementById('et-h-'+fbId).value)||8,dias};
+  await fbUpd('turnos',fbId,dados);
+  const i=turnos.findIndex(t=>t.fbId===fbId);if(i>=0)turnos[i]={...turnos[i],...dados};
+  toast('✓ Turno atualizado!');renderTurnos();
+}
+async function addTurno(){
+  const nome=document.getElementById('tn-nome').value.trim();if(!nome){toast('⚠ Indique o nome.');return;}
+  const dias=[...document.querySelectorAll('#tn-dias input:checked')].map(x=>parseInt(x.value));
+  const obj={nome,entrada:document.getElementById('tn-in').value,saida:document.getElementById('tn-out').value,pausaInicio:document.getElementById('tn-pi').value,pausaDur:parseInt(document.getElementById('tn-pd').value)||0,horas:parseInt(document.getElementById('tn-h').value)||8,dias};
+  const id=await fbAdd('turnos',obj);turnos.push({fbId:id,...obj});
+  toast('✓ Turno criado!');renderTurnos();document.getElementById('tn-nome').value='';
+}
+async function delTurno(fbId){
+  const t=turnos.find(x=>x.fbId===fbId);if(!t)return;
+  const emUso=colaboradores.filter(c=>c.turnoId===fbId).length;
+  if(emUso>0){toast(`⚠ Este turno está atribuído a ${emUso} colaborador(es). Mude primeiro.`);return;}
+  if(!confirm(`Eliminar turno "${t.nome}"?`))return;
+  await fbDel('turnos',fbId);turnos=turnos.filter(x=>x.fbId!==fbId);
+  toast('Turno eliminado.');renderTurnos();
+}
+window.editTurno=editTurno;window.saveTurno=saveTurno;window.addTurno=addTurno;window.delTurno=delTurno;
+
+// ── Config PIN ──
 async function mudarPIN(){
-  const cur=document.getElementById('pin-cur').value;
-  const nw=document.getElementById('pin-new').value;
-  const cnf=document.getElementById('pin-cnf').value;
+  const cur=document.getElementById('pin-cur').value;const nw=document.getElementById('pin-new').value;const cnf=document.getElementById('pin-cnf').value;
   const msg=document.getElementById('pin-msg');
   if(cur!==adminPIN){msg.style.color='var(--red-text)';msg.textContent='PIN atual incorreto.';return;}
   if(!/^\d{4}$/.test(nw)){msg.style.color='var(--red-text)';msg.textContent='O PIN deve ter 4 dígitos.';return;}
@@ -1347,14 +1423,20 @@ async function mudarPIN(){
   ['pin-cur','pin-new','pin-cnf'].forEach(id=>document.getElementById(id).value='');
 }
 async function limparTodos(){
-  if(!confirm('Eliminar TODOS os registos? Esta ação é irreversível.'))return;
+  if(!confirm('Eliminar TODOS os registos de ponto? Esta ação é irreversível.'))return;
   const snap=await getDocs(collection(db,'registos'));
   await Promise.all(snap.docs.map(d=>deleteDoc(d.ref)));registos=[];
   toast('Todos os registos eliminados.');renderAdmReg();
 }
 window.mudarPIN=mudarPIN;window.limparTodos=limparTodos;
 
-// ── Arranque ───────────────────────────────────────────────────────────────
+// ── Mes selects ──
+function initMesSelects(){
+  const cur=new Date().getMonth();
+  ['hist-mes','rel-mes'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML=MESES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');s.value=cur;});
+}
+
+// ── Arranque ──
 init();
 </script>
 </body>
