@@ -331,8 +331,8 @@ tfoot td{font-weight:700;border-top:1px solid var(--border2);border-bottom:none;
       <div class="warn-banner" style="margin-bottom:14px;padding:8px 12px;font-size:12px;display:none;" id="aviso-extra"><i class="ti ti-clock-exclamation" style="flex-shrink:0;font-size:14px;"></i> Horas além do turno só são contadas após aprovação pelo administrador.</div>
       <div class="btn-row" style="margin-top:0;">
         <button class="btn bg" id="btn-entrada" onclick="reg('entrada')"><i class="ti ti-login"></i> Entrada</button>
-        <button class="btn by" id="btn-pausa" onclick="reg('inicio_pausa')"><i class="ti ti-coffee"></i> Pausa</button>
-        <button class="btn bgy" id="btn-retomar" onclick="reg('fim_pausa')"><i class="ti ti-player-play"></i> Retomar</button>
+        <button class="btn by" id="btn-pausa" onclick="reg('inicio_pausa')"><i class="ti ti-soup"></i> Almoço</button>
+        <button class="btn bgy" id="btn-retomar" onclick="reg('fim_pausa')"><i class="ti ti-player-play"></i> Voltar</button>
         <button class="btn br" id="btn-saida" onclick="reg('saida')"><i class="ti ti-logout"></i> Saída</button>
       </div>
     </div>
@@ -432,11 +432,12 @@ tfoot td{font-weight:700;border-top:1px solid var(--border2);border-bottom:none;
   <!-- REGISTOS ADMIN -->
   <div id="sa-reg" class="sec" style="display:none;">
     <div class="card">
-      <div class="filter-row" style="margin-bottom:0;">
-        <div class="fg"><label>Mês</label><select id="adm-mes" onchange="renderAdmReg()"></select></div>
-        <div class="fg"><label>Colaborador</label><select id="adm-emp" onchange="renderAdmReg()"></select></div>
-        <button class="btn bp sm" onclick="abrirNR()" style="margin-top:20px;"><i class="ti ti-plus"></i> Novo registo</button>
+      <div class="seg" style="margin-bottom:14px;max-width:300px;">
+        <button class="seg-b on" id="rv-mes" onclick="admRegView('mes')">Mês</button>
+        <button class="seg-b" id="rv-semana" onclick="admRegView('semana')">Semana</button>
+        <button class="seg-b" id="rv-dia" onclick="admRegView('dia')">Dia</button>
       </div>
+      <div class="filter-row" style="margin-bottom:0;" id="reg-filtros"></div>
     </div>
     <div id="adm-reg-out"></div>
   </div>
@@ -479,7 +480,8 @@ tfoot td{font-weight:700;border-top:1px solid var(--border2);border-bottom:none;
       <div id="adm-ped-pend"></div>
     </div>
     <div class="card">
-      <div class="ct-sm"><i class="ti ti-history"></i> Histórico</div>
+      <div class="ct-sm" style="margin-bottom:12px;"><i class="ti ti-list-search"></i> Todos os pedidos</div>
+      <div class="filter-row" id="ped-filtros" style="margin-bottom:14px;"></div>
       <div id="adm-ped-hist"></div>
     </div>
   </div>
@@ -492,6 +494,7 @@ tfoot td{font-weight:700;border-top:1px solid var(--border2);border-bottom:none;
         <button class="btn bp" onclick="gerarRelAdm()" style="margin-top:20px;"><i class="ti ti-refresh"></i> Gerar</button>
         <button class="btn bg" onclick="expCSVAdm()" style="margin-top:20px;"><i class="ti ti-download"></i> CSV</button>
         <button class="btn br" onclick="expPDFAdm()" style="margin-top:20px;"><i class="ti ti-file-type-pdf"></i> PDF</button>
+        <button class="btn bpk" onclick="expPDFSalarial()" style="margin-top:20px;"><i class="ti ti-cash"></i> PDF Salarial (ausências)</button>
         <button class="btn bgy" onclick="expTodosCSV()" style="margin-top:20px;"><i class="ti ti-database-export"></i> Todos</button>
       </div>
     </div>
@@ -565,9 +568,9 @@ const app=initializeApp(FC);const db=getFirestore(app);
 const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const DIAS_FULL=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 const DIAS_SHORT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const TL={entrada:'Entrada',saida:'Saída',inicio_pausa:'Início pausa',fim_pausa:'Fim pausa'};
+const TL={entrada:'Entrada',saida:'Saída',inicio_pausa:'Início almoço',fim_pausa:'Fim almoço'};
 const TC={entrada:'bdg-g',saida:'bdg-r',inicio_pausa:'bdg-y',fim_pausa:'bdg-gy'};
-const TI={entrada:'ti-login',saida:'ti-logout',inicio_pausa:'ti-coffee',fim_pausa:'ti-player-play'};
+const TI={entrada:'ti-login',saida:'ti-logout',inicio_pausa:'ti-soup',fim_pausa:'ti-player-play'};
 const AUSL={ferias:'Férias',falta_just:'Falta justificada',falta_injust:'Falta injustificada',baixa:'Baixa médica',meio_dia_manha:'Meio dia (manhã)',meio_dia_tarde:'Meio dia (tarde)'};
 const AUSC={ferias:'bdg-b',falta_just:'bdg-y',falta_injust:'bdg-r',baixa:'bdg-pk',meio_dia_manha:'bdg-t',meio_dia_tarde:'bdg-t'};
 const DIAS_FERIAS_DEFAULT=22;
@@ -812,9 +815,9 @@ function swA(id){
     if(tab)tab.classList.toggle('on',s===id);
   });
   if(id==='dash')renderDash();
-  if(id==='reg')renderAdmReg();
+  if(id==='reg'){renderRegFiltros();renderAdmReg();}
   if(id==='aus'){initAdmAusSels();renderAdmAus();}
-  if(id==='ped')renderAdmPed();
+  if(id==='ped'){renderPedFiltros();renderAdmPed();}
   if(id==='rel')gerarRelAdm();
   if(id==='col')renderAdmCol();
   if(id==='trn')renderTurnosTab();
@@ -841,8 +844,8 @@ async function reg(tipo){
   const ul=hojeRegs.length?hojeRegs[hojeRegs.length-1]:null;
   if(tipo==='entrada'&&ul&&ul.tipo==='entrada'){toast('⚠ Já tem entrada registada.');return;}
   if((tipo==='saida'||tipo==='inicio_pausa'||tipo==='fim_pausa')&&(!ul||ul.tipo==='saida')){toast('⚠ Registe primeiro a entrada.');return;}
-  if(tipo==='fim_pausa'&&ul&&ul.tipo!=='inicio_pausa'){toast('⚠ Não tem pausa em curso.');return;}
-  if(tipo==='inicio_pausa'&&ul&&ul.tipo==='inicio_pausa'){toast('⚠ Pausa já iniciada.');return;}
+  if(tipo==='fim_pausa'&&ul&&ul.tipo!=='inicio_pausa'){toast('⚠ Não tem almoço em curso.');return;}
+  if(tipo==='inicio_pausa'&&ul&&ul.tipo==='inicio_pausa'){toast('⚠ Almoço já iniciado.');return;}
   regBusy=true;setPontoBtns(true);
   const now=new Date();
   const obj={empId,data:hoje(),hora:now.toTimeString().slice(0,8),tipo,ts:now.getTime(),aprovadoExtra:false};
@@ -867,7 +870,7 @@ function atualizarBadge(empId,d){
   const regs=registos.filter(r=>r.empId===empId&&r.data===d);
   const ul=regs.length?regs[regs.length-1]:null;
   const b=document.getElementById('badge-estado');if(!b)return;
-  const m={entrada:['bdg-g','ti-login','Em serviço'],saida:['bdg-r','ti-logout','Saiu'],inicio_pausa:['bdg-y','ti-coffee','Em pausa'],fim_pausa:['bdg-g','ti-player-play','Em serviço']};
+  const m={entrada:['bdg-g','ti-login','Em serviço'],saida:['bdg-r','ti-logout','Saiu'],inicio_pausa:['bdg-y','ti-soup','Ao almoço'],fim_pausa:['bdg-g','ti-player-play','Em serviço']};
   if(!ul){b.className='bdg bdg-gy';b.innerHTML='<i class="ti ti-circle"></i> Sem registo';return;}
   const[c,i,l]=m[ul.tipo]||m.entrada;b.className='bdg '+c;b.innerHTML=`<i class="ti ${i}"></i> ${l}`;
 }
@@ -1030,7 +1033,7 @@ async function enviarCorrDia(ds){
   const mot=document.getElementById('pcf-mot').value.trim();
   if(!hora){toast('⚠ Indique a hora.');return;}
   const obj={empId:utilizadorAtual.id,tipoPedido:'correcao',tipo,data:ds,hora:hora+':00',motivo:mot,estado:'pendente',criadoEm:Date.now()};
-  const id=await fbAdd('pedidos',obj);pedidos.push({fbId:id,...obj});
+  const id=await fbAdd('pedidos',obj);
   toast('✓ Pedido enviado ao administrador.');atualizarNotifA();
   renderDiaDetail(ds);// atualiza o painel sem o fechar
 }
@@ -1061,7 +1064,7 @@ async function enviarEditReg(fbId,ds){
   const mot=document.getElementById('erf-mot').value.trim();
   if(!hora){toast('⚠ Indique a hora.');return;}
   const obj={empId:utilizadorAtual.id,tipoPedido:'correcaoExistente',registoId:fbId,tipo,data:ds,hora:hora+':00',motivo:mot,estado:'pendente',criadoEm:Date.now()};
-  const id=await fbAdd('pedidos',obj);pedidos.push({fbId:id,...obj});
+  const id=await fbAdd('pedidos',obj);
   toast('✓ Pedido enviado ao administrador.');atualizarNotifA();
   document.getElementById(`corr-form-${ds}`).innerHTML='';
 }
@@ -1098,7 +1101,7 @@ async function pedirAus(){
   const mot=document.getElementById('aus-mot').value.trim();
   if(!di){toast('⚠ Selecione a data.');return;}
   const obj={empId:utilizadorAtual.id,tipo,dataInicio:di,dataFim:df,motivo:mot,estado:'pendente',criadoEm:Date.now(),tipoPedido:'ausencia'};
-  const id=await fbAdd('pedidos',obj);pedidos.push({fbId:id,...obj});
+  const id=await fbAdd('pedidos',obj);
   toast('✓ Pedido enviado ao administrador.');renderPedColab();atualizarNotifA();
   ['aus-di','aus-df','aus-mot'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
 }
@@ -1201,7 +1204,7 @@ function renderDash(){
     const ini=emp.nome.split(' ').map(n=>n[0]).slice(0,2).join('');
     let sc='var(--text3)',si='ti-circle',sl='Ausente';
     if(ausE){sl=AUSL[ausE.tipo]||ausE.tipo;si='ti-calendar-off';sc='var(--blue-text)';}
-    else if(ul){const m={entrada:['var(--green-text)','ti-login','Em serviço'],saida:['var(--text2)','ti-logout','Saiu'],inicio_pausa:['var(--amber-text)','ti-coffee','Em pausa'],fim_pausa:['var(--green-text)','ti-player-play','Em serviço']};[sc,si,sl]=m[ul.tipo]||m.entrada;}
+    else if(ul){const m={entrada:['var(--green-text)','ti-login','Em serviço'],saida:['var(--text2)','ti-logout','Saiu'],inicio_pausa:['var(--amber-text)','ti-soup','Ao almoço'],fim_pausa:['var(--green-text)','ti-player-play','Em serviço']};[sc,si,sl]=m[ul.tipo]||m.entrada;}
     return`<div class="pcard"><div class="avatar">${ini}</div><div style="min-width:0;"><div class="pcard-name">${emp.nome}</div><div class="pcard-status" style="color:${sc};"><i class="ti ${si}"></i> ${sl}</div></div></div>`;
   }).join('');
   document.getElementById('dash-presence').innerHTML=`<div class="presence-grid">${cards}</div>`;
@@ -1219,38 +1222,138 @@ function renderDash(){
 }
 
 // ── Admin: Registos ──
+let admRegModo='mes',admRegMes=new Date().getMonth(),admRegDia=hoje(),admRegSemana=hoje();
 function initAdmSels(){
   const cur=new Date().getMonth();
   const empAll='<option value="todos">Todos</option>'+colaboradores.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
   const empOnly=colaboradores.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
-  ['adm-emp','aa-fil-e'].forEach(id=>{const s=document.getElementById(id);if(s)s.innerHTML=empAll;});
+  ['aa-fil-e'].forEach(id=>{const s=document.getElementById(id);if(s)s.innerHTML=empAll;});
   ['aa-emp'].forEach(id=>{const s=document.getElementById(id);if(s)s.innerHTML=empOnly;});
-  ['adm-mes','aa-fil-m','adm-rel-mes'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML=MESES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');s.value=cur;});
+  ['aa-fil-m','adm-rel-mes'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML=MESES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');s.value=cur;});
 }
 function initAdmAusSels(){
   const s1=document.getElementById('aa-fil-e');if(s1)s1.innerHTML='<option value="todos">Todos</option>'+colaboradores.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
   const s2=document.getElementById('aa-fil-m');if(s2){s2.innerHTML=MESES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');s2.value=new Date().getMonth();}
 }
+function admRegView(modo){
+  admRegModo=modo;
+  ['mes','semana','dia'].forEach(s=>document.getElementById('rv-'+s)?.classList.toggle('on',s===modo));
+  renderRegFiltros();renderAdmReg();
+}
+window.admRegView=admRegView;
+function renderRegFiltros(){
+  const el=document.getElementById('reg-filtros');if(!el)return;
+  const empSelAtual=document.getElementById('adm-emp')?.value||'todos';
+  const empOpts='<option value="todos">Todos</option>'+colaboradores.map(c=>`<option value="${c.id}" ${String(c.id)===empSelAtual?'selected':''}>${c.nome}</option>`).join('');
+  let html='';
+  if(admRegModo==='mes'){
+    html=`<div class="fg"><label>Mês</label><select id="adm-mes" onchange="admRegSetMes(this.value)"></select></div>
+      <div class="fg"><label>Colaborador</label><select id="adm-emp" onchange="renderAdmReg()">${empOpts}</select></div>`;
+  }else if(admRegModo==='semana'){
+    html=`<div class="fg"><label>Semana de</label><input type="date" id="adm-semana" value="${admRegSemana}" onchange="admRegSetSemana(this.value)"/></div>
+      <div style="display:flex;gap:6px;margin-top:20px;">
+        <button class="cal-nav-btn" onclick="admRegNav(-7)" title="Semana anterior"><i class="ti ti-chevron-left"></i></button>
+        <button class="cal-nav-btn" onclick="admRegHoje()" title="Semana atual" style="font-size:11px;width:auto;padding:0 10px;">Hoje</button>
+        <button class="cal-nav-btn" onclick="admRegNav(7)" title="Semana seguinte"><i class="ti ti-chevron-right"></i></button>
+      </div>
+      <div class="fg"><label>Colaborador</label><select id="adm-emp" onchange="renderAdmReg()">${empOpts}</select></div>`;
+  }else{
+    html=`<div class="fg"><label>Dia</label><input type="date" id="adm-dia" value="${admRegDia}" onchange="admRegSetDia(this.value)"/></div>
+      <div style="display:flex;gap:6px;margin-top:20px;">
+        <button class="cal-nav-btn" onclick="admRegNav(-1)" title="Dia anterior"><i class="ti ti-chevron-left"></i></button>
+        <button class="cal-nav-btn" onclick="admRegHoje()" title="Hoje" style="font-size:11px;width:auto;padding:0 10px;">Hoje</button>
+        <button class="cal-nav-btn" onclick="admRegNav(1)" title="Dia seguinte"><i class="ti ti-chevron-right"></i></button>
+      </div>
+      <div class="fg"><label>Colaborador</label><select id="adm-emp" onchange="renderAdmReg()">${empOpts}</select></div>`;
+  }
+  html+=`<button class="btn bp sm" onclick="abrirNR()" style="margin-top:20px;"><i class="ti ti-plus"></i> Novo registo</button>`;
+  el.innerHTML=html;
+  if(admRegModo==='mes'){
+    const s=document.getElementById('adm-mes');
+    s.innerHTML=MESES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+    s.value=admRegMes;
+  }
+}
+window.renderRegFiltros=renderRegFiltros;
+function admRegNav(deltaDias){
+  if(admRegModo==='dia'){
+    const d=new Date(admRegDia+'T12:00:00');d.setDate(d.getDate()+deltaDias);admRegDia=dStr(d);
+    const inp=document.getElementById('adm-dia');if(inp)inp.value=admRegDia;
+  }else if(admRegModo==='semana'){
+    const d=new Date(admRegSemana+'T12:00:00');d.setDate(d.getDate()+deltaDias);admRegSemana=dStr(d);
+    const inp=document.getElementById('adm-semana');if(inp)inp.value=admRegSemana;
+  }
+  renderAdmReg();
+}
+window.admRegNav=admRegNav;
+function admRegHoje(){
+  if(admRegModo==='dia'){admRegDia=hoje();const inp=document.getElementById('adm-dia');if(inp)inp.value=admRegDia;}
+  else if(admRegModo==='semana'){admRegSemana=hoje();const inp=document.getElementById('adm-semana');if(inp)inp.value=admRegSemana;}
+  renderAdmReg();
+}
+window.admRegHoje=admRegHoje;
+function admRegSetMes(v){admRegMes=parseInt(v);renderAdmReg();}
+function admRegSetSemana(v){admRegSemana=v;renderAdmReg();}
+function admRegSetDia(v){admRegDia=v;renderAdmReg();}
+window.admRegSetMes=admRegSetMes;window.admRegSetSemana=admRegSetSemana;window.admRegSetDia=admRegSetDia;
+function periodoAtualRegs(){
+  const ano=new Date().getFullYear();
+  if(admRegModo==='semana'){
+    const d0=new Date(admRegSemana+'T12:00:00');
+    const seg=new Date(d0);seg.setDate(d0.getDate()-((d0.getDay()+6)%7));
+    const dias=[...Array(7)].map((_,i)=>{const d=new Date(seg);d.setDate(seg.getDate()+i);return dStr(d);});
+    return{regs:registos.filter(r=>r.data>=dias[0]&&r.data<=dias[6]),titulo:`Semana de ${dias[0].split('-').reverse().join('/')} a ${dias[6].split('-').reverse().join('/')}`};
+  }
+  if(admRegModo==='dia'){
+    return{regs:registos.filter(r=>r.data===admRegDia),titulo:`${DIAS_FULL[new Date(admRegDia+'T12:00:00').getDay()]}, ${admRegDia.split('-').reverse().join('/')}`};
+  }
+  const pref=`${ano}-${String(admRegMes+1).padStart(2,'0')}`;
+  return{regs:registos.filter(r=>r.data.startsWith(pref)),titulo:`${MESES[admRegMes]} ${ano}`};
+}
 window.renderAdmReg=renderAdmReg;
 function renderAdmReg(){
-  const mes=parseInt(document.getElementById('adm-mes').value);
-  const filtEmp=document.getElementById('adm-emp').value;
-  const pref=`${new Date().getFullYear()}-${String(mes+1).padStart(2,'0')}`;
-  let regs=registos.filter(r=>r.data.startsWith(pref));
-  if(filtEmp!=='todos')regs=regs.filter(r=>r.empId===parseInt(filtEmp));
+  const filtEmp=document.getElementById('adm-emp')?.value||'todos';
+  const{regs:regsPeriodo,titulo}=periodoAtualRegs();
+  let regs=filtEmp!=='todos'?regsPeriodo.filter(r=>r.empId===parseInt(filtEmp)):regsPeriodo;
   regs=[...regs].sort((a,b)=>a.ts-b.ts);
-  const rows=regs.map(r=>{const emp=colaboradores.find(c=>c.id===r.empId);
-    const extraBdg=r.aprovadoExtra?'<span class="bdg bdg-g xs" style="font-size:9px;margin-left:4px;"><i class="ti ti-star"></i> Extra aprovado</span>':'';
-    return`<tr id="row-${r.fbId}"><td>${emp?emp.nome:'?'}</td><td>${(r.data||'').split('-').reverse().join('/')}</td><td style="font-variant-numeric:tabular-nums;font-weight:600;">${r.hora.slice(0,5)}</td><td><span class="bdg ${TC[r.tipo]}" style="font-size:10px;"><i class="ti ${TI[r.tipo]}"></i> ${TL[r.tipo]}</span>${extraBdg}</td><td style="text-align:right;white-space:nowrap;">
-      ${r.tipo==='saida'&&!r.aprovadoExtra?`<button class="btn bt xs" onclick="aprovarExtra('${r.fbId}')" title="Aprovar hora extra"><i class="ti ti-star"></i></button> `:''}
-      <button class="btn bb sm" onclick="editReg('${r.fbId}')" title="Editar registo"><i class="ti ti-edit"></i></button> <button class="btn br sm" onclick="delReg('${r.fbId}')" title="Eliminar registo"><i class="ti ti-trash"></i></button></td></tr>`;
-  }).join('');
+
+  const porDia={};
+  regs.forEach(r=>{(porDia[r.data]=porDia[r.data]||[]).push(r);});
+  const diasOrd=Object.keys(porDia).sort();
+  const hj=hoje();
+  let corpo='';
+  diasOrd.forEach(ds=>{
+    const dObj=new Date(ds+'T12:00:00');
+    const fer=isFeriado(ds);const ferN=fer?nomeFeriado(ds):'';
+    const isHoje=ds===hj;const isFds=dObj.getDay()===0||dObj.getDay()===6;
+    let estilo='background:var(--bg2);';
+    if(isHoje)estilo='background:var(--purple-light);';
+    else if(fer)estilo='background:var(--purple-light);opacity:.65;';
+    else if(isFds)estilo='background:var(--bg2);opacity:.6;';
+    corpo+=`<tr style="${estilo}"><td colspan="4" style="padding:9px 12px;font-weight:700;font-size:12px;${isHoje?'color:var(--purple-text);':''}">
+      ${DIAS_SHORT[dObj.getDay()]}, ${ds.split('-').reverse().join('/')}
+      ${isHoje?' <span class="bdg bdg-p" style="font-size:9px;">Hoje</span>':''}
+      ${fer?` <span class="bdg bdg-p" style="font-size:9px;">🎉 ${ferN}</span>`:''}
+      <span style="float:right;color:var(--text2);font-weight:500;">${porDia[ds].length} registo(s)</span>
+    </td></tr>`;
+    corpo+=porDia[ds].map(r=>{
+      const emp=colaboradores.find(c=>c.id===r.empId);
+      const extraBdg=r.aprovadoExtra?'<span class="bdg bdg-g xs" style="font-size:9px;margin-left:4px;"><i class="ti ti-star"></i> Extra</span>':'';
+      return`<tr id="row-${r.fbId}"><td style="padding-left:22px;">${emp?emp.nome:'?'}</td><td style="font-variant-numeric:tabular-nums;font-weight:600;">${r.hora.slice(0,5)}</td><td><span class="bdg ${TC[r.tipo]}" style="font-size:10px;"><i class="ti ${TI[r.tipo]}"></i> ${TL[r.tipo]}</span>${extraBdg}</td><td style="text-align:right;white-space:nowrap;">
+        ${r.tipo==='saida'&&!r.aprovadoExtra?`<button class="btn bt xs" onclick="aprovarExtra('${r.fbId}')" title="Aprovar hora extra"><i class="ti ti-star"></i></button> `:''}
+        <button class="btn bb sm" onclick="editReg('${r.fbId}')" title="Editar registo"><i class="ti ti-edit"></i></button> <button class="btn br sm" onclick="delReg('${r.fbId}')" title="Eliminar registo"><i class="ti ti-trash"></i></button></td></tr>`;
+    }).join('');
+  });
+
   document.getElementById('adm-reg-out').innerHTML=`<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+      <p style="font-size:15px;font-weight:700;">${titulo}</p>
+      <p style="font-size:12px;color:var(--text2);">${regs.length} registo(s)</p>
+    </div>
     <div id="nr-area"></div>
-    <button class="btn bp sm" onclick="abrirNR()" style="margin-bottom:14px;"><i class="ti ti-plus"></i> Novo registo manual</button>
     <div class="info-banner" style="margin-bottom:14px;"><i class="ti ti-star"></i> Clique em <strong>⭐</strong> numa saída para aprovar horas extra desse dia.</div>
-    ${regs.length===0?'<p style="font-size:13px;color:var(--text2);">Sem registos neste período.</p>':
-    `<div style="overflow-x:auto;"><table><thead><tr><th>Colaborador</th><th>Data</th><th>Hora</th><th>Tipo</th><th style="text-align:right;">Ações</th></tr></thead><tbody>${rows}</tbody></table></div>`}
+    ${diasOrd.length===0?'<p style="font-size:13px;color:var(--text2);">Sem registos neste período.</p>':
+    `<div style="overflow-x:auto;"><table><thead><tr><th>Colaborador</th><th>Hora</th><th>Tipo</th><th style="text-align:right;">Ações</th></tr></thead><tbody>${corpo}</tbody></table></div>`}
   </div>`;
 }
 async function aprovarExtra(fbId){
@@ -1264,16 +1367,17 @@ function editReg(fbId){
   const row=document.getElementById('row-'+fbId);row.style.background='var(--bg2)';
   const eO=colaboradores.map(c=>`<option value="${c.id}" ${c.id===r.empId?'selected':''}>${c.nome}</option>`).join('');
   const tO=['entrada','saida','inicio_pausa','fim_pausa'].map(t=>`<option value="${t}" ${t===r.tipo?'selected':''}>${TL[t]}</option>`).join('');
-  row.innerHTML=`<td><select class="ei" id="re-e-${fbId}">${eO}</select></td><td><input class="ei" type="date" id="re-d-${fbId}" value="${r.data}"/></td><td><input class="ei" type="time" id="re-h-${fbId}" value="${r.hora.slice(0,5)}" style="width:90px;"/></td><td><select class="ei" id="re-t-${fbId}">${tO}</select></td><td style="text-align:right;white-space:nowrap;"><button class="btn bp sm" onclick="saveReg('${fbId}')"><i class="ti ti-check"></i></button> <button class="btn bgy sm" onclick="renderAdmReg()">✕</button></td>`;
+  row.innerHTML=`<td><select class="ei" id="re-e-${fbId}">${eO}</select></td><td><input class="ei" type="time" id="re-h-${fbId}" value="${r.hora.slice(0,5)}" style="width:90px;"/></td><td><select class="ei" id="re-t-${fbId}">${tO}</select></td><td style="text-align:right;white-space:nowrap;"><button class="btn bp sm" onclick="saveReg('${fbId}')"><i class="ti ti-check"></i></button> <button class="btn bgy sm" onclick="renderAdmReg()">✕</button></td>`;
 }
 async function saveReg(fbId){
+  const r=registos.find(x=>x.fbId===fbId);if(!r)return;
   const empId=parseInt(document.getElementById('re-e-'+fbId).value);
-  const data=document.getElementById('re-d-'+fbId).value;
   const hora=document.getElementById('re-h-'+fbId).value+':00';
   const tipo=document.getElementById('re-t-'+fbId).value;
-  const[y,m,d]=data.split('-').map(Number);const[hh,mm]=hora.split(':').map(Number);
-  await fbUpd('registos',fbId,{empId,data,hora,tipo,ts:new Date(y,m-1,d,hh,mm,0).getTime()});
-  const i=registos.findIndex(r=>r.fbId===fbId);if(i>=0)registos[i]={...registos[i],empId,data,hora,tipo};
+  const[y,m,d]=r.data.split('-').map(Number);const[hh,mm]=hora.split(':').map(Number);
+  const ts=new Date(y,m-1,d,hh,mm,0).getTime();
+  await fbUpd('registos',fbId,{empId,hora,tipo,ts});
+  const i=registos.findIndex(x=>x.fbId===fbId);if(i>=0)registos[i]={...registos[i],empId,hora,tipo,ts};
   toast('✓ Registo atualizado!');renderAdmReg();
 }
 async function delReg(fbId){
@@ -1282,8 +1386,10 @@ async function delReg(fbId){
   toast('Registo eliminado.');renderAdmReg();
 }
 function abrirNR(){
-  const mes=parseInt(document.getElementById('adm-mes').value);
-  const hj=new Date();const dataD=`${hj.getFullYear()}-${String(mes+1).padStart(2,'0')}-${String(hj.getDate()).padStart(2,'0')}`;
+  let dataD;
+  if(admRegModo==='dia')dataD=admRegDia;
+  else if(admRegModo==='semana')dataD=admRegSemana;
+  else{const hj=new Date();dataD=`${hj.getFullYear()}-${String(admRegMes+1).padStart(2,'0')}-${String(hj.getDate()).padStart(2,'0')}`;}
   const eO=colaboradores.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
   const tO=['entrada','saida','inicio_pausa','fim_pausa'].map(t=>`<option value="${t}">${TL[t]}</option>`).join('');
   document.getElementById('nr-area').innerHTML=`<div class="inline-edit" style="margin-bottom:14px;">
@@ -1303,7 +1409,7 @@ async function criarNR(){
   const hora=document.getElementById('nr-h').value+':00';
   const[y,m,d]=data.split('-').map(Number);const[hh,mm]=hora.split(':').map(Number);
   const obj={empId,data,hora,tipo,ts:new Date(y,m-1,d,hh,mm,0).getTime(),aprovadoExtra:false};
-  const id=await fbAdd('registos',obj);registos.push({fbId:id,...obj});registos.sort((a,b)=>a.ts-b.ts);
+  const id=await fbAdd('registos',obj);
   toast('✓ Registo criado!');renderAdmReg();
 }
 window.editReg=editReg;window.saveReg=saveReg;window.delReg=delReg;window.abrirNR=abrirNR;window.criarNR=criarNR;
@@ -1318,7 +1424,7 @@ async function admAus(){
   const mot=document.getElementById('aa-mot').value.trim();
   if(!di){toast('⚠ Selecione data.');return;}
   const obj={empId,tipo,dataInicio:di,dataFim:df,motivo:mot,estado:'aprovado',criadoEm:Date.now(),origem:'admin'};
-  const id=await fbAdd('ausencias',obj);ausencias.push({fbId:id,...obj});
+  const id=await fbAdd('ausencias',obj);
   toast('✓ Ausência registada.');renderAdmAus();
 }
 window.admAus=admAus;
@@ -1408,9 +1514,46 @@ function pedDetalheHTML(p){
   return{emp,det,contexto,alteracoes,dataAcao};
 }
 
+let pedFiltroEmp='todos',pedFiltroEstado='todos',pedFiltroMes='todos',pedAgrupado=false;
+function renderPedFiltros(){
+  const el=document.getElementById('ped-filtros');if(!el)return;
+  const empOpts='<option value="todos">Todos</option>'+colaboradores.map(c=>`<option value="${c.id}" ${String(c.id)===pedFiltroEmp?'selected':''}>${c.nome}</option>`).join('');
+  const mesOpts='<option value="todos">Todos os meses</option>'+MESES.map((m,i)=>`<option value="${i}" ${String(i)===pedFiltroMes?'selected':''}>${m}</option>`).join('');
+  el.innerHTML=`
+    <div class="fg"><label>Colaborador</label><select onchange="pedSetFiltroEmp(this.value)">${empOpts}</select></div>
+    <div class="fg"><label>Estado</label><select onchange="pedSetFiltroEstado(this.value)">
+      <option value="todos" ${pedFiltroEstado==='todos'?'selected':''}>Todos</option>
+      <option value="pendente" ${pedFiltroEstado==='pendente'?'selected':''}>Pendente</option>
+      <option value="aprovado" ${pedFiltroEstado==='aprovado'?'selected':''}>Aprovado</option>
+      <option value="rejeitado" ${pedFiltroEstado==='rejeitado'?'selected':''}>Rejeitado</option>
+    </select></div>
+    <div class="fg"><label>Mês</label><select onchange="pedSetFiltroMes(this.value)">${mesOpts}</select></div>
+    <div style="margin-top:22px;"><label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:var(--text2);">
+      <input type="checkbox" id="ped-agrupar" ${pedAgrupado?'checked':''} onchange="pedSetAgrupado(this.checked)" style="width:16px;height:16px;"/> Agrupar por colaborador
+    </label></div>`;
+}
+function pedSetFiltroEmp(v){pedFiltroEmp=v;renderAdmPed();}
+function pedSetFiltroEstado(v){pedFiltroEstado=v;renderAdmPed();}
+function pedSetFiltroMes(v){pedFiltroMes=v;renderAdmPed();}
+function pedSetAgrupado(v){pedAgrupado=v;renderAdmPed();}
+window.pedSetFiltroEmp=pedSetFiltroEmp;window.pedSetFiltroEstado=pedSetFiltroEstado;window.pedSetFiltroMes=pedSetFiltroMes;window.pedSetAgrupado=pedSetAgrupado;
+window.renderPedFiltros=renderPedFiltros;
+function pedDataRef(p){return p.tipoPedido==='ausencia'?(p.dataInicio||p.data):p.data;}
+function pedRowHTML(p,mostrarColab){
+  const{emp,det,contexto,alteracoes,dataAcao}=pedDetalheHTML(p);
+  const estadoMap={pendente:['bdg-y','Pendente'],aprovado:['bdg-g','✓ Aprovado'],rejeitado:['bdg-r','✗ Rejeitado']};
+  const[cls,lbl]=estadoMap[p.estado]||['bdg-gy',p.estado];
+  const estadoBdg=`<span class="bdg ${cls}" style="font-size:10px;">${lbl}</span>${dataAcao?`<div style="font-size:10px;color:var(--text3);margin-top:3px;">${dataAcao}</div>`:''}`;
+  let acoes='';
+  if(p.estado==='pendente')acoes=`<button class="btn bg sm" onclick="aprovPed('${p.fbId}')"><i class="ti ti-check"></i> Aprovar</button> <button class="btn br sm" onclick="rejPed('${p.fbId}')"><i class="ti ti-x"></i> Rejeitar</button>`;
+  else if(p.estado==='aprovado')acoes=`<button class="btn br xs" onclick="reverterPed('${p.fbId}')" title="Desfaz a aprovação e restaura o estado anterior"><i class="ti ti-arrow-back-up"></i> Reverter</button>`;
+  else acoes=`<button class="btn bg xs" onclick="aprovPed('${p.fbId}')" title="Aprovar este pedido"><i class="ti ti-check"></i> Aprovar</button>`;
+  const colTd=mostrarColab?`<td style="font-size:13px;font-weight:600;">${emp?emp.nome:'?'}</td>`:'';
+  return`<tr>${colTd}<td style="font-size:12px;">${det}${contexto}${p.motivo?`<br><span style="color:var(--text2);font-size:11px;"><i class="ti ti-message"></i> ${p.motivo}</span>`:''}${alteracoes}</td><td style="white-space:nowrap;">${estadoBdg}</td><td style="text-align:right;white-space:nowrap;">${acoes}</td></tr>`;
+}
+
 function renderAdmPed(){
   const pend=pedidos.filter(p=>p.estado==='pendente').sort((a,b)=>b.criadoEm-a.criadoEm);
-  const hist=pedidos.filter(p=>p.estado!=='pendente').sort((a,b)=>(b.resolvidoEm||b.criadoEm)-(a.resolvidoEm||a.criadoEm));
 
   const c=document.getElementById('adm-ped-pend');
   c.innerHTML=!pend.length?'<p style="font-size:13px;color:var(--text2);">Sem pedidos pendentes.</p>':
@@ -1420,19 +1563,37 @@ function renderAdmPed(){
       return`<tr><td style="font-size:13px;font-weight:600;">${emp?emp.nome:'?'}</td><td style="font-size:12px;">${det}${contexto}${p.motivo?`<br><span style="color:var(--text2);font-size:11px;"><i class="ti ti-message"></i> ${p.motivo}</span>`:''}</td><td style="text-align:right;white-space:nowrap;"><button class="btn bg sm" onclick="aprovPed('${p.fbId}')"><i class="ti ti-check"></i> Aprovar</button> <button class="btn br sm" onclick="rejPed('${p.fbId}')"><i class="ti ti-x"></i> Rejeitar</button></td></tr>`;
     }).join('')+'</tbody></table></div>';
 
+  let lista=[...pedidos];
+  if(pedFiltroEmp!=='todos')lista=lista.filter(p=>p.empId===parseInt(pedFiltroEmp));
+  if(pedFiltroEstado!=='todos')lista=lista.filter(p=>p.estado===pedFiltroEstado);
+  if(pedFiltroMes!=='todos'){
+    const pref=`${new Date().getFullYear()}-${String(parseInt(pedFiltroMes)+1).padStart(2,'0')}`;
+    lista=lista.filter(p=>(pedDataRef(p)||'').startsWith(pref));
+  }
+  lista.sort((a,b)=>(b.resolvidoEm||b.criadoEm)-(a.resolvidoEm||a.criadoEm));
+
   const h=document.getElementById('adm-ped-hist');
-  if(!hist.length){h.innerHTML='<p style="font-size:13px;color:var(--text2);">Sem histórico.</p>';return;}
-  h.innerHTML='<div style="overflow-x:auto;"><table><thead><tr><th>Colaborador</th><th>Pedido e alterações</th><th>Estado</th><th style="text-align:right;">Ações</th></tr></thead><tbody>'+
-    hist.slice(0,40).map(p=>{
-      const{emp,det,contexto,alteracoes,dataAcao}=pedDetalheHTML(p);
-      const isAprov=p.estado==='aprovado';
-      const estadoBdg=`<span class="bdg ${isAprov?'bdg-g':'bdg-r'}" style="font-size:10px;">${isAprov?'✓ Aprovado':'✗ Rejeitado'}</span>${dataAcao?`<div style="font-size:10px;color:var(--text3);margin-top:3px;">${dataAcao}</div>`:''}`;
-      // Botão reverter: aprovado → pode reverter ação; rejeitado → pode mudar para aprovado
-      const btnReverter=isAprov?
-        `<button class="btn br xs" onclick="reverterPed('${p.fbId}')" title="Desfaz a aprovação e restaura o estado anterior"><i class="ti ti-arrow-back-up"></i> Reverter</button>`:
-        `<button class="btn bg xs" onclick="aprovPed('${p.fbId}')" title="Aprovar este pedido"><i class="ti ti-check"></i> Aprovar</button>`;
-      return`<tr><td style="font-size:13px;font-weight:600;">${emp?emp.nome:'?'}</td><td style="font-size:12px;">${det}${contexto}${p.motivo?`<br><span style="color:var(--text2);font-size:11px;"><i class="ti ti-message"></i> ${p.motivo}</span>`:''}${alteracoes}</td><td style="white-space:nowrap;">${estadoBdg}</td><td style="text-align:right;white-space:nowrap;">${btnReverter}</td></tr>`;
-    }).join('')+'</tbody></table></div>';
+  if(!lista.length){h.innerHTML='<p style="font-size:13px;color:var(--text2);">Sem pedidos para os filtros selecionados.</p>';return;}
+
+  if(pedAgrupado){
+    const porEmp={};
+    lista.forEach(p=>{(porEmp[p.empId]=porEmp[p.empId]||[]).push(p);});
+    const empIds=Object.keys(porEmp).map(Number).sort((a,b)=>{
+      const na=colaboradores.find(c=>c.id===a)?.nome||'';const nb=colaboradores.find(c=>c.id===b)?.nome||'';
+      return na.localeCompare(nb);
+    });
+    h.innerHTML=empIds.map(eid=>{
+      const emp=colaboradores.find(c=>c.id===eid);
+      const rows=porEmp[eid].map(p=>pedRowHTML(p,false)).join('');
+      return`<div style="margin-bottom:18px;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:6px;padding:7px 10px;background:var(--bg2);border-radius:var(--r);">${emp?emp.nome:'Colaborador removido'} <span style="color:var(--text2);font-weight:500;font-size:11px;">(${porEmp[eid].length})</span></div>
+        <div style="overflow-x:auto;"><table><thead><tr><th>Pedido e alterações</th><th>Estado</th><th style="text-align:right;">Ações</th></tr></thead><tbody>${rows}</tbody></table></div>
+      </div>`;
+    }).join('');
+  }else{
+    h.innerHTML='<div style="overflow-x:auto;"><table><thead><tr><th>Colaborador</th><th>Pedido e alterações</th><th>Estado</th><th style="text-align:right;">Ações</th></tr></thead><tbody>'+
+      lista.slice(0,80).map(p=>pedRowHTML(p,true)).join('')+'</tbody></table></div>';
+  }
 }
 
 async function aprovPed(fbId){
@@ -1450,8 +1611,7 @@ async function aprovPed(fbId){
       if(ri>=0){registos[ri].hora=p.hora;registos[ri].ts=novoTs;}
     } else {
       const obj={empId:p.empId,data:p.data,hora:p.hora,tipo:p.tipo,ts:novoTs,aprovadoExtra:false};
-      const id=await fbAdd('registos',obj);registos.push({fbId:id,...obj});
-      registos.sort((a,b)=>a.ts-b.ts);
+      const id=await fbAdd('registos',obj);
       snapshot.registoCriadoId=id;snapshot.acao='criado';snapshot.tipo=p.tipo;snapshot.hora=p.hora;
     }
 
@@ -1466,7 +1626,7 @@ async function aprovPed(fbId){
 
   } else if(p.tipoPedido==='ausencia'){
     const obj={empId:p.empId,tipo:p.tipo,dataInicio:p.dataInicio||p.data,dataFim:p.dataFim||p.dataInicio||p.data,motivo:p.motivo||'',estado:'aprovado',criadoEm:Date.now(),origem:'pedido'};
-    const id=await fbAdd('ausencias',obj);ausencias.push({fbId:id,...obj});
+    const id=await fbAdd('ausencias',obj);
     snapshot.ausenciaCriadaId=id;
   }
 
@@ -1585,6 +1745,49 @@ function expPDFAdm(){
   pdf.save(`relatorio_${MESES[mes]}.pdf`);toast('✓ PDF exportado!');
 }
 window.expPDFAdm=expPDFAdm;
+
+// Conta dias de uma ausência (inclusivo). Meios-dias contam 0.5.
+function diasAusencia(a){
+  if(a.tipo==='meio_dia_manha'||a.tipo==='meio_dia_tarde')return 0.5;
+  const di=new Date((a.dataInicio||a.dataFim)+'T12:00:00');
+  const df=new Date((a.dataFim||a.dataInicio)+'T12:00:00');
+  return Math.max(1,Math.round((df-di)/86400000)+1);
+}
+function expPDFSalarial(){
+  const sel=document.getElementById('adm-rel-mes');const mes=sel?parseInt(sel.value):new Date().getMonth();
+  const ano=new Date().getFullYear();
+  const pref=`${ano}-${String(mes+1).padStart(2,'0')}`;
+  const{jsPDF}=window.jspdf;const pdf=new jsPDF();
+  pdf.setFontSize(16);pdf.setFont(undefined,'bold');pdf.text('Relatório de Ausências — Processamento Salarial',14,18);
+  pdf.setFontSize(10);pdf.setFont(undefined,'normal');
+  pdf.text(`${MESES[mes]} ${ano}  |  Apenas ausências aprovadas`,14,27);
+  const rows=[];const subtotalRows=[];
+  [...colaboradores].sort((a,b)=>a.nome.localeCompare(b.nome)).forEach(emp=>{
+    const ausM=ausencias.filter(a=>a.empId===emp.id&&a.estado==='aprovado'&&(a.dataInicio||'').startsWith(pref))
+      .sort((a,b)=>(a.dataInicio||'').localeCompare(b.dataInicio||''));
+    if(!ausM.length){
+      rows.push([emp.nome,'—','—','Sem ausências neste período','—']);
+    }else{
+      ausM.forEach(a=>rows.push([emp.nome,(a.dataInicio||'').split('-').reverse().join('/'),(a.dataFim||a.dataInicio||'').split('-').reverse().join('/'),AUSL[a.tipo]||a.tipo,diasAusencia(a)+'d']));
+    }
+    const total=ausM.reduce((s,a)=>s+diasAusencia(a),0);
+    rows.push([`Total — ${emp.nome}`,'','','',total+'d']);
+    subtotalRows.push(rows.length-1);
+  });
+  pdf.autoTable({
+    startY:33,
+    head:[['Colaborador','Início','Fim','Tipo','Dias']],
+    body:rows,
+    styles:{fontSize:9},
+    headStyles:{fillColor:[60,52,137]},
+    didParseCell:data=>{
+      if(subtotalRows.includes(data.row.index)){data.cell.styles.fontStyle='bold';data.cell.styles.fillColor=[245,245,244];}
+    }
+  });
+  pdf.save(`ausencias_salarial_${MESES[mes]}_${ano}.pdf`);
+  toast('✓ PDF de processamento salarial exportado!');
+}
+window.expPDFSalarial=expPDFSalarial;
 function expTodosCSV(){
   let csv='Nome,Departamento,Data,Hora,Tipo,Extra Aprovado\n';
   registos.sort((a,b)=>a.ts-b.ts).forEach(r=>{const emp=colaboradores.find(c=>c.id===r.empId);
@@ -1651,7 +1854,7 @@ async function addCol(){
   if(!pin||!/^\d{4}$/.test(pin)){toast('⚠ PIN deve ter 4 dígitos.');return;}
   const maxId=colaboradores.reduce((m,c)=>Math.max(m,c.id||0),0);
   const obj={id:maxId+1,nome,dept:document.getElementById('nc-d').value.trim()||'Geral',turnoId:document.getElementById('nc-t').value,ferias:parseInt(document.getElementById('nc-f').value)||22,pin};
-  const id=await fbAdd('colaboradores',obj);colaboradores.push({fbId:id,...obj});
+  const id=await fbAdd('colaboradores',obj);
   toast('✓ Colaborador adicionado!');renderAdmCol();initAdmSels();
 }
 async function delCol(fbId){
@@ -1702,7 +1905,7 @@ async function addTurno(){
   const nome=document.getElementById('tn-nome').value.trim();if(!nome){toast('⚠ Indique o nome.');return;}
   const dias=[...document.querySelectorAll('#tn-dias input:checked')].map(x=>parseInt(x.value));
   const obj={nome,entrada:document.getElementById('tn-in').value,saida:document.getElementById('tn-out').value,pausaInicio:document.getElementById('tn-pi').value,pausaDur:parseInt(document.getElementById('tn-pd').value)||0,horas:parseInt(document.getElementById('tn-h').value)||8,dias};
-  const id=await fbAdd('turnos',obj);turnos.push({fbId:id,...obj});
+  const id=await fbAdd('turnos',obj);
   toast('✓ Turno criado!');renderTurnos();document.getElementById('tn-nome').value='';
 }
 async function delTurno(fbId){
@@ -1729,7 +1932,7 @@ async function addTurno2(){
   const nome=document.getElementById('tn-nome2').value.trim();if(!nome){toast('⚠ Indique o nome.');return;}
   const dias=[...document.querySelectorAll('#tn-dias2 input:checked')].map(x=>parseInt(x.value));
   const obj={nome,entrada:document.getElementById('tn-in2').value,saida:document.getElementById('tn-out2').value,pausaInicio:document.getElementById('tn-pi2').value,pausaDur:parseInt(document.getElementById('tn-pd2').value)||0,horas:parseInt(document.getElementById('tn-h2').value)||8,dias};
-  const id=await fbAdd('turnos',obj);turnos.push({fbId:id,...obj});
+  const id=await fbAdd('turnos',obj);
   toast('✓ Turno criado!');renderTurnosTab();document.getElementById('tn-nome2').value='';
 }
 window.addTurno2=addTurno2;
