@@ -129,22 +129,29 @@ tfoot td{font-weight:700;border-top:1px solid var(--border2);border-bottom:none;
 .metric{background:var(--bg2);border-radius:var(--r);padding:14px 16px;border:.5px solid var(--border);}
 .metric-link{cursor:pointer;transition:all .15s;}
 /* ── Mapa de Férias ── */
-.mapa-wrap{overflow-x:auto;padding-bottom:6px;}
-.mapa-row{display:flex;align-items:stretch;}
-.mapa-nome{flex:0 0 130px;font-size:12px;font-weight:600;padding:5px 8px 5px 0;display:flex;align-items:center;position:sticky;left:0;background:var(--bg);z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.mapa-head .mapa-nome{font-weight:700;color:var(--text2);font-size:11px;background:transparent;}
-.mapa-mes-head{flex:0 0 110px;font-size:10px;color:var(--text2);text-align:center;font-weight:600;padding-bottom:5px;border-bottom:1.5px solid var(--border);}
-.mapa-mes{flex:0 0 110px;display:flex;gap:1px;padding:4px 4px;border-right:.5px solid var(--border);box-sizing:border-box;}
-.mapa-dia{flex:1;height:18px;border-radius:1px;background:var(--bg2);min-width:2px;cursor:default;}
+.mapa-wrap{overflow-x:auto;padding-bottom:10px;}
+.mapa-row{display:flex;align-items:stretch;border-bottom:.5px solid var(--border);}
+.mapa-row:last-child{border-bottom:none;}
+.mapa-nome{flex:0 0 160px;font-size:13px;font-weight:600;padding:7px 10px 7px 0;display:flex;align-items:center;position:sticky;left:0;background:var(--bg);z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mapa-head{border-bottom:none;}
+.mapa-head .mapa-nome{font-weight:700;color:var(--text2);font-size:12px;background:transparent;}
+.mapa-mes-head{flex:0 0 300px;font-size:12px;color:var(--text2);text-align:center;font-weight:700;padding-bottom:8px;border-bottom:2px solid var(--border);}
+.mapa-mes{flex:0 0 300px;display:flex;gap:2px;padding:6px 6px;border-right:1px solid var(--border);box-sizing:border-box;}
+.mapa-dia{flex:1;height:28px;border-radius:2px;background:var(--bg2);min-width:5px;cursor:default;}
 .mapa-dia-fds{opacity:.45;}
 .mapa-dia-fer{background:var(--purple-light);}
 .mapa-dia-aprov{background:var(--blue-text);}
 .mapa-dia-pend{background:var(--yellow-text);}
 .mapa-dia-sel{background:var(--green-text)!important;}
 .mapa-dia-clic{cursor:pointer;}
-.mapa-dia-clic:hover{outline:1.5px solid var(--purple);outline-offset:1px;}
-.mapa-legend{display:flex;gap:14px;margin-top:14px;font-size:11px;color:var(--text2);flex-wrap:wrap;align-items:center;}
-.mapa-leg-dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:middle;}
+.mapa-dia-clic:hover{outline:2px solid var(--purple);outline-offset:1px;}
+.mapa-legend{display:flex;gap:14px;margin-top:14px;font-size:12px;color:var(--text2);flex-wrap:wrap;align-items:center;}
+.mapa-leg-dot{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:middle;}
+@media(max-width:520px){
+  .mapa-nome{flex:0 0 110px;font-size:12px;}
+  .mapa-mes-head,.mapa-mes{flex:0 0 190px;}
+  .mapa-dia{height:24px;}
+}
 .metric-link:hover{border-color:var(--purple);box-shadow:0 2px 8px rgba(60,52,137,.12);transform:translateY(-1px);}
 .ml{font-size:10px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
 .mv{font-size:22px;font-weight:700;}
