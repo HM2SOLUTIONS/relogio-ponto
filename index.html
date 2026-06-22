@@ -128,6 +128,23 @@ tfoot td{font-weight:700;border-top:1px solid var(--border2);border-bottom:none;
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:10px;margin-bottom:16px;}
 .metric{background:var(--bg2);border-radius:var(--r);padding:14px 16px;border:.5px solid var(--border);}
 .metric-link{cursor:pointer;transition:all .15s;}
+/* ── Mapa de Férias ── */
+.mapa-wrap{overflow-x:auto;padding-bottom:6px;}
+.mapa-row{display:flex;align-items:stretch;}
+.mapa-nome{flex:0 0 130px;font-size:12px;font-weight:600;padding:5px 8px 5px 0;display:flex;align-items:center;position:sticky;left:0;background:var(--bg);z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mapa-head .mapa-nome{font-weight:700;color:var(--text2);font-size:11px;background:transparent;}
+.mapa-mes-head{flex:0 0 110px;font-size:10px;color:var(--text2);text-align:center;font-weight:600;padding-bottom:5px;border-bottom:1.5px solid var(--border);}
+.mapa-mes{flex:0 0 110px;display:flex;gap:1px;padding:4px 4px;border-right:.5px solid var(--border);box-sizing:border-box;}
+.mapa-dia{flex:1;height:18px;border-radius:1px;background:var(--bg2);min-width:2px;cursor:default;}
+.mapa-dia-fds{opacity:.45;}
+.mapa-dia-fer{background:var(--purple-light);}
+.mapa-dia-aprov{background:var(--blue-text);}
+.mapa-dia-pend{background:var(--yellow-text);}
+.mapa-dia-sel{background:var(--green-text)!important;}
+.mapa-dia-clic{cursor:pointer;}
+.mapa-dia-clic:hover{outline:1.5px solid var(--purple);outline-offset:1px;}
+.mapa-legend{display:flex;gap:14px;margin-top:14px;font-size:11px;color:var(--text2);flex-wrap:wrap;align-items:center;}
+.mapa-leg-dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:middle;}
 .metric-link:hover{border-color:var(--purple);box-shadow:0 2px 8px rgba(60,52,137,.12);transform:translateY(-1px);}
 .ml{font-size:10px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
 .mv{font-size:22px;font-weight:700;}
@@ -379,6 +396,15 @@ tfoot td{font-weight:700;border-top:1px solid var(--border2);border-bottom:none;
       <div id="ferias-saldo"></div>
     </div>
     <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+        <div class="ct" style="margin-bottom:0;"><i class="ti ti-beach"></i> Marcar férias no mapa</div>
+        <select id="mapa-ano-colab" onchange="mapaColabSetAno(this.value)" style="width:auto;"></select>
+      </div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:10px;">Toque no primeiro dia e depois no último dia das férias que pretende pedir.</p>
+      <div class="mapa-wrap"><div id="mapa-ferias-colab"></div></div>
+      <div class="btn-row" style="margin-top:10px;"><button class="btn bgy sm" onclick="limparSelMapa()"><i class="ti ti-x"></i> Limpar seleção</button></div>
+    </div>
+    <div class="card">
       <div class="ct"><i class="ti ti-calendar-plus"></i> Pedir ausência</div>
       <div class="info-banner"><i class="ti ti-info-circle"></i> O pedido será enviado ao administrador para aprovação.</div>
       <div class="row2">
@@ -392,8 +418,8 @@ tfoot td{font-weight:700;border-top:1px solid var(--border2);border-bottom:none;
             <option value="meio_dia_tarde">🌆 Meio dia — tarde</option>
           </select>
         </div>
-        <div class="fg"><label>Data início</label><input type="date" id="aus-di"/></div>
-        <div class="fg"><label>Data fim</label><input type="date" id="aus-df"/></div>
+        <div class="fg"><label>Data início</label><input type="date" id="aus-di" onchange="renderMapaFeriasColab()"/></div>
+        <div class="fg"><label>Data fim</label><input type="date" id="aus-df" onchange="renderMapaFeriasColab()"/></div>
         <div class="fg"><label>Motivo (opcional)</label><input type="text" id="aus-mot" placeholder="Ex: Consulta médica"/></div>
       </div>
       <div class="btn-row"><button class="btn bp" onclick="pedirAus()"><i class="ti ti-send"></i> Enviar pedido</button></div>
@@ -445,6 +471,13 @@ tfoot td{font-weight:700;border-top:1px solid var(--border2);border-bottom:none;
   <!-- AUSÊNCIAS ADMIN -->
   <div id="sa-aus" class="sec" style="display:none;">
     <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+        <div class="ct" style="margin-bottom:0;"><i class="ti ti-beach"></i> Mapa de Férias</div>
+        <select id="mapa-ano-adm" onchange="mapaAdmSetAno(this.value)" style="width:auto;"></select>
+      </div>
+      <div class="mapa-wrap"><div id="mapa-ferias-adm"></div></div>
+    </div>
+    <div class="card">
       <div class="ct"><i class="ti ti-calendar-plus"></i> Marcar ausência</div>
       <div class="row3">
         <div class="fg"><label>Colaborador</label><select id="aa-emp"></select></div>
@@ -477,6 +510,7 @@ tfoot td{font-weight:700;border-top:1px solid var(--border2);border-bottom:none;
   <div id="sa-ped" class="sec" style="display:none;">
     <div class="card">
       <div class="ct"><i class="ti ti-bell"></i> Pedidos pendentes</div>
+      <div id="ped-bulk-bar"></div>
       <div id="adm-ped-pend"></div>
     </div>
     <div class="card">
@@ -495,6 +529,7 @@ tfoot td{font-weight:700;border-top:1px solid var(--border2);border-bottom:none;
         <button class="btn bg" onclick="expCSVAdm()" style="margin-top:20px;"><i class="ti ti-download"></i> CSV</button>
         <button class="btn br" onclick="expPDFAdm()" style="margin-top:20px;"><i class="ti ti-file-type-pdf"></i> PDF</button>
         <button class="btn bpk" onclick="expPDFSalarial()" style="margin-top:20px;"><i class="ti ti-cash"></i> PDF Salarial (ausências)</button>
+        <button class="btn bpk" onclick="expPDFHorasExtra()" style="margin-top:20px;"><i class="ti ti-clock-dollar"></i> PDF Salarial (horas extra)</button>
         <button class="btn bgy" onclick="expTodosCSV()" style="margin-top:20px;"><i class="ti ti-database-export"></i> Todos</button>
       </div>
     </div>
@@ -537,6 +572,14 @@ tfoot td{font-weight:700;border-top:1px solid var(--border2);border-bottom:none;
 
   <!-- CONFIG -->
   <div id="sa-cfg" class="sec" style="display:none;">
+    <div class="card">
+      <div class="ct"><i class="ti ti-bell-ringing"></i> Alertas</div>
+      <div class="row2">
+        <div class="fg"><label>Avisar quando alguém estiver em serviço há mais de (horas)</label><input type="number" id="cfg-limite-alerta" min="1" max="24" step="0.5"/></div>
+      </div>
+      <div class="btn-row"><button class="btn ba" onclick="salvarLimiteAlerta()"><i class="ti ti-check"></i> Guardar</button></div>
+      <p id="alerta-msg" style="font-size:12px;margin-top:10px;min-height:16px;"></p>
+    </div>
     <div class="card">
       <div class="ct"><i class="ti ti-key"></i> PIN de administrador</div>
       <div class="row2">
@@ -582,7 +625,7 @@ function nomeFeriado(ds){const m={'2026-01-01':'Ano Novo','2026-04-03':'Sexta-fe
 
 // ── Estado ──
 let colaboradores=[],registos=[],ausencias=[],pedidos=[],turnos=[];
-let adminPIN='1234',utilizadorAtual=null,loginModo='colab',lBuf='';
+let adminPIN='1234',utilizadorAtual=null,loginModo='colab',lBuf='',limiteAlertaHoras=10;
 let calMes=new Date().getMonth(),calAno=new Date().getFullYear();
 let calDiaAtivo=null;
 
@@ -637,7 +680,7 @@ async function init(){
   try{
     ss('busy');
     const[cfg,cols,regs,aus,peds,trns]=await Promise.all([fbGet('config'),fbGet('colaboradores'),fbGet('registos','ts'),fbGet('ausencias','dataInicio'),fbGet('pedidos','criadoEm'),fbGet('turnos','nome')]);
-    cfg.forEach(d=>{if(d.fbId==='admin')adminPIN=d.pin||'1234';});
+    cfg.forEach(d=>{if(d.fbId==='admin')adminPIN=d.pin||'1234';if(d.fbId==='alertas')limiteAlertaHoras=d.limiteHoras||10;});
     colaboradores=cols;registos=regs;ausencias=aus;pedidos=peds;turnos=trns;
     if(!turnos.length){
       const defaultTurnos=[
@@ -705,12 +748,12 @@ function liveSync(){
       window._calDirty=true;
     }
 
-    if(document.getElementById('sc-aus')?.classList.contains('on')){renderAusColab();renderFeriasSaldo();}
+    if(document.getElementById('sc-aus')?.classList.contains('on')){renderAusColab();renderFeriasSaldo();renderMapaFeriasColab();}
     if(document.getElementById('sc-ped')?.classList.contains('on'))renderPedColab();
   } else if(document.getElementById('tabs-a')?.style.display==='flex'){
     if(document.getElementById('sa-dash')?.classList.contains('on'))renderDash();
     if(document.getElementById('sa-ped')?.classList.contains('on'))renderAdmPed();
-    if(document.getElementById('sa-aus')?.classList.contains('on'))renderAdmAus();
+    if(document.getElementById('sa-aus')?.classList.contains('on')){renderAdmAus();renderMapaFerias();}
   }
 }
 
@@ -805,7 +848,7 @@ function swC(id){
     if(calDiaAtivo)renderDiaDetail(calDiaAtivo);
     window._calDirty=false;
   }
-  if(id==='aus'){renderAusColab();renderFeriasSaldo();}
+  if(id==='aus'){renderAusColab();renderFeriasSaldo();renderMapaFeriasColab();}
   if(id==='ped')renderPedColab();
 }
 function swA(id){
@@ -816,12 +859,12 @@ function swA(id){
   });
   if(id==='dash')renderDash();
   if(id==='reg'){renderRegFiltros();renderAdmReg();}
-  if(id==='aus'){initAdmAusSels();renderAdmAus();}
+  if(id==='aus'){initAdmAusSels();renderAdmAus();renderMapaFerias();}
   if(id==='ped'){renderPedFiltros();renderAdmPed();}
   if(id==='rel')gerarRelAdm();
   if(id==='col')renderAdmCol();
   if(id==='trn')renderTurnosTab();
-  if(id==='cfg'){/* só PIN e perigo */}
+  if(id==='cfg'){const el=document.getElementById('cfg-limite-alerta');if(el)el.value=limiteAlertaHoras;}
 }
 window.swC=swC;window.swA=swA;
 
@@ -862,17 +905,28 @@ async function reg(tipo){
     atualizarBadge(empId,hoje());renderHojeLog(empId,hoje());atualizarHojeH();
     toast('⚠ Falha a gravar. Tente novamente.',4000);
   }
-  regBusy=false;setPontoBtns(false);
+  regBusy=false;atualizarBadge(empId,hoje());
 }
 window.reg=reg;
 
 function atualizarBadge(empId,d){
   const regs=registos.filter(r=>r.empId===empId&&r.data===d);
   const ul=regs.length?regs[regs.length-1]:null;
+  atualizarBotoesPonto(ul);
   const b=document.getElementById('badge-estado');if(!b)return;
   const m={entrada:['bdg-g','ti-login','Em serviço'],saida:['bdg-r','ti-logout','Saiu'],inicio_pausa:['bdg-y','ti-soup','Ao almoço'],fim_pausa:['bdg-g','ti-player-play','Em serviço']};
   if(!ul){b.className='bdg bdg-gy';b.innerHTML='<i class="ti ti-circle"></i> Sem registo';return;}
   const[c,i,l]=m[ul.tipo]||m.entrada;b.className='bdg '+c;b.innerHTML=`<i class="ti ${i}"></i> ${l}`;
+}
+// Só deixa disponível o(s) botão(ões) que fazem sentido no estado atual do dia —
+// assim é impossível, por exemplo, dar Entrada outra vez depois do Almoço.
+function atualizarBotoesPonto(ul){
+  const podeEntrada=!ul||ul.tipo==='saida';
+  const podeAlmoco=!!ul&&(ul.tipo==='entrada'||ul.tipo==='fim_pausa');
+  const podeVoltar=!!ul&&ul.tipo==='inicio_pausa';
+  const podeSaida=!!ul&&(ul.tipo==='entrada'||ul.tipo==='fim_pausa');
+  const set=(id,ativo)=>{const b=document.getElementById(id);if(b)b.disabled=regBusy||!ativo;};
+  set('btn-entrada',podeEntrada);set('btn-pausa',podeAlmoco);set('btn-retomar',podeVoltar);set('btn-saida',podeSaida);
 }
 function renderHojeLog(empId,d){
   const c=document.getElementById('hoje-log');if(!c)return;
@@ -881,13 +935,28 @@ function renderHojeLog(empId,d){
   c.innerHTML='<table><thead><tr><th>Hora</th><th>Tipo</th></tr></thead><tbody>'+
     regs.map(r=>`<tr><td style="font-weight:700;font-variant-numeric:tabular-nums;">${r.hora.slice(0,5)}</td><td><span class="bdg ${TC[r.tipo]}"><i class="ti ${TI[r.tipo]}"></i> ${TL[r.tipo]}</span></td></tr>`).join('')+'</tbody></table>';
 }
+function previsaoSaida(empId){
+  const hojeRegs=registos.filter(r=>r.empId===empId&&r.data===hoje()).sort((a,b)=>a.ts-b.ts);
+  const entradaReg=hojeRegs.find(r=>r.tipo==='entrada');
+  if(!entradaReg)return null;
+  const ultimo=hojeRegs[hojeRegs.length-1];
+  if(ultimo&&ultimo.tipo==='saida')return null;// já saiu, não há previsão a mostrar
+  const turno=getTurno(utilizadorAtual);
+  const[eh,em]=(turno.entrada||'09:00').split(':').map(Number);
+  const[sh,sm]=(turno.saida||'18:00').split(':').map(Number);
+  const spanMin=(sh*60+sm)-(eh*60+em);
+  if(spanMin<=0)return null;
+  return new Date(entradaReg.ts+spanMin*60000).toTimeString().slice(0,5);
+}
 function atualizarHojeH(){
   const el=document.getElementById('horas-hoje');if(!el||!utilizadorAtual)return;
   const regs=registos.filter(r=>r.empId===utilizadorAtual.id&&r.data===hoje());
   const turno=getTurno(utilizadorAtual);
   const h=calcH(regs,turno,false);
   const hComExtra=calcH(regs,turno,true);
-  el.innerHTML=h>0?`<span style="font-size:13px;color:var(--text2);">Horas hoje: <strong>${h.toFixed(2)}h</strong></span>`:'';
+  const prev=previsaoSaida(utilizadorAtual.id);
+  el.innerHTML=(h>0?`<span style="font-size:13px;color:var(--text2);">Horas hoje: <strong>${h.toFixed(2)}h</strong></span>`:'')+
+    (prev?`<span style="font-size:12px;color:var(--text3);margin-left:10px;"><i class="ti ti-hourglass-low"></i> Previsão de saída: <strong>${prev}</strong></span>`:'');
   const avisoEl=document.getElementById('aviso-extra');
   if(avisoEl)avisoEl.style.display=(hComExtra>h&&h>0)?'flex':'none';
 }
@@ -1107,6 +1176,53 @@ async function pedirAus(){
 }
 window.pedirAus=pedirAus;
 
+let mapaAnoColab=new Date().getFullYear(),mapaSelInicio=null;
+function mapaColabSetAno(v){mapaAnoColab=parseInt(v);renderMapaFeriasColab();}
+window.mapaColabSetAno=mapaColabSetAno;
+function limparSelMapa(){
+  mapaSelInicio=null;
+  const di=document.getElementById('aus-di'),df=document.getElementById('aus-df');
+  if(di)di.value='';if(df)df.value='';
+  renderMapaFeriasColab();
+}
+window.limparSelMapa=limparSelMapa;
+function clicarDiaMapa(ds){
+  const di=document.getElementById('aus-di'),df=document.getElementById('aus-df');
+  const tipoSel=document.getElementById('aus-tipo');if(tipoSel)tipoSel.value='ferias';
+  if(!mapaSelInicio||ds<mapaSelInicio){mapaSelInicio=ds;if(di)di.value=ds;if(df)df.value=ds;}
+  else{if(df)df.value=ds;}
+  renderMapaFeriasColab();
+}
+window.clicarDiaMapa=clicarDiaMapa;
+function renderMapaFeriasColab(){
+  const el=document.getElementById('mapa-ferias-colab');if(!el||!utilizadorAtual)return;
+  popularAnoSelect('mapa-ano-colab',mapaAnoColab);
+  const ano=mapaAnoColab;
+  const selDi=document.getElementById('aus-di')?.value||'';
+  const selDf=document.getElementById('aus-df')?.value||'';
+  const ausFerias=ausencias.filter(a=>a.empId===utilizadorAtual.id&&a.tipo==='ferias'&&(a.estado==='aprovado'||a.estado==='pendente'));
+  const head='<div class="mapa-row mapa-head"><div class="mapa-nome"></div>'+MESES_ABR.map(m=>`<div class="mapa-mes-head">${m}</div>`).join('')+'</div>';
+  const meses=MESES_ABR.map((_,mi)=>{
+    const numDias=new Date(ano,mi+1,0).getDate();
+    let dias='';
+    for(let d=1;d<=numDias;d++){
+      const ds=`${ano}-${String(mi+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const{cls,f}=classificarDiaMapa(ds,ausFerias);
+      const selecionado=selDi&&selDf&&ds>=selDi&&ds<=selDf;
+      const clsFinal=cls+' mapa-dia-clic'+(selecionado&&!f?' mapa-dia-sel':'');
+      dias+=`<span class="${clsFinal}" onclick="clicarDiaMapa('${ds}')" title="${ds.split('-').reverse().join('/')}${f?' — Férias '+f.estado:''}"></span>`;
+    }
+    return`<div class="mapa-mes">${dias}</div>`;
+  }).join('');
+  el.innerHTML=head+`<div class="mapa-row"><div class="mapa-nome">${utilizadorAtual.nome}</div>${meses}</div>`+`<div class="mapa-legend">
+    <span><i class="mapa-leg-dot" style="background:var(--green-text);"></i> Selecionado agora</span>
+    <span><i class="mapa-leg-dot" style="background:var(--blue-text);"></i> Aprovadas</span>
+    <span><i class="mapa-leg-dot" style="background:var(--yellow-text);"></i> Pendentes</span>
+    <span><i class="mapa-leg-dot" style="background:var(--purple-light);"></i> Feriado</span>
+  </div>`;
+}
+window.renderMapaFeriasColab=renderMapaFeriasColab;
+
 function renderAusColab(){
   if(!utilizadorAtual)return;
   const list=ausencias.filter(a=>a.empId===utilizadorAtual.id).sort((a,b)=>(b.dataInicio||'').localeCompare(a.dataInicio||''));
@@ -1214,7 +1330,7 @@ function renderDash(){
     const ul=regs.length?regs[regs.length-1]:null;
     if(ul&&ul.tipo==='entrada'){
       const diff=(Date.now()-ul.ts)/3600000;
-      if(diff>10)alertas.push(`<div class="warn-banner"><i class="ti ti-alert-triangle" style="flex-shrink:0;"></i> <strong>${emp.nome}</strong> entrou às ${ul.hora.slice(0,5)} e ainda não registou saída (há ${diff.toFixed(0)}h).</div>`);
+      if(diff>limiteAlertaHoras)alertas.push(`<div class="warn-banner"><i class="ti ti-alert-triangle" style="flex-shrink:0;"></i> <strong>${emp.nome}</strong> entrou às ${ul.hora.slice(0,5)} e ainda não registou saída (há ${diff.toFixed(0)}h).</div>`);
     }
   });
   if(pend>0)alertas.push(`<div class="info-banner" style="cursor:pointer;" onclick="swA('ped')"><i class="ti ti-bell"></i> <strong>${pend} pedido(s) pendente(s)</strong> aguardam aprovação — clique para rever.</div>`);
@@ -1231,6 +1347,53 @@ function initAdmSels(){
   ['aa-emp'].forEach(id=>{const s=document.getElementById(id);if(s)s.innerHTML=empOnly;});
   ['aa-fil-m','adm-rel-mes'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML=MESES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');s.value=cur;});
 }
+// ── Mapa de Férias ──
+const MESES_ABR=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+function classificarDiaMapa(ds,ausFerias){
+  const dow=new Date(ds+'T12:00:00').getDay();
+  const f=ausFerias.find(a=>ds>=(a.dataInicio||'')&&ds<=(a.dataFim||a.dataInicio||''));
+  let cls='mapa-dia';
+  if(f)cls+=f.estado==='aprovado'?' mapa-dia-aprov':' mapa-dia-pend';
+  else if(isFeriado(ds))cls+=' mapa-dia-fer';
+  else if(dow===0||dow===6)cls+=' mapa-dia-fds';
+  return{cls,f};
+}
+function popularAnoSelect(id,anoAtual){
+  const s=document.getElementById(id);if(!s)return;
+  const hoje=new Date().getFullYear();
+  s.innerHTML=[hoje-1,hoje,hoje+1].map(a=>`<option value="${a}" ${a===anoAtual?'selected':''}>${a}</option>`).join('');
+}
+let mapaAnoAdm=new Date().getFullYear();
+function mapaAdmSetAno(v){mapaAnoAdm=parseInt(v);renderMapaFerias();}
+window.mapaAdmSetAno=mapaAdmSetAno;
+function renderMapaFerias(){
+  const el=document.getElementById('mapa-ferias-adm');if(!el)return;
+  popularAnoSelect('mapa-ano-adm',mapaAnoAdm);
+  const ano=mapaAnoAdm;
+  const head='<div class="mapa-row mapa-head"><div class="mapa-nome"></div>'+MESES_ABR.map(m=>`<div class="mapa-mes-head">${m}</div>`).join('')+'</div>';
+  const rows=colaboradores.map(emp=>{
+    const ausFerias=ausencias.filter(a=>a.empId===emp.id&&a.tipo==='ferias'&&(a.estado==='aprovado'||a.estado==='pendente'));
+    const meses=MESES_ABR.map((_,mi)=>{
+      const numDias=new Date(ano,mi+1,0).getDate();
+      let dias='';
+      for(let d=1;d<=numDias;d++){
+        const ds=`${ano}-${String(mi+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const{cls,f}=classificarDiaMapa(ds,ausFerias);
+        dias+=`<span class="${cls}" title="${emp.nome} — ${ds.split('-').reverse().join('/')}${f?' — Férias '+f.estado:''}"></span>`;
+      }
+      return`<div class="mapa-mes">${dias}</div>`;
+    }).join('');
+    return`<div class="mapa-row"><div class="mapa-nome">${emp.nome}</div>${meses}</div>`;
+  }).join('');
+  el.innerHTML=head+rows+`<div class="mapa-legend">
+    <span><i class="mapa-leg-dot" style="background:var(--blue-text);"></i> Aprovadas</span>
+    <span><i class="mapa-leg-dot" style="background:var(--yellow-text);"></i> Pendentes</span>
+    <span><i class="mapa-leg-dot" style="background:var(--purple-light);"></i> Feriado</span>
+    <span><i class="mapa-leg-dot" style="background:var(--bg2);opacity:.6;"></i> Fim de semana</span>
+  </div>`;
+}
+window.renderMapaFerias=renderMapaFerias;
+
 function initAdmAusSels(){
   const s1=document.getElementById('aa-fil-e');if(s1)s1.innerHTML='<option value="todos">Todos</option>'+colaboradores.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
   const s2=document.getElementById('aa-fil-m');if(s2){s2.innerHTML=MESES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');s2.value=new Date().getMonth();}
@@ -1554,14 +1717,17 @@ function pedRowHTML(p,mostrarColab){
 
 function renderAdmPed(){
   const pend=pedidos.filter(p=>p.estado==='pendente').sort((a,b)=>b.criadoEm-a.criadoEm);
+  const pendIds=new Set(pend.map(p=>p.fbId));
+  [...pedSelecionados].forEach(id=>{if(!pendIds.has(id))pedSelecionados.delete(id);});// limpa seleções de pedidos que já não estão pendentes
 
   const c=document.getElementById('adm-ped-pend');
   c.innerHTML=!pend.length?'<p style="font-size:13px;color:var(--text2);">Sem pedidos pendentes.</p>':
-    '<div style="overflow-x:auto;"><table><thead><tr><th>Colaborador</th><th>Pedido</th><th style="text-align:right;">Ações</th></tr></thead><tbody>'+
+    `<div style="overflow-x:auto;"><table><thead><tr><th style="width:30px;"><input type="checkbox" onchange="pedToggleSelTodos(this.checked)" title="Selecionar todos" style="width:16px;height:16px;"/></th><th>Colaborador</th><th>Pedido</th><th style="text-align:right;">Ações</th></tr></thead><tbody>`+
     pend.map(p=>{
       const{emp,det,contexto}=pedDetalheHTML(p);
-      return`<tr><td style="font-size:13px;font-weight:600;">${emp?emp.nome:'?'}</td><td style="font-size:12px;">${det}${contexto}${p.motivo?`<br><span style="color:var(--text2);font-size:11px;"><i class="ti ti-message"></i> ${p.motivo}</span>`:''}</td><td style="text-align:right;white-space:nowrap;"><button class="btn bg sm" onclick="aprovPed('${p.fbId}')"><i class="ti ti-check"></i> Aprovar</button> <button class="btn br sm" onclick="rejPed('${p.fbId}')"><i class="ti ti-x"></i> Rejeitar</button></td></tr>`;
+      return`<tr><td><input type="checkbox" class="ped-sel-chk" data-fbid="${p.fbId}" ${pedSelecionados.has(p.fbId)?'checked':''} onchange="pedToggleSel('${p.fbId}',this.checked)" style="width:16px;height:16px;"/></td><td style="font-size:13px;font-weight:600;">${emp?emp.nome:'?'}</td><td style="font-size:12px;">${det}${contexto}${p.motivo?`<br><span style="color:var(--text2);font-size:11px;"><i class="ti ti-message"></i> ${p.motivo}</span>`:''}</td><td style="text-align:right;white-space:nowrap;"><button class="btn bg sm" onclick="aprovPed('${p.fbId}')"><i class="ti ti-check"></i> Aprovar</button> <button class="btn br sm" onclick="rejPed('${p.fbId}')"><i class="ti ti-x"></i> Rejeitar</button></td></tr>`;
     }).join('')+'</tbody></table></div>';
+  atualizarBarraPedSel();
 
   let lista=[...pedidos];
   if(pedFiltroEmp!=='todos')lista=lista.filter(p=>p.empId===parseInt(pedFiltroEmp));
@@ -1596,7 +1762,36 @@ function renderAdmPed(){
   }
 }
 
-async function aprovPed(fbId){
+let pedSelecionados=new Set();
+function pedToggleSel(fbId,checked){
+  if(checked)pedSelecionados.add(fbId);else pedSelecionados.delete(fbId);
+  atualizarBarraPedSel();
+}
+window.pedToggleSel=pedToggleSel;
+function pedToggleSelTodos(checked){
+  document.querySelectorAll('.ped-sel-chk').forEach(cb=>{cb.checked=checked;if(checked)pedSelecionados.add(cb.dataset.fbid);else pedSelecionados.delete(cb.dataset.fbid);});
+  atualizarBarraPedSel();
+}
+window.pedToggleSelTodos=pedToggleSelTodos;
+function atualizarBarraPedSel(){
+  const bar=document.getElementById('ped-bulk-bar');if(!bar)return;
+  const n=pedSelecionados.size;
+  bar.innerHTML=n>0?`<div class="info-banner" style="justify-content:space-between;margin-bottom:10px;">
+    <span><i class="ti ti-checks"></i> ${n} selecionado(s)</span>
+    <button class="btn bg sm" onclick="aprovarSelecionados()"><i class="ti ti-check"></i> Aprovar selecionados</button>
+  </div>`:'';
+}
+window.atualizarBarraPedSel=atualizarBarraPedSel;
+async function aprovarSelecionados(){
+  const ids=[...pedSelecionados];
+  if(!ids.length)return;
+  if(!confirm(`Aprovar ${ids.length} pedido(s) pendente(s)?`))return;
+  pedSelecionados.clear();
+  for(const id of ids)await aprovPed(id,true);
+  toast(`✓ ${ids.length} pedido(s) aprovado(s)!`);renderAdmPed();atualizarNotifA();liveSync();
+}
+window.aprovarSelecionados=aprovarSelecionados;
+async function aprovPed(fbId,silencioso=false){
   const p=pedidos.find(x=>x.fbId===fbId);if(!p)return;
   const snapshot={};
 
@@ -1632,7 +1827,7 @@ async function aprovPed(fbId){
 
   await fbUpd('pedidos',fbId,{estado:'aprovado',resolvidoEm:Date.now(),snapshotAntes:snapshot});
   const i=pedidos.findIndex(x=>x.fbId===fbId);if(i>=0){pedidos[i].estado='aprovado';pedidos[i].resolvidoEm=Date.now();pedidos[i].snapshotAntes=snapshot;}
-  toast('✓ Pedido aprovado e registo atualizado.');renderAdmPed();atualizarNotifA();liveSync();
+  if(!silencioso){toast('✓ Pedido aprovado e registo atualizado.');renderAdmPed();atualizarNotifA();liveSync();}
 }
 
 async function rejPed(fbId){
@@ -1753,6 +1948,11 @@ function diasAusencia(a){
   const df=new Date((a.dataFim||a.dataInicio)+'T12:00:00');
   return Math.max(1,Math.round((df-di)/86400000)+1);
 }
+// Dias com registo de entrada nesse mês — referência habitual para o subsídio de alimentação
+function diasTrabalhoEfetivo(empId,pref){
+  const datas=new Set(registos.filter(r=>r.empId===empId&&r.data.startsWith(pref)&&r.tipo==='entrada').map(r=>r.data));
+  return datas.size;
+}
 function expPDFSalarial(){
   const sel=document.getElementById('adm-rel-mes');const mes=sel?parseInt(sel.value):new Date().getMonth();
   const ano=new Date().getFullYear();
@@ -1761,8 +1961,27 @@ function expPDFSalarial(){
   pdf.setFontSize(16);pdf.setFont(undefined,'bold');pdf.text('Relatório de Ausências — Processamento Salarial',14,18);
   pdf.setFontSize(10);pdf.setFont(undefined,'normal');
   pdf.text(`${MESES[mes]} ${ano}  |  Apenas ausências aprovadas`,14,27);
+
+  const colabOrdenados=[...colaboradores].sort((a,b)=>a.nome.localeCompare(b.nome));
+  const resumoRows=colabOrdenados.map(emp=>{
+    const dte=diasTrabalhoEfetivo(emp.id,pref);
+    const ausM=ausencias.filter(a=>a.empId===emp.id&&a.estado==='aprovado'&&(a.dataInicio||'').startsWith(pref));
+    const diasAus=ausM.reduce((s,a)=>s+diasAusencia(a),0);
+    return[emp.nome,dte,diasAus+'d'];
+  });
+  pdf.autoTable({
+    startY:33,
+    head:[['Colaborador','Dias de trabalho efetivo','Dias de ausência']],
+    body:resumoRows,
+    styles:{fontSize:9},
+    headStyles:{fillColor:[60,52,137]},
+  });
+  pdf.setFontSize(8);pdf.setFont(undefined,'italic');
+  pdf.text('"Dias de trabalho efetivo" = dias com registo de entrada — referência habitual para o subsídio de alimentação.',14,pdf.lastAutoTable.finalY+6);
+  pdf.setFont(undefined,'normal');
+
   const rows=[];const subtotalRows=[];
-  [...colaboradores].sort((a,b)=>a.nome.localeCompare(b.nome)).forEach(emp=>{
+  colabOrdenados.forEach(emp=>{
     const ausM=ausencias.filter(a=>a.empId===emp.id&&a.estado==='aprovado'&&(a.dataInicio||'').startsWith(pref))
       .sort((a,b)=>(a.dataInicio||'').localeCompare(b.dataInicio||''));
     if(!ausM.length){
@@ -1775,7 +1994,7 @@ function expPDFSalarial(){
     subtotalRows.push(rows.length-1);
   });
   pdf.autoTable({
-    startY:33,
+    startY:pdf.lastAutoTable.finalY+12,
     head:[['Colaborador','Início','Fim','Tipo','Dias']],
     body:rows,
     styles:{fontSize:9},
@@ -1788,6 +2007,75 @@ function expPDFSalarial(){
   toast('✓ PDF de processamento salarial exportado!');
 }
 window.expPDFSalarial=expPDFSalarial;
+
+// ── Horas extra com majoração legal (Código do Trabalho, art. 268º) ──
+// Dia útil: 1ª hora +25%, seguintes +37,5% · Dia de descanso/feriado: +50%
+// Acima de 100h acumuladas no ano: dia útil 1ª hora +50%/seguintes +75% · descanso/feriado +100%
+// Nota: confirme estas taxas com o seu contabilista/CCT — podem variar por setor.
+function calcularHorasExtraAno(empId,ano,mesLimite){
+  const emp=colaboradores.find(c=>c.id===empId);
+  const turno=getTurno(emp);
+  let cumulativo=0;
+  const bucket={h25:0,h375:0,h50:0,h75:0,h100:0};
+  for(let mi=0;mi<=mesLimite;mi++){
+    const pref=`${ano}-${String(mi+1).padStart(2,'0')}`;
+    const regsMes=registos.filter(r=>r.empId===empId&&r.data.startsWith(pref));
+    const porDia={};
+    regsMes.forEach(r=>{(porDia[r.data]=porDia[r.data]||[]).push(r);});
+    Object.keys(porDia).sort().forEach(ds=>{
+      const dayRegs=porDia[ds];
+      if(!dayRegs.some(r=>r.tipo==='saida'&&r.aprovadoExtra))return;
+      const hNormal=calcH(dayRegs,turno,false);
+      const hComExtra=calcH(dayRegs,turno,true);
+      const extraDia=Math.max(0,hComExtra-hNormal);
+      if(extraDia<=0)return;
+      const pos100=cumulativo>=100;
+      cumulativo+=extraDia;
+      if(mi!==mesLimite)return;// só preenchemos o "balde" do mês pedido; meses anteriores só contam para o acumulado
+      const dow=new Date(ds+'T12:00:00').getDay();
+      const ehDescanso=dow===0||dow===6||isFeriado(ds);
+      if(ehDescanso){
+        if(pos100)bucket.h100+=extraDia;else bucket.h50+=extraDia;
+      }else{
+        const primeira=Math.min(extraDia,1);
+        const resto=extraDia-primeira;
+        if(pos100){bucket.h50+=primeira;bucket.h75+=resto;}
+        else{bucket.h25+=primeira;bucket.h375+=resto;}
+      }
+    });
+  }
+  return{bucket,totalAcumuladoAno:cumulativo};
+}
+function expPDFHorasExtra(){
+  const sel=document.getElementById('adm-rel-mes');const mes=sel?parseInt(sel.value):new Date().getMonth();
+  const ano=new Date().getFullYear();
+  const{jsPDF}=window.jspdf;const pdf=new jsPDF();
+  pdf.setFontSize(16);pdf.setFont(undefined,'bold');pdf.text('Relatório de Horas Extra — Processamento Salarial',14,18);
+  pdf.setFontSize(9);pdf.setFont(undefined,'normal');
+  pdf.text(`${MESES[mes]} ${ano}  |  Majorações conforme Código do Trabalho, art. 268º`,14,26);
+  pdf.setFontSize(8);pdf.setFont(undefined,'italic');
+  pdf.text('Confirme estas taxas com o seu contabilista ou CCT do setor — podem ser superiores por convenção coletiva.',14,31);
+  pdf.setFont(undefined,'normal');
+  const rows=[];
+  [...colaboradores].sort((a,b)=>a.nome.localeCompare(b.nome)).forEach(emp=>{
+    const{bucket,totalAcumuladoAno}=calcularHorasExtraAno(emp.id,ano,mes);
+    const totalMes=bucket.h25+bucket.h375+bucket.h50+bucket.h75+bucket.h100;
+    if(totalMes<=0)return;
+    rows.push([emp.nome,bucket.h25.toFixed(2),bucket.h375.toFixed(2),bucket.h50.toFixed(2),bucket.h75.toFixed(2),bucket.h100.toFixed(2),totalMes.toFixed(2),totalAcumuladoAno.toFixed(1)]);
+  });
+  pdf.autoTable({
+    startY:38,
+    head:[['Colaborador','+25%','+37,5%','+50%','+75%','+100%','Total mês (h)','Acum. ano (h)']],
+    body:rows.length?rows:[['Sem horas extra aprovadas neste mês','—','—','—','—','—','—','—']],
+    styles:{fontSize:8},
+    headStyles:{fillColor:[60,52,137]}
+  });
+  pdf.setFontSize(8);pdf.setFont(undefined,'italic');
+  pdf.text('+25%/+37,5%: dia útil (1ª hora / seguintes) · +50%/+75%: idem, após 100h acumuladas no ano · +100%: dia de descanso ou feriado (+50% até às 100h).',14,pdf.lastAutoTable.finalY+8);
+  pdf.save(`horas_extra_${MESES[mes]}_${ano}.pdf`);
+  toast('✓ PDF de horas extra exportado!');
+}
+window.expPDFHorasExtra=expPDFHorasExtra;
 function expTodosCSV(){
   let csv='Nome,Departamento,Data,Hora,Tipo,Extra Aprovado\n';
   registos.sort((a,b)=>a.ts-b.ts).forEach(r=>{const emp=colaboradores.find(c=>c.id===r.empId);
@@ -1938,6 +2226,16 @@ async function addTurno2(){
 window.addTurno2=addTurno2;
 
 // ── Config PIN ──
+async function salvarLimiteAlerta(){
+  const v=parseFloat(document.getElementById('cfg-limite-alerta').value);
+  const msg=document.getElementById('alerta-msg');
+  if(!v||v<=0){msg.style.color='var(--red-text)';msg.textContent='Indique um número de horas válido.';return;}
+  limiteAlertaHoras=v;
+  await setDoc(doc(db,'config','alertas'),{limiteHoras:v});
+  msg.style.color='var(--green-text)';msg.textContent='✓ Limite de alerta guardado!';
+  toast('✓ Configuração de alertas guardada!');
+}
+window.salvarLimiteAlerta=salvarLimiteAlerta;
 async function mudarPIN(){
   const cur=document.getElementById('pin-cur').value;const nw=document.getElementById('pin-new').value;const cnf=document.getElementById('pin-cnf').value;
   const msg=document.getElementById('pin-msg');
